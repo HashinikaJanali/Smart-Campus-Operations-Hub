@@ -1,87 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { getAllResources, deleteResource } from '../services/resourceService';
 import ResourceForm from '../components/resource/ResourceForm';
-
-const injectStyles = () => {
-    if (document.getElementById('crex-admin')) return;
-    const s = document.createElement('style');
-    s.id = 'crex-admin';
-    s.innerHTML = `
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
-
-        @keyframes fadeUp   { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes shimY    { 0%{background-position:-200% center} 100%{background-position:200% center} }
-        @keyframes spin     { from{transform:rotate(0)} to{transform:rotate(360deg)} }
-        @keyframes modalIn  { from{opacity:0;transform:scale(.96) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
-        @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.5} }
-
-        body { background:#f5f3ee !important; }
-
-        .ca { font-family:'DM Sans',sans-serif !important; }
-
-        .sa  { animation:fadeUp .5s ease forwards; opacity:0; }
-        .sa:nth-child(1){animation-delay:.05s}
-        .sa:nth-child(2){animation-delay:.12s}
-        .sa:nth-child(3){animation-delay:.19s}
-        .sa:nth-child(4){animation-delay:.26s}
-
-        .sh { transition:all .25s ease !important; }
-        .sh:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.08) !important; }
-
-        .shimY {
-            background:linear-gradient(90deg,#1a1a1a,#d4a017,#e8b923,#1a1a1a);
-            background-size:200% auto;
-            -webkit-background-clip:text;
-            -webkit-text-fill-color:transparent;
-            animation:shimY 3s linear infinite;
-        }
-
-        .nav-c {
-            display:flex; align-items:center; gap:10px;
-            padding:9px 12px; border-radius:10px;
-            font-size:13.5px; color:#6b6b6b; cursor:pointer;
-            margin-bottom:2px; transition:all .2s ease;
-            font-weight:500; border:1px solid transparent;
-        }
-        .nav-c:hover { background:#eceae4; color:#1a1a1a; }
-        .nav-c.on    { background:#1a1a1a; color:#fff; font-weight:600; }
-        .nav-c.on .nb-c { background:#e8b923 !important; color:#1a1a1a !important; }
-
-        .tr-c:hover { background:#faf9f6 !important; }
-        .btn-c { transition:all .15s ease !important; }
-        .btn-c:hover { transform:scale(1.05); }
-        .row-c { animation:fadeUp .4s ease forwards; opacity:0; }
-        .min { animation:modalIn .3s ease forwards; }
-
-        .add-c:hover {
-            background:#1a1a1a !important;
-            transform:translateY(-2px);
-            box-shadow:0 8px 20px rgba(26,26,26,.25) !important;
-        }
-    `;
-    document.head.appendChild(s);
-};
+import {
+    Building2, FlaskConical, Users, MonitorPlay,
+    Archive, LayoutDashboard, FolderOpen, Plus,
+    CheckCircle2, Wrench, Search, ClipboardList,
+    MapPin, Clock, Edit, Trash2, Loader2, RefreshCcw, Menu
+} from 'lucide-react';
 
 const TC = {
-    LECTURE_HALL: { icon:'🏛️', color:'#1a1a1a', bg:'#f0ede6', label:'Lecture Hall' },
-    LAB:          { icon:'🔬', color:'#c47d0e', bg:'#fef3dc', label:'Lab' },
-    MEETING_ROOM: { icon:'🤝', color:'#2d6a4f', bg:'#d8f3dc', label:'Meeting Room' },
-    EQUIPMENT:    { icon:'📽️', color:'#5e4b8b', bg:'#ede7f6', label:'Equipment' },
+    LECTURE_HALL: { icon: Building2, textClass: 'text-slate-900', bgClass: 'bg-slate-100', label: 'Lecture Hall' },
+    LAB: { icon: FlaskConical, textClass: 'text-cyan-700', bgClass: 'bg-cyan-100', label: 'Lab' },
+    MEETING_ROOM: { icon: Users, textClass: 'text-teal-700', bgClass: 'bg-teal-100', label: 'Meeting Room' },
+    EQUIPMENT: { icon: MonitorPlay, textClass: 'text-indigo-700', bgClass: 'bg-indigo-100', label: 'Equipment' },
 };
-const cfg = t => TC[t] || { icon:'📦', color:'#6b6b6b', bg:'#f0ede6', label: t };
+const cfg = t => TC[t] || { icon: Archive, textClass: 'text-slate-600', bgClass: 'bg-slate-200', label: t };
 
 export default function AdminResourcePage() {
     const [resources, setResources] = useState([]);
-    const [filtered,  setFiltered]  = useState([]);
-    const [showForm,  setShowForm]  = useState(false);
-    const [editRes,   setEditRes]   = useState(null);
-    const [loading,   setLoading]   = useState(true);
-    const [search,    setSearch]    = useState('');
-    const [typeF,     setTypeF]     = useState('ALL');
-    const [statusF,   setStatusF]   = useState('ALL');
-    const [nav,       setNav]       = useState('all');
+    const [filtered, setFiltered] = useState([]);
+    const [showForm, setShowForm] = useState(false);
+    const [editRes, setEditRes] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [typeF, setTypeF] = useState('ALL');
+    const [statusF, setStatusF] = useState('ALL');
+    const [nav, setNav] = useState('all');
+    const [sidebarOpen, setSidebarOpen] = useState(true);
 
-    useEffect(() => { injectStyles(); load(); }, []);
+    useEffect(() => { load(); }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
 
     const load = async () => {
         try {
@@ -89,15 +36,15 @@ export default function AdminResourcePage() {
             const d = await getAllResources();
             setResources(d);
             flt(d, '', 'ALL', 'ALL');
-        } catch(e) { console.error(e); }
+        } catch (e) { console.error(e); }
         finally { setLoading(false); }
     };
 
     const flt = (data, s, t, st) => {
         let f = data ?? resources;
-        if (t  !== 'ALL') f = f.filter(r => r.type   === t);
+        if (t !== 'ALL') f = f.filter(r => r.type === t);
         if (st !== 'ALL') f = f.filter(r => r.status === st);
-        if (s)  f = f.filter(r =>
+        if (s) f = f.filter(r =>
             r.name.toLowerCase().includes(s.toLowerCase()) ||
             r.location.toLowerCase().includes(s.toLowerCase())
         );
@@ -106,11 +53,11 @@ export default function AdminResourcePage() {
 
     const onDelete = async id => {
         if (!window.confirm('Delete this resource?')) return;
-        try { await deleteResource(id); load(); } catch(e) { console.error(e); }
+        try { await deleteResource(id); load(); } catch (e) { console.error(e); }
     };
 
-    const onEdit  = r => { setEditRes(r); setShowForm(true); };
-    const onSave  = () => { setShowForm(false); setEditRes(null); load(); };
+    const onEdit = r => { setEditRes(r); setShowForm(true); };
+    const onSave = () => { setShowForm(false); setEditRes(null); load(); };
     const onClose = () => { setShowForm(false); setEditRes(null); };
 
     const doFilter = (t, st) => { setTypeF(t); setStatusF(st); flt(null, search, t, st); };
@@ -118,274 +65,288 @@ export default function AdminResourcePage() {
 
     const navClick = k => {
         setNav(k);
-        if      (k === 'all')    { doFilter('ALL','ALL'); setSearch(''); }
-        else if (k === 'add')    { setEditRes(null); setShowForm(true); }
-        else if (k === 'active') { doFilter('ALL','ACTIVE'); }
-        else if (k === 'oos')    { doFilter('ALL','OUT_OF_SERVICE'); }
+        if (k === 'all') { doFilter('ALL', 'ALL'); setSearch(''); }
+        else if (k === 'add') { setEditRes(null); setShowForm(true); }
+        else if (k === 'active') { doFilter('ALL', 'ACTIVE'); }
+        else if (k === 'oos') { doFilter('ALL', 'OUT_OF_SERVICE'); }
         else { setTypeF(k); flt(null, search, k, statusF); }
     };
 
     const active = resources.filter(r => r.status === 'ACTIVE').length;
-    const oos    = resources.filter(r => r.status === 'OUT_OF_SERVICE').length;
+    const oos = resources.filter(r => r.status === 'OUT_OF_SERVICE').length;
 
     return (
-        <div className="ca" style={S.layout}>
-
+        <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
             {/* ── SIDEBAR ── */}
-            <aside style={S.sidebar}>
-                <div style={S.logo}>
-                    <div style={S.logoBox}>
-                        <span style={{fontSize:'18px'}}>🏫</span>
-                    </div>
-                    <div>
-                        <div style={S.logoT}>SmartCampus</div>
-                        <div style={S.logoS}>Admin Panel</div>
-                    </div>
+            <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[#241571] bg-[#241571] shadow-sm text-white transition-all duration-300 ${sidebarOpen ? 'w-64 p-5' : 'w-20 p-4 items-center'}`}>
+                <div className={`mb-6 flex items-center border-b border-white/10 pb-5 w-full ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
+                    {sidebarOpen && (
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white shadow-md shadow-black/10">
+                                <LayoutDashboard className="h-5 w-5" />
+                            </div>
+                            <div className="overflow-hidden whitespace-nowrap">
+                                <div className="font-bold text-white">UniOps</div>
+                                <div className="mt-0.5 text-xs font-medium text-blue-200">Admin Panel</div>
+                            </div>
+                        </div>
+                    )}
+                    <button onClick={() => setSidebarOpen(!sidebarOpen)} className={`flex shrink-0 items-center justify-center rounded-lg transition-all ${sidebarOpen ? 'h-8 w-8 text-blue-200 hover:bg-white/10 hover:text-white' : 'h-10 w-10 bg-white/10 text-white shadow-md shadow-black/10 hover:bg-white/20'}`}>
+                        <Menu className="h-5 w-5" />
+                    </button>
                 </div>
 
-                <div style={S.navSec}>
-                    <div style={S.navLbl}>MANAGE</div>
+                <div className="mb-6 w-full">
+                    {sidebarOpen ? (
+                        <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-[#93c5fd]">Manage</div>
+                    ) : (
+                        <div className="mb-2 border-t border-white/10 pt-2" />
+                    )}
                     {[
-                        {k:'all',    ico:'🗂️', lbl:'All Resources',  badge:resources.length},
-                        {k:'add',    ico:'➕', lbl:'Add New Resource'},
-                        {k:'active', ico:'✅', lbl:'Active',          badge:active},
-                        {k:'oos',    ico:'🔧', lbl:'Out of Service',  badge:oos},
-                    ].map(item => (
-                        <div key={item.k} className={`nav-c ${nav===item.k?'on':''}`} onClick={()=>navClick(item.k)}>
-                            <span style={{fontSize:'16px'}}>{item.ico}</span>
-                            <span style={{flex:1}}>{item.lbl}</span>
-                            {item.badge != null && (
-                                <span className="nb-c" style={{...S.nb, background:nav===item.k?'#e8b923':'#ede9e0', color:nav===item.k?'#1a1a1a':'#6b6b6b'}}>
-                                    {item.badge}
-                                </span>
-                            )}
-                        </div>
-                    ))}
+                        { k: 'all', ico: FolderOpen, lbl: 'All Resources', badge: resources.length },
+                        { k: 'add', ico: Plus, lbl: 'Add New Resource' },
+                        { k: 'active', ico: CheckCircle2, lbl: 'Active', badge: active },
+                        { k: 'oos', ico: Wrench, lbl: 'Out of Service', badge: oos },
+                    ].map(item => {
+                        const Icon = item.ico;
+                        return (
+                            <div key={item.k} onClick={() => navClick(item.k)} title={!sidebarOpen ? item.lbl : ''}
+                                className={`mb-1 flex cursor-pointer items-center rounded-lg text-sm font-medium transition-all ${sidebarOpen ? 'gap-3 px-3 py-2' : 'justify-center p-3'} ${nav === item.k ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-cyan-900/50' : 'text-blue-100 hover:bg-white/10 hover:text-white'}`}>
+                                <Icon className="h-5 w-5 shrink-0" />
+                                {sidebarOpen && <span className="flex-1 overflow-hidden whitespace-nowrap">{item.lbl}</span>}
+                                {sidebarOpen && item.badge != null && (
+                                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0 ${nav === item.k ? 'bg-white/20 text-white' : 'bg-white/10 text-white'}`}>
+                                        {item.badge}
+                                    </span>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
 
-                <div style={S.navSec}>
-                    <div style={S.navLbl}>BY TYPE</div>
-                    {Object.entries(TC).map(([t,c]) => (
-                        <div key={t} className={`nav-c ${nav===t?'on':''}`} onClick={()=>navClick(t)}>
-                            <span style={{fontSize:'15px'}}>{c.icon}</span>
-                            <span style={{flex:1}}>{c.label}</span>
-                            <span style={{...S.nb, background:c.bg, color:c.color}}>
-                                {resources.filter(r=>r.type===t).length}
-                            </span>
-                        </div>
-                    ))}
+                <div className="mb-6 w-full">
+                    {sidebarOpen ? (
+                        <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-[#93c5fd]">By Type</div>
+                    ) : (
+                        <div className="mb-2 border-t border-white/10 pt-2" />
+                    )}
+                    {Object.entries(TC).map(([t, c]) => {
+                        const Icon = c.icon;
+                        return (
+                            <div key={t} onClick={() => navClick(t)} title={!sidebarOpen ? c.label : ''}
+                                className={`mb-1 flex cursor-pointer items-center rounded-lg text-sm font-medium transition-all ${sidebarOpen ? 'gap-3 px-3 py-2' : 'justify-center p-3'} ${nav === t ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-cyan-900/50' : 'text-blue-100 hover:bg-white/10 hover:text-white'}`}>
+                                <Icon className="h-5 w-5 shrink-0" />
+                                {sidebarOpen && <span className="flex-1 overflow-hidden whitespace-nowrap">{c.label}</span>}
+                                {sidebarOpen && (
+                                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0 ${nav === t ? 'bg-white/20 text-white' : 'bg-white/10 text-white'}`}>
+                                        {resources.filter(r => r.type === t).length}
+                                    </span>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
 
-                <div style={S.foot}>
-                    <div style={S.av}>A</div>
-                    <div>
-                        <div style={S.an}>Admin User</div>
-                        <div style={S.ar}>System Administrator</div>
-                    </div>
+                <div className={`mt-auto flex items-center border-t border-white/10 pt-4 w-full ${sidebarOpen ? 'gap-3' : 'justify-center'}`}>
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-[#241571]">A</div>
+                    {sidebarOpen && (
+                        <div className="overflow-hidden whitespace-nowrap">
+                            <div className="text-sm font-bold text-white">Admin User</div>
+                            <div className="text-xs text-blue-200 truncate">System Administrator</div>
+                        </div>
+                    )}
                 </div>
             </aside>
 
             {/* ── MAIN ── */}
-            <main style={S.main}>
-
+            <main className={`flex-1 p-8 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
                 {/* Topbar */}
-                <div style={S.topbar}>
+                <div className="mb-8 flex items-start justify-between">
                     <div>
-                        <div style={S.welcome}>Welcome back, Admin 👋</div>
-                        <h1 style={S.title}>Facilities <span className="shimY">& Assets</span></h1>
-                        <p style={S.sub}>{new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
+                        <div className="mb-1 text-sm font-medium text-slate-500">Welcome back, Admin 👋</div>
+                        <h1 className="text-3xl font-extrabold leading-tight text-slate-900">
+                            Facilities <span className="text-blue-600">{"&"} Assets</span>
+                        </h1>
+                        <p className="mt-1 text-sm text-slate-500">
+                            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
                     </div>
-                    <div style={S.topRight}>
-                        <div style={S.sw}>
-                            <span style={{color:'#aaa',fontSize:'14px'}}>🔍</span>
-                            <input style={S.si} placeholder="Search resources..."
-                                value={search} onChange={e=>doSearch(e.target.value)}/>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+                            <Search className="h-4 w-4 text-slate-400" />
+                            <input className="w-48 bg-transparent text-sm text-slate-900 outline-none"
+                                placeholder="Search resources..."
+                                value={search} onChange={e => doSearch(e.target.value)} />
                         </div>
-                        <button className="add-c" style={S.addBtn}
-                            onClick={()=>{setEditRes(null);setShowForm(true);}}>
-                            ＋ Add Resource
+                        <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-500/30 transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/40"
+                            onClick={() => { setEditRes(null); setShowForm(true); }}>
+                            <Plus className="h-4 w-4" /> Add Resource
                         </button>
                     </div>
                 </div>
 
                 {/* Stats */}
-                <div style={S.sg}>
+                <div className="mb-6 grid grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {[
-                        {lbl:'Total Resources', v:resources.length, ico:'🗂️', accent:'#e8b923'},
-                        {lbl:'Active',          v:active,           ico:'✅', accent:'#2d6a4f'},
-                        {lbl:'Out of Service',  v:oos,              ico:'🔧', accent:'#c0392b'},
-                        {lbl:'Labs Available',  v:resources.filter(r=>r.type==='LAB').length, ico:'🔬', accent:'#c47d0e'},
-                    ].map((st,i) => (
-                        <div key={i} className="sa sh" style={{...S.sc, borderBottom:`3px solid ${st.accent}`}}>
-                            <div style={S.scTop}>
-                                <span style={{fontSize:'28px'}}>{st.ico}</span>
-                                <span style={{...S.sv, color:st.accent}}>{st.v}</span>
+                        { lbl: 'Total Resources', v: resources.length, ico: FolderOpen, borderClass: 'border-blue-500', textClass: 'text-blue-600', bgClass: 'bg-blue-50' },
+                        { lbl: 'Active', v: active, ico: CheckCircle2, borderClass: 'border-emerald-500', textClass: 'text-emerald-600', bgClass: 'bg-emerald-50' },
+                        { lbl: 'Out of Service', v: oos, ico: Wrench, borderClass: 'border-rose-500', textClass: 'text-rose-600', bgClass: 'bg-rose-50' },
+                        { lbl: 'Labs Available', v: resources.filter(r => r.type === 'LAB').length, ico: FlaskConical, borderClass: 'border-cyan-500', textClass: 'text-cyan-600', bgClass: 'bg-cyan-50' },
+                    ].map((st, i) => {
+                        const Icon = st.ico;
+                        return (
+                            <div key={i} className={`rounded-2xl border border-slate-200 border-b-4 ${st.borderClass} bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md`}>
+                                <div className="mb-2 flex items-center justify-between">
+                                    <div className={`rounded-lg p-2 ${st.bgClass} ${st.textClass}`}>
+                                        <Icon className="h-6 w-6" />
+                                    </div>
+                                    <span className={`text-3xl font-extrabold ${st.textClass}`}>{st.v}</span>
+                                </div>
+                                <div className="text-sm font-medium text-slate-500">{st.lbl}</div>
                             </div>
-                            <div style={S.sl}>{st.lbl}</div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {/* Filter bar */}
-                <div style={S.fb}>
-                    <span style={{fontSize:'14px',color:'#6b6b6b'}}>🎛️ Filters:</span>
-                    <select style={S.sel} value={typeF} onChange={e=>doFilter(e.target.value,statusF)}>
+                <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-3 shadow-sm">
+                    <span className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                        <LayoutDashboard className="h-4 w-4" /> Filters:
+                    </span>
+                    <select className="cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        value={typeF} onChange={e => doFilter(e.target.value, statusF)}>
                         <option value="ALL">All Types</option>
-                        <option value="LECTURE_HALL">🏛️ Lecture Hall</option>
-                        <option value="LAB">🔬 Lab</option>
-                        <option value="MEETING_ROOM">🤝 Meeting Room</option>
-                        <option value="EQUIPMENT">📽️ Equipment</option>
+                        <option value="LECTURE_HALL">Lecture Hall</option>
+                        <option value="LAB">Lab</option>
+                        <option value="MEETING_ROOM">Meeting Room</option>
+                        <option value="EQUIPMENT">Equipment</option>
                     </select>
-                    <select style={S.sel} value={statusF} onChange={e=>doFilter(typeF,e.target.value)}>
+                    <select className="cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        value={statusF} onChange={e => doFilter(typeF, e.target.value)}>
                         <option value="ALL">All Status</option>
-                        <option value="ACTIVE">✅ Active</option>
-                        <option value="OUT_OF_SERVICE">🔧 Out of Service</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="OUT_OF_SERVICE">Out of Service</option>
                     </select>
-                    <button style={S.rb} onClick={()=>{doFilter('ALL','ALL');setSearch('');setNav('all');}}>
-                        ↺ Reset
+                    <button className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-100"
+                        onClick={() => { doFilter('ALL', 'ALL'); setSearch(''); setNav('all'); }}>
+                        <RefreshCcw className="h-3 w-3" /> Reset
                     </button>
-                    <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:'8px'}}>
-                        <span style={S.cp}>{filtered.length} results</span>
+                    <div className="ml-auto flex items-center gap-2">
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 border border-slate-200">{filtered.length} results</span>
                     </div>
                 </div>
 
                 {/* Table */}
                 {loading ? (
-                    <div style={S.lw}>
-                        <div style={{fontSize:'36px',animation:'spin 1.5s linear infinite',display:'inline-block'}}>⚙️</div>
-                        <div style={S.lt}>Loading resources...</div>
+                    <div className="py-20 flex flex-col items-center justify-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                        <div className="mt-4 text-sm font-medium text-slate-500">Loading resources...</div>
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div style={S.ec}>
-                        <div style={{fontSize:'52px',marginBottom:'12px'}}>🔍</div>
-                        <div style={S.et}>No resources found</div>
-                        <div style={S.es}>Try adjusting your filters</div>
+                    <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-20 shadow-sm">
+                        <Search className="mb-4 h-12 w-12 text-slate-300" />
+                        <div className="text-lg font-bold text-slate-900">No resources found</div>
+                        <div className="mt-1 text-sm text-slate-500">Try adjusting your filters</div>
                     </div>
                 ) : (
-                    <div style={S.tc}>
-                        <div style={S.th2}>
-                            <span style={S.tt}>📋 Resource Catalogue</span>
-                            <span style={S.tcnt}>{filtered.length} resources</span>
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4">
+                            <span className="flex items-center gap-2 font-bold text-slate-900">
+                                <ClipboardList className="h-5 w-5 text-blue-600" /> Resource Catalogue
+                            </span>
+                            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">{filtered.length} items</span>
                         </div>
-                        <table style={{width:'100%',borderCollapse:'collapse'}}>
-                            <thead>
-                                <tr style={{background:'#f0ede6'}}>
-                                    {['Resource','Type','Location','Capacity','Availability','Status','Actions'].map(h=>(
-                                        <th key={h} style={S.thh}>{h}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filtered.map((r,i) => {
-                                    const c = cfg(r.type);
-                                    return (
-                                        <tr key={r.id} className="tr-c row-c" style={{borderBottom:'1px solid #f0ede6',animationDelay:`${i*.04}s`}}>
-                                            <td style={S.td}>
-                                                <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-                                                    <div style={{...S.rib, background:c.bg}}>
-                                                        <span style={{fontSize:'17px'}}>{c.icon}</span>
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                        <th className="px-6 py-3">Resource</th>
+                                        <th className="px-6 py-3">Type</th>
+                                        <th className="px-6 py-3">Location</th>
+                                        <th className="px-6 py-3">Capacity</th>
+                                        <th className="px-6 py-3">Availability</th>
+                                        <th className="px-6 py-3">Status</th>
+                                        <th className="px-6 py-3">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filtered.map((r, i) => {
+                                        const c = cfg(r.type);
+                                        const Icon = c.icon;
+                                        return (
+                                            <tr key={r.id} className="border-b border-slate-100 transition-colors hover:bg-slate-50/80">
+                                                <td className="px-6 py-4 text-sm text-slate-700">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${c.bgClass} ${c.textClass}`}>
+                                                            <Icon className="h-5 w-5" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="font-bold text-slate-900">{r.name}</div>
+                                                            <div className="text-xs text-slate-400">ID #{r.id}</div>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <div style={S.rn}>{r.name}</div>
-                                                        <div style={S.ri}>ID #{r.id}</div>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm">
+                                                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${c.bgClass} ${c.textClass}`}>
+                                                        <Icon className="h-3.5 w-3.5" /> {c.label}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-slate-600">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <MapPin className="h-3.5 w-3.5 text-slate-400" /> {r.location}
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td style={S.td}>
-                                                <span style={{...S.tp, background:c.bg, color:c.color}}>
-                                                    {c.icon} {r.type?.replace(/_/g,' ')}
-                                                </span>
-                                            </td>
-                                            <td style={S.td}><span style={S.mu}>📍 {r.location}</span></td>
-                                            <td style={S.td}><span style={S.mu}>{r.capacity>0?`👥 ${r.capacity}`:'—'}</span></td>
-                                            <td style={S.td}><span style={S.mu}>🕐 {r.availableFrom}–{r.availableTo}</span></td>
-                                            <td style={S.td}>
-                                                <span style={{
-                                                    display:'inline-flex',alignItems:'center',gap:'5px',
-                                                    padding:'5px 12px',borderRadius:'20px',fontSize:'12px',fontWeight:'600',
-                                                    background: r.status==='ACTIVE'?'#1a1a1a':'#fff0ee',
-                                                    color:      r.status==='ACTIVE'?'#e8b923':'#c0392b',
-                                                }}>
-                                                    {r.status==='ACTIVE'?'● ACTIVE':'● OUT OF SERVICE'}
-                                                </span>
-                                            </td>
-                                            <td style={S.td}>
-                                                <div style={{display:'flex',gap:'6px'}}>
-                                                    <button className="btn-c" style={S.eb} onClick={()=>onEdit(r)}>✏️ Edit</button>
-                                                    <button className="btn-c" style={S.db} onClick={()=>onDelete(r.id)}>🗑️</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-slate-600">
+                                                    {r.capacity > 0 ? (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Users className="h-3.5 w-3.5 text-slate-400" /> {r.capacity}
+                                                        </div>
+                                                    ) : '—'}
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-slate-600">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Clock className="h-3.5 w-3.5 text-slate-400" />
+                                                        {r.availableFrom}–{r.availableTo}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm">
+                                                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${r.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                                        }`}>
+                                                        <span className={`h-1.5 w-1.5 rounded-full ${r.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                                                        {r.status === 'ACTIVE' ? 'ACTIVE' : 'OUT OF SERVICE'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm">
+                                                    <div className="flex gap-2">
+                                                        <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:shadow-sm"
+                                                            onClick={() => onEdit(r)}>
+                                                            <Edit className="h-3.5 w-3.5" /> Edit
+                                                        </button>
+                                                        <button className="flex items-center justify-center rounded-lg border border-rose-200 bg-rose-50 p-1.5 text-rose-600 transition-all hover:bg-rose-100 hover:shadow-sm"
+                                                            onClick={() => onDelete(r.id)}
+                                                            title="Delete">
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
             </main>
 
             {/* ── FORM MODAL ── */}
             {showForm && (
-                <div style={S.ov} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-                    <div className="min" style={S.mb}>
-                        <ResourceForm existingResource={editRes} onSave={onSave} onClose={onClose}/>
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+                    <div className="animate-in zoom-in-95 max-h-[92vh] w-[580px] overflow-y-auto rounded-2xl shadow-2xl duration-200">
+                        <ResourceForm existingResource={editRes} onSave={onSave} onClose={onClose} />
                     </div>
                 </div>
             )}
         </div>
     );
 }
-
-const S = {
-    layout:  {display:'flex',minHeight:'100vh',background:'#f5f3ee',fontFamily:"'DM Sans',sans-serif"},
-    sidebar: {width:'250px',background:'#fff',borderRight:'1px solid #e8e4da',display:'flex',flexDirection:'column',padding:'22px 14px',position:'fixed',top:0,left:0,bottom:0,zIndex:50,boxShadow:'2px 0 16px rgba(0,0,0,.05)'},
-    logo:    {display:'flex',alignItems:'center',gap:'10px',padding:'0 6px 22px',borderBottom:'1px solid #f0ede6',marginBottom:'16px'},
-    logoBox: {width:'40px',height:'40px',borderRadius:'12px',background:'#1a1a1a',display:'flex',alignItems:'center',justifyContent:'center'},
-    logoT:   {fontWeight:'700',fontSize:'15px',color:'#1a1a1a'},
-    logoS:   {fontSize:'11px',color:'#aaa',marginTop:'1px'},
-    navSec:  {marginBottom:'8px'},
-    navLbl:  {fontSize:'9px',fontWeight:'700',color:'#bbb',letterSpacing:'1.8px',textTransform:'uppercase',padding:'8px 12px 5px'},
-    nb:      {padding:'2px 8px',borderRadius:'20px',fontSize:'11px',fontWeight:'700'},
-    foot:    {marginTop:'auto',padding:'16px 6px 0',borderTop:'1px solid #f0ede6',display:'flex',alignItems:'center',gap:'10px'},
-    av:      {width:'36px',height:'36px',borderRadius:'50%',background:'#1a1a1a',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',fontWeight:'700',color:'#e8b923',flexShrink:0},
-    an:      {fontSize:'13px',fontWeight:'700',color:'#1a1a1a'},
-    ar:      {fontSize:'11px',color:'#aaa'},
-    main:    {marginLeft:'250px',flex:1,padding:'32px'},
-    topbar:  {display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'28px'},
-    welcome: {fontSize:'13px',color:'#aaa',marginBottom:'4px',fontWeight:'500'},
-    title:   {fontSize:'30px',fontWeight:'700',color:'#1a1a1a',lineHeight:1.1},
-    sub:     {fontSize:'13px',color:'#aaa',marginTop:'4px'},
-    topRight:{display:'flex',alignItems:'center',gap:'12px'},
-    sw:      {display:'flex',alignItems:'center',gap:'8px',background:'#fff',border:'1px solid #e8e4da',borderRadius:'12px',padding:'10px 16px',boxShadow:'0 1px 6px rgba(0,0,0,.04)'},
-    si:      {background:'none',border:'none',outline:'none',fontSize:'13px',color:'#1a1a1a',width:'170px',fontFamily:"'DM Sans',sans-serif"},
-    addBtn:  {background:'#e8b923',color:'#1a1a1a',border:'none',padding:'11px 22px',borderRadius:'12px',fontSize:'13.5px',fontWeight:'700',cursor:'pointer',boxShadow:'0 4px 12px rgba(232,185,35,.3)',fontFamily:"'DM Sans',sans-serif",transition:'all .2s ease'},
-    sg:      {display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'16px',marginBottom:'24px'},
-    sc:      {background:'#fff',borderRadius:'14px',padding:'20px',boxShadow:'0 1px 6px rgba(0,0,0,.04)',border:'1px solid #f0ede6'},
-    scTop:   {display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'},
-    sv:      {fontSize:'36px',fontWeight:'800'},
-    sl:      {fontSize:'12px',color:'#aaa',fontWeight:'500'},
-    fb:      {display:'flex',alignItems:'center',gap:'10px',background:'#fff',border:'1px solid #e8e4da',borderRadius:'12px',padding:'12px 18px',marginBottom:'20px',boxShadow:'0 1px 6px rgba(0,0,0,.04)'},
-    sel:     {background:'#f5f3ee',border:'1px solid #e8e4da',color:'#1a1a1a',borderRadius:'8px',padding:'8px 12px',fontSize:'13px',outline:'none',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"},
-    rb:      {background:'#fff0ee',border:'1px solid #ffd0cc',color:'#c0392b',borderRadius:'8px',padding:'8px 12px',fontSize:'12px',fontWeight:'600',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"},
-    cp:      {background:'#1a1a1a',color:'#e8b923',padding:'4px 12px',borderRadius:'20px',fontSize:'12px',fontWeight:'700'},
-    lw:      {textAlign:'center',padding:'80px'},
-    lt:      {marginTop:'14px',fontSize:'14px',color:'#aaa'},
-    ec:      {textAlign:'center',padding:'80px',background:'#fff',borderRadius:'16px',border:'1px solid #e8e4da'},
-    et:      {fontSize:'18px',fontWeight:'700',color:'#1a1a1a'},
-    es:      {fontSize:'13px',color:'#aaa',marginTop:'6px'},
-    tc:      {background:'#fff',borderRadius:'16px',border:'1px solid #e8e4da',boxShadow:'0 2px 12px rgba(0,0,0,.04)',overflow:'hidden'},
-    th2:     {display:'flex',justifyContent:'space-between',alignItems:'center',padding:'16px 22px',borderBottom:'1px solid #f0ede6',background:'#faf9f6'},
-    tt:      {fontWeight:'700',fontSize:'15px',color:'#1a1a1a'},
-    tcnt:    {background:'#1a1a1a',color:'#e8b923',padding:'4px 12px',borderRadius:'20px',fontSize:'12px',fontWeight:'600'},
-    thh:     {padding:'10px 18px',textAlign:'left',fontSize:'10px',fontWeight:'700',color:'#aaa',textTransform:'uppercase',letterSpacing:'.8px',borderBottom:'1px solid #f0ede6'},
-    td:      {padding:'14px 18px',fontSize:'13.5px',color:'#333'},
-    rib:     {width:'38px',height:'38px',borderRadius:'10px',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0},
-    rn:      {fontWeight:'600',color:'#1a1a1a',fontSize:'14px'},
-    ri:      {fontSize:'11px',color:'#bbb',marginTop:'2px'},
-    tp:      {display:'inline-block',padding:'4px 10px',borderRadius:'20px',fontSize:'11px',fontWeight:'600'},
-    mu:      {color:'#888',fontSize:'13px'},
-    eb:      {background:'#f5f3ee',color:'#1a1a1a',border:'1px solid #e8e4da',padding:'5px 12px',borderRadius:'8px',fontSize:'12px',fontWeight:'600',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"},
-    db:      {background:'#fff0ee',color:'#c0392b',border:'1px solid #ffd0cc',padding:'5px 10px',borderRadius:'8px',fontSize:'12px',cursor:'pointer'},
-    ov:      {position:'fixed',inset:0,zIndex:9999,background:'rgba(26,26,26,.5)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center'},
-    mb:      {width:'580px',maxHeight:'92vh',overflowY:'auto',borderRadius:'20px',boxShadow:'0 40px 80px rgba(0,0,0,.2)'},
-};
