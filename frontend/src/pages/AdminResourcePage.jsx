@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllResources, deleteResource } from '../services/resourceService';
 import ResourceForm from '../components/resource/ResourceForm';
+import Sidebar from '../components/common/sidebar';
 
 const injectStyles = () => {
     if (document.getElementById('crex-admin')) return;
@@ -9,17 +10,15 @@ const injectStyles = () => {
     s.innerHTML = `
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 
-        @keyframes fadeUp   { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes shimY    { 0%{background-position:-200% center} 100%{background-position:200% center} }
-        @keyframes spin     { from{transform:rotate(0)} to{transform:rotate(360deg)} }
-        @keyframes modalIn  { from{opacity:0;transform:scale(.96) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
-        @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.5} }
+        @keyframes fadeUp  { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes shimY   { 0%{background-position:-200% center} 100%{background-position:200% center} }
+        @keyframes spin    { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+        @keyframes modalIn { from{opacity:0;transform:scale(.96) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
 
         body { background:#f5f3ee !important; }
+        .ca  { font-family:'DM Sans',sans-serif !important; }
 
-        .ca { font-family:'DM Sans',sans-serif !important; }
-
-        .sa  { animation:fadeUp .5s ease forwards; opacity:0; }
+        .sa { animation:fadeUp .5s ease forwards; opacity:0; }
         .sa:nth-child(1){animation-delay:.05s}
         .sa:nth-child(2){animation-delay:.12s}
         .sa:nth-child(3){animation-delay:.19s}
@@ -36,23 +35,11 @@ const injectStyles = () => {
             animation:shimY 3s linear infinite;
         }
 
-        .nav-c {
-            display:flex; align-items:center; gap:10px;
-            padding:9px 12px; border-radius:10px;
-            font-size:13.5px; color:#6b6b6b; cursor:pointer;
-            margin-bottom:2px; transition:all .2s ease;
-            font-weight:500; border:1px solid transparent;
-        }
-        .nav-c:hover { background:#eceae4; color:#1a1a1a; }
-        .nav-c.on    { background:#1a1a1a; color:#fff; font-weight:600; }
-        .nav-c.on .nb-c { background:#e8b923 !important; color:#1a1a1a !important; }
-
         .tr-c:hover { background:#faf9f6 !important; }
         .btn-c { transition:all .15s ease !important; }
         .btn-c:hover { transform:scale(1.05); }
         .row-c { animation:fadeUp .4s ease forwards; opacity:0; }
-        .min { animation:modalIn .3s ease forwards; }
-
+        .min   { animation:modalIn .3s ease forwards; }
         .add-c:hover {
             background:#1a1a1a !important;
             transform:translateY(-2px);
@@ -71,15 +58,15 @@ const TC = {
 const cfg = t => TC[t] || { icon:'📦', color:'#6b6b6b', bg:'#f0ede6', label: t };
 
 export default function AdminResourcePage() {
-    const [resources, setResources] = useState([]);
-    const [filtered,  setFiltered]  = useState([]);
-    const [showForm,  setShowForm]  = useState(false);
-    const [editRes,   setEditRes]   = useState(null);
-    const [loading,   setLoading]   = useState(true);
-    const [search,    setSearch]    = useState('');
-    const [typeF,     setTypeF]     = useState('ALL');
-    const [statusF,   setStatusF]   = useState('ALL');
-    const [nav,       setNav]       = useState('all');
+    const [resources,      setResources]      = useState([]);
+    const [filtered,       setFiltered]       = useState([]);
+    const [showForm,       setShowForm]       = useState(false);
+    const [editRes,        setEditRes]        = useState(null);
+    const [loading,        setLoading]        = useState(true);
+    const [search,         setSearch]         = useState('');
+    const [typeF,          setTypeF]          = useState('ALL');
+    const [statusF,        setStatusF]        = useState('ALL');
+    const [activeFilter,   setActiveFilter]   = useState('ALL');
 
     useEffect(() => { injectStyles(); load(); }, []);
 
@@ -113,16 +100,25 @@ export default function AdminResourcePage() {
     const onSave  = () => { setShowForm(false); setEditRes(null); load(); };
     const onClose = () => { setShowForm(false); setEditRes(null); };
 
-    const doFilter = (t, st) => { setTypeF(t); setStatusF(st); flt(null, search, t, st); };
-    const doSearch = s => { setSearch(s); flt(null, s, typeF, statusF); };
+    const doFilter = (t, st) => {
+        setTypeF(t); setStatusF(st);
+        flt(null, search, t, st);
+    };
 
-    const navClick = k => {
-        setNav(k);
-        if      (k === 'all')    { doFilter('ALL','ALL'); setSearch(''); }
-        else if (k === 'add')    { setEditRes(null); setShowForm(true); }
-        else if (k === 'active') { doFilter('ALL','ACTIVE'); }
-        else if (k === 'oos')    { doFilter('ALL','OUT_OF_SERVICE'); }
-        else { setTypeF(k); flt(null, search, k, statusF); }
+    const doSearch = s => {
+        setSearch(s);
+        flt(null, s, typeF, statusF);
+    };
+
+    // Called from Sidebar
+    const handleSidebarFilter = (type, status) => {
+        setActiveFilter(status !== 'ALL' ? status : type !== 'ALL' ? type : 'ALL');
+        doFilter(type, status);
+    };
+
+    const handleSidebarAdd = () => {
+        setEditRes(null);
+        setShowForm(true);
     };
 
     const active = resources.filter(r => r.status === 'ACTIVE').length;
@@ -132,58 +128,11 @@ export default function AdminResourcePage() {
         <div className="ca" style={S.layout}>
 
             {/* ── SIDEBAR ── */}
-            <aside style={S.sidebar}>
-                <div style={S.logo}>
-                    <div style={S.logoBox}>
-                        <span style={{fontSize:'18px'}}>🏫</span>
-                    </div>
-                    <div>
-                        <div style={S.logoT}>SmartCampus</div>
-                        <div style={S.logoS}>Admin Panel</div>
-                    </div>
-                </div>
-
-                <div style={S.navSec}>
-                    <div style={S.navLbl}>MANAGE</div>
-                    {[
-                        {k:'all',    ico:'🗂️', lbl:'All Resources',  badge:resources.length},
-                        {k:'add',    ico:'➕', lbl:'Add New Resource'},
-                        {k:'active', ico:'✅', lbl:'Active',          badge:active},
-                        {k:'oos',    ico:'🔧', lbl:'Out of Service',  badge:oos},
-                    ].map(item => (
-                        <div key={item.k} className={`nav-c ${nav===item.k?'on':''}`} onClick={()=>navClick(item.k)}>
-                            <span style={{fontSize:'16px'}}>{item.ico}</span>
-                            <span style={{flex:1}}>{item.lbl}</span>
-                            {item.badge != null && (
-                                <span className="nb-c" style={{...S.nb, background:nav===item.k?'#e8b923':'#ede9e0', color:nav===item.k?'#1a1a1a':'#6b6b6b'}}>
-                                    {item.badge}
-                                </span>
-                            )}
-                        </div>
-                    ))}
-                </div>
-
-                <div style={S.navSec}>
-                    <div style={S.navLbl}>BY TYPE</div>
-                    {Object.entries(TC).map(([t,c]) => (
-                        <div key={t} className={`nav-c ${nav===t?'on':''}`} onClick={()=>navClick(t)}>
-                            <span style={{fontSize:'15px'}}>{c.icon}</span>
-                            <span style={{flex:1}}>{c.label}</span>
-                            <span style={{...S.nb, background:c.bg, color:c.color}}>
-                                {resources.filter(r=>r.type===t).length}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-
-                <div style={S.foot}>
-                    <div style={S.av}>A</div>
-                    <div>
-                        <div style={S.an}>Admin User</div>
-                        <div style={S.ar}>System Administrator</div>
-                    </div>
-                </div>
-            </aside>
+            <Sidebar
+                onFilterChange={handleSidebarFilter}
+                onAddResource={handleSidebarAdd}
+                activeFilter={activeFilter}
+            />
 
             {/* ── MAIN ── */}
             <main style={S.main}>
@@ -192,14 +141,23 @@ export default function AdminResourcePage() {
                 <div style={S.topbar}>
                     <div>
                         <div style={S.welcome}>Welcome back, Admin 👋</div>
-                        <h1 style={S.title}>Facilities <span className="shimY">& Assets</span></h1>
-                        <p style={S.sub}>{new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
+                        <h1 style={S.title}>
+                            Facilities <span className="shimY">& Assets</span>
+                        </h1>
+                        <p style={S.sub}>
+                            {new Date().toLocaleDateString('en-US',{
+                                weekday:'long', year:'numeric',
+                                month:'long', day:'numeric'
+                            })}
+                        </p>
                     </div>
                     <div style={S.topRight}>
                         <div style={S.sw}>
                             <span style={{color:'#aaa',fontSize:'14px'}}>🔍</span>
-                            <input style={S.si} placeholder="Search resources..."
-                                value={search} onChange={e=>doSearch(e.target.value)}/>
+                            <input style={S.si}
+                                placeholder="Search resources..."
+                                value={search}
+                                onChange={e=>doSearch(e.target.value)}/>
                         </div>
                         <button className="add-c" style={S.addBtn}
                             onClick={()=>{setEditRes(null);setShowForm(true);}}>
@@ -211,12 +169,13 @@ export default function AdminResourcePage() {
                 {/* Stats */}
                 <div style={S.sg}>
                     {[
-                        {lbl:'Total Resources', v:resources.length, ico:'🗂️', accent:'#e8b923'},
-                        {lbl:'Active',          v:active,           ico:'✅', accent:'#2d6a4f'},
-                        {lbl:'Out of Service',  v:oos,              ico:'🔧', accent:'#c0392b'},
-                        {lbl:'Labs Available',  v:resources.filter(r=>r.type==='LAB').length, ico:'🔬', accent:'#c47d0e'},
+                        {lbl:'Total Resources', v:resources.length,                              ico:'🗂️', accent:'#e8b923'},
+                        {lbl:'Active',          v:active,                                        ico:'✅', accent:'#2d6a4f'},
+                        {lbl:'Out of Service',  v:oos,                                           ico:'🔧', accent:'#c0392b'},
+                        {lbl:'Labs Available',  v:resources.filter(r=>r.type==='LAB').length,    ico:'🔬', accent:'#c47d0e'},
                     ].map((st,i) => (
-                        <div key={i} className="sa sh" style={{...S.sc, borderBottom:`3px solid ${st.accent}`}}>
+                        <div key={i} className="sa sh"
+                            style={{...S.sc, borderBottom:`3px solid ${st.accent}`}}>
                             <div style={S.scTop}>
                                 <span style={{fontSize:'28px'}}>{st.ico}</span>
                                 <span style={{...S.sv, color:st.accent}}>{st.v}</span>
@@ -226,25 +185,39 @@ export default function AdminResourcePage() {
                     ))}
                 </div>
 
+                {/* Active filter indicator */}
+                {activeFilter !== 'ALL' && (
+                    <div style={S.filterIndicator}>
+                        <span>🔍 Filtered by: <strong>{activeFilter.replace(/_/g,' ')}</strong></span>
+                        <button style={S.clearFilter}
+                            onClick={()=>{ handleSidebarFilter('ALL','ALL'); }}>
+                            ✕ Clear
+                        </button>
+                    </div>
+                )}
+
                 {/* Filter bar */}
                 <div style={S.fb}>
                     <span style={{fontSize:'14px',color:'#6b6b6b'}}>🎛️ Filters:</span>
-                    <select style={S.sel} value={typeF} onChange={e=>doFilter(e.target.value,statusF)}>
+                    <select style={S.sel} value={typeF}
+                        onChange={e=>{ doFilter(e.target.value,statusF); setActiveFilter(e.target.value); }}>
                         <option value="ALL">All Types</option>
                         <option value="LECTURE_HALL">🏛️ Lecture Hall</option>
                         <option value="LAB">🔬 Lab</option>
                         <option value="MEETING_ROOM">🤝 Meeting Room</option>
                         <option value="EQUIPMENT">📽️ Equipment</option>
                     </select>
-                    <select style={S.sel} value={statusF} onChange={e=>doFilter(typeF,e.target.value)}>
+                    <select style={S.sel} value={statusF}
+                        onChange={e=>{ doFilter(typeF,e.target.value); setActiveFilter(e.target.value); }}>
                         <option value="ALL">All Status</option>
                         <option value="ACTIVE">✅ Active</option>
                         <option value="OUT_OF_SERVICE">🔧 Out of Service</option>
                     </select>
-                    <button style={S.rb} onClick={()=>{doFilter('ALL','ALL');setSearch('');setNav('all');}}>
+                    <button style={S.rb}
+                        onClick={()=>{ doFilter('ALL','ALL'); setSearch(''); setActiveFilter('ALL'); }}>
                         ↺ Reset
                     </button>
-                    <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:'8px'}}>
+                    <div style={{marginLeft:'auto'}}>
                         <span style={S.cp}>{filtered.length} results</span>
                     </div>
                 </div>
@@ -279,7 +252,8 @@ export default function AdminResourcePage() {
                                 {filtered.map((r,i) => {
                                     const c = cfg(r.type);
                                     return (
-                                        <tr key={r.id} className="tr-c row-c" style={{borderBottom:'1px solid #f0ede6',animationDelay:`${i*.04}s`}}>
+                                        <tr key={r.id} className="tr-c row-c"
+                                            style={{borderBottom:'1px solid #f0ede6',animationDelay:`${i*.04}s`}}>
                                             <td style={S.td}>
                                                 <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
                                                     <div style={{...S.rib, background:c.bg}}>
@@ -292,7 +266,7 @@ export default function AdminResourcePage() {
                                                 </div>
                                             </td>
                                             <td style={S.td}>
-                                                <span style={{...S.tp, background:c.bg, color:c.color}}>
+                                                <span style={{...S.tp,background:c.bg,color:c.color}}>
                                                     {c.icon} {r.type?.replace(/_/g,' ')}
                                                 </span>
                                             </td>
@@ -302,9 +276,10 @@ export default function AdminResourcePage() {
                                             <td style={S.td}>
                                                 <span style={{
                                                     display:'inline-flex',alignItems:'center',gap:'5px',
-                                                    padding:'5px 12px',borderRadius:'20px',fontSize:'12px',fontWeight:'600',
-                                                    background: r.status==='ACTIVE'?'#1a1a1a':'#fff0ee',
-                                                    color:      r.status==='ACTIVE'?'#e8b923':'#c0392b',
+                                                    padding:'5px 12px',borderRadius:'20px',
+                                                    fontSize:'12px',fontWeight:'600',
+                                                    background:r.status==='ACTIVE'?'#1a1a1a':'#fff0ee',
+                                                    color:     r.status==='ACTIVE'?'#e8b923':'#c0392b',
                                                 }}>
                                                     {r.status==='ACTIVE'?'● ACTIVE':'● OUT OF SERVICE'}
                                                 </span>
@@ -326,9 +301,13 @@ export default function AdminResourcePage() {
 
             {/* ── FORM MODAL ── */}
             {showForm && (
-                <div style={S.ov} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+                <div style={S.ov}
+                    onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
                     <div className="min" style={S.mb}>
-                        <ResourceForm existingResource={editRes} onSave={onSave} onClose={onClose}/>
+                        <ResourceForm
+                            existingResource={editRes}
+                            onSave={onSave}
+                            onClose={onClose}/>
                     </div>
                 </div>
             )}
@@ -338,19 +317,7 @@ export default function AdminResourcePage() {
 
 const S = {
     layout:  {display:'flex',minHeight:'100vh',background:'#f5f3ee',fontFamily:"'DM Sans',sans-serif"},
-    sidebar: {width:'250px',background:'#fff',borderRight:'1px solid #e8e4da',display:'flex',flexDirection:'column',padding:'22px 14px',position:'fixed',top:0,left:0,bottom:0,zIndex:50,boxShadow:'2px 0 16px rgba(0,0,0,.05)'},
-    logo:    {display:'flex',alignItems:'center',gap:'10px',padding:'0 6px 22px',borderBottom:'1px solid #f0ede6',marginBottom:'16px'},
-    logoBox: {width:'40px',height:'40px',borderRadius:'12px',background:'#1a1a1a',display:'flex',alignItems:'center',justifyContent:'center'},
-    logoT:   {fontWeight:'700',fontSize:'15px',color:'#1a1a1a'},
-    logoS:   {fontSize:'11px',color:'#aaa',marginTop:'1px'},
-    navSec:  {marginBottom:'8px'},
-    navLbl:  {fontSize:'9px',fontWeight:'700',color:'#bbb',letterSpacing:'1.8px',textTransform:'uppercase',padding:'8px 12px 5px'},
-    nb:      {padding:'2px 8px',borderRadius:'20px',fontSize:'11px',fontWeight:'700'},
-    foot:    {marginTop:'auto',padding:'16px 6px 0',borderTop:'1px solid #f0ede6',display:'flex',alignItems:'center',gap:'10px'},
-    av:      {width:'36px',height:'36px',borderRadius:'50%',background:'#1a1a1a',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',fontWeight:'700',color:'#e8b923',flexShrink:0},
-    an:      {fontSize:'13px',fontWeight:'700',color:'#1a1a1a'},
-    ar:      {fontSize:'11px',color:'#aaa'},
-    main:    {marginLeft:'250px',flex:1,padding:'32px'},
+    main:    {marginLeft:'260px',flex:1,padding:'32px'},
     topbar:  {display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'28px'},
     welcome: {fontSize:'13px',color:'#aaa',marginBottom:'4px',fontWeight:'500'},
     title:   {fontSize:'30px',fontWeight:'700',color:'#1a1a1a',lineHeight:1.1},
@@ -359,11 +326,22 @@ const S = {
     sw:      {display:'flex',alignItems:'center',gap:'8px',background:'#fff',border:'1px solid #e8e4da',borderRadius:'12px',padding:'10px 16px',boxShadow:'0 1px 6px rgba(0,0,0,.04)'},
     si:      {background:'none',border:'none',outline:'none',fontSize:'13px',color:'#1a1a1a',width:'170px',fontFamily:"'DM Sans',sans-serif"},
     addBtn:  {background:'#e8b923',color:'#1a1a1a',border:'none',padding:'11px 22px',borderRadius:'12px',fontSize:'13.5px',fontWeight:'700',cursor:'pointer',boxShadow:'0 4px 12px rgba(232,185,35,.3)',fontFamily:"'DM Sans',sans-serif",transition:'all .2s ease'},
-    sg:      {display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'16px',marginBottom:'24px'},
+    sg:      {display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'16px',marginBottom:'20px'},
     sc:      {background:'#fff',borderRadius:'14px',padding:'20px',boxShadow:'0 1px 6px rgba(0,0,0,.04)',border:'1px solid #f0ede6'},
     scTop:   {display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'},
     sv:      {fontSize:'36px',fontWeight:'800'},
     sl:      {fontSize:'12px',color:'#aaa',fontWeight:'500'},
+    filterIndicator:{
+        display:'flex',alignItems:'center',justifyContent:'space-between',
+        background:'#fef3dc',border:'1px solid #f5d78a',
+        borderRadius:'10px',padding:'10px 16px',marginBottom:'14px',
+        fontSize:'13px',color:'#c47d0e',fontWeight:'500',
+    },
+    clearFilter:{
+        background:'none',border:'none',color:'#c47d0e',
+        cursor:'pointer',fontSize:'12px',fontWeight:'700',
+        fontFamily:"'DM Sans',sans-serif",
+    },
     fb:      {display:'flex',alignItems:'center',gap:'10px',background:'#fff',border:'1px solid #e8e4da',borderRadius:'12px',padding:'12px 18px',marginBottom:'20px',boxShadow:'0 1px 6px rgba(0,0,0,.04)'},
     sel:     {background:'#f5f3ee',border:'1px solid #e8e4da',color:'#1a1a1a',borderRadius:'8px',padding:'8px 12px',fontSize:'13px',outline:'none',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"},
     rb:      {background:'#fff0ee',border:'1px solid #ffd0cc',color:'#c0392b',borderRadius:'8px',padding:'8px 12px',fontSize:'12px',fontWeight:'600',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"},
