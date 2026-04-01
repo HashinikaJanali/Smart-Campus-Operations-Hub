@@ -2,16 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Edit3, Users, Loader2, Info } from 'lucide-react';
 import { getAllResources } from '../../services/resourceService';
 
-export default function BookingForm({ onSubmit, onClose, isLoading }) {
+export default function BookingForm({ onSubmit, onClose, isLoading, initialResourceId }) {
     const [resources, setResources] = useState([]);
     const [formData, setFormData] = useState({
-        resourceId: '',
+        resourceId: initialResourceId || '',
         bookingDate: '',
         startTime: '',
         endTime: '',
         purpose: '',
         attendees: 1
     });
+
+    useEffect(() => {
+        if (initialResourceId) {
+            setFormData(prev => ({ ...prev, resourceId: initialResourceId }));
+        }
+    }, [initialResourceId]);
 
     useEffect(() => {
         const fetchResources = async () => {
