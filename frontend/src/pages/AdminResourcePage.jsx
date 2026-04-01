@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllResources, deleteResource } from '../services/resourceService';
 import ResourceForm from '../components/resource/ResourceForm';
+import AdminSidebar from '../components/common/AdminSidebar';
 import {
     Building2, FlaskConical, Users, MonitorPlay,
     Archive, LayoutDashboard, FolderOpen, Plus,
@@ -16,6 +17,7 @@ const TC = {
 };
 const cfg = t => TC[t] || { icon: Archive, textClass: 'text-slate-600', bgClass: 'bg-slate-200', label: t };
 
+
 export default function AdminResourcePage() {
     const [resources, setResources] = useState([]);
     const [filtered, setFiltered] = useState([]);
@@ -25,7 +27,6 @@ export default function AdminResourcePage() {
     const [search, setSearch] = useState('');
     const [typeF, setTypeF] = useState('ALL');
     const [statusF, setStatusF] = useState('ALL');
-    const [nav, setNav] = useState('all');
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     useEffect(() => { load(); }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,103 +64,21 @@ export default function AdminResourcePage() {
     const doFilter = (t, st) => { setTypeF(t); setStatusF(st); flt(null, search, t, st); };
     const doSearch = s => { setSearch(s); flt(null, s, typeF, statusF); };
 
-    const navClick = k => {
-        setNav(k);
-        if (k === 'all') { doFilter('ALL', 'ALL'); setSearch(''); }
-        else if (k === 'add') { setEditRes(null); setShowForm(true); }
-        else if (k === 'active') { doFilter('ALL', 'ACTIVE'); }
-        else if (k === 'oos') { doFilter('ALL', 'OUT_OF_SERVICE'); }
-        else { setTypeF(k); flt(null, search, k, statusF); }
-    };
-
     const active = resources.filter(r => r.status === 'ACTIVE').length;
     const oos = resources.filter(r => r.status === 'OUT_OF_SERVICE').length;
 
     return (
         <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
-            {/* ── SIDEBAR ── */}
-            <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[#241571] bg-[#241571] shadow-sm text-white transition-all duration-300 ${sidebarOpen ? 'w-64 p-5' : 'w-20 p-4 items-center'}`}>
-                <div className={`mb-6 flex items-center border-b border-white/10 pb-5 w-full ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
-                    {sidebarOpen && (
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white shadow-md shadow-black/10">
-                                <LayoutDashboard className="h-5 w-5" />
-                            </div>
-                            <div className="overflow-hidden whitespace-nowrap">
-                                <div className="font-bold text-white">UniOps</div>
-                                <div className="mt-0.5 text-xs font-medium text-blue-200">Admin Panel</div>
-                            </div>
-                        </div>
-                    )}
-                    <button onClick={() => setSidebarOpen(!sidebarOpen)} className={`flex shrink-0 items-center justify-center rounded-lg transition-all ${sidebarOpen ? 'h-8 w-8 text-blue-200 hover:bg-white/10 hover:text-white' : 'h-10 w-10 bg-white/10 text-white shadow-md shadow-black/10 hover:bg-white/20'}`}>
-                        <Menu className="h-5 w-5" />
-                    </button>
-                </div>
+            {/* ── SHARED ADMIN SIDEBAR ── */}
+            <AdminSidebar 
+                isOpen={sidebarOpen} 
+                onToggle={() => setSidebarOpen(!sidebarOpen)} 
+                activePage="resources"
+            />
 
-                <div className="mb-6 w-full">
-                    {sidebarOpen ? (
-                        <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-[#93c5fd]">Manage</div>
-                    ) : (
-                        <div className="mb-2 border-t border-white/10 pt-2" />
-                    )}
-                    {[
-                        { k: 'all', ico: FolderOpen, lbl: 'All Resources', badge: resources.length },
-                        { k: 'add', ico: Plus, lbl: 'Add New Resource' },
-                        { k: 'active', ico: CheckCircle2, lbl: 'Active', badge: active },
-                        { k: 'oos', ico: Wrench, lbl: 'Out of Service', badge: oos },
-                    ].map(item => {
-                        const Icon = item.ico;
-                        return (
-                            <div key={item.k} onClick={() => navClick(item.k)} title={!sidebarOpen ? item.lbl : ''}
-                                className={`mb-1 flex cursor-pointer items-center rounded-lg text-sm font-medium transition-all ${sidebarOpen ? 'gap-3 px-3 py-2' : 'justify-center p-3'} ${nav === item.k ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-cyan-900/50' : 'text-blue-100 hover:bg-white/10 hover:text-white'}`}>
-                                <Icon className="h-5 w-5 shrink-0" />
-                                {sidebarOpen && <span className="flex-1 overflow-hidden whitespace-nowrap">{item.lbl}</span>}
-                                {sidebarOpen && item.badge != null && (
-                                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0 ${nav === item.k ? 'bg-white/20 text-white' : 'bg-white/10 text-white'}`}>
-                                        {item.badge}
-                                    </span>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <div className="mb-6 w-full">
-                    {sidebarOpen ? (
-                        <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-[#93c5fd]">By Type</div>
-                    ) : (
-                        <div className="mb-2 border-t border-white/10 pt-2" />
-                    )}
-                    {Object.entries(TC).map(([t, c]) => {
-                        const Icon = c.icon;
-                        return (
-                            <div key={t} onClick={() => navClick(t)} title={!sidebarOpen ? c.label : ''}
-                                className={`mb-1 flex cursor-pointer items-center rounded-lg text-sm font-medium transition-all ${sidebarOpen ? 'gap-3 px-3 py-2' : 'justify-center p-3'} ${nav === t ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-cyan-900/50' : 'text-blue-100 hover:bg-white/10 hover:text-white'}`}>
-                                <Icon className="h-5 w-5 shrink-0" />
-                                {sidebarOpen && <span className="flex-1 overflow-hidden whitespace-nowrap">{c.label}</span>}
-                                {sidebarOpen && (
-                                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0 ${nav === t ? 'bg-white/20 text-white' : 'bg-white/10 text-white'}`}>
-                                        {resources.filter(r => r.type === t).length}
-                                    </span>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <div className={`mt-auto flex items-center border-t border-white/10 pt-4 w-full ${sidebarOpen ? 'gap-3' : 'justify-center'}`}>
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-[#241571]">A</div>
-                    {sidebarOpen && (
-                        <div className="overflow-hidden whitespace-nowrap">
-                            <div className="text-sm font-bold text-white">Admin User</div>
-                            <div className="text-xs text-blue-200 truncate">System Administrator</div>
-                        </div>
-                    )}
-                </div>
-            </aside>
 
             {/* ── MAIN ── */}
-            <main className={`flex-1 p-8 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
+            <main className={`flex-1 p-8 transition-all duration-300 ${sidebarOpen ? 'ml-[265px]' : 'ml-20'}`}>
                 {/* Topbar */}
                 <div className="mb-8 flex items-start justify-between">
                     <div>
@@ -228,7 +147,7 @@ export default function AdminResourcePage() {
                         <option value="OUT_OF_SERVICE">Out of Service</option>
                     </select>
                     <button className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-100"
-                        onClick={() => { doFilter('ALL', 'ALL'); setSearch(''); setNav('all'); }}>
+                        onClick={() => { doFilter('ALL', 'ALL'); setSearch(''); }}>
                         <RefreshCcw className="h-3 w-3" /> Reset
                     </button>
                     <div className="ml-auto flex items-center gap-2">

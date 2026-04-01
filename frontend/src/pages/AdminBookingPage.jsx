@@ -3,12 +3,15 @@ import { Clock, CheckCircle2, XCircle, AlertCircle, MapPin, CalendarDays, Eye, L
 import { getAllBookings, updateBookingStatus } from '../services/bookingService';
 import ReviewModal from '../components/booking/ReviewModal';
 
+import AdminSidebar from '../components/common/AdminSidebar';
+
 export default function AdminBookingPage() {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [reviewing, setReviewing] = useState(null);
     const [processing, setProcessing] = useState(false);
     const [activeTab, setActiveTab] = useState('PENDING');
+    const [sidebarOpen, setSidebarOpen] = useState(true);
 
     useEffect(() => { loadAllBookings(); }, []);
 
@@ -43,17 +46,27 @@ export default function AdminBookingPage() {
     const displayed = bookings.filter(b => b.status === activeTab);
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col p-8 items-center">
+        <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+            <AdminSidebar 
+                isOpen={sidebarOpen} 
+                onToggle={() => setSidebarOpen(!sidebarOpen)} 
+                activePage="bookings"
+            />
             
-            <div className="w-full max-w-7xl">
-                {/* Header */}
-                <div className="flex justify-between items-end mb-12">
+            {/* ── MAIN CONTENT ── */}
+            <main className={`flex-1 p-10 transition-all duration-300 ${sidebarOpen ? 'ml-[265px]' : 'ml-20'}`}>
+                
+                {/* Dashboard Header */}
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-12 gap-8">
                     <div>
-                        <h1 className="text-4xl font-black text-slate-900">
-                            Command Center
+                        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-600 border border-indigo-100 shadow-sm">
+                            <Clock className="w-3.5 h-3.5" /> Booking Control
+                        </div>
+                        <h1 className="text-4xl font-black text-slate-900 leading-tight">
+                            Request <span className="text-indigo-600">Queue</span>
                         </h1>
-                        <p className="text-slate-500 mt-2 font-medium tracking-wide">
-                            Facilities {"&"} Equipment Authority Review
+                        <p className="text-slate-500 mt-2 font-medium">
+                            Manage and review campus resource reservations.
                         </p>
                     </div>
 
@@ -62,7 +75,7 @@ export default function AdminBookingPage() {
                             <button 
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`relative px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === tab ? 'text-indigo-700 bg-indigo-50 shadow-sm border border-indigo-100' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent'}`}
+                                className={`relative px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === tab ? 'text-indigo-700 bg-indigo-50 shadow-sm border border-indigo-100' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50 border border-transparent'}`}
                             >
                                 <span className="relative z-10 flex items-center gap-2">
                                     {tab}
@@ -78,7 +91,8 @@ export default function AdminBookingPage() {
                 </div>
 
                 {/* Content Area */}
-                <main className="flex-1">
+                <div>
+
                     {loading ? (
                         <div className="flex flex-col items-center justify-center h-64">
                             <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
@@ -160,8 +174,8 @@ export default function AdminBookingPage() {
                             ))}
                         </div>
                     )}
-                </main>
-            </div>
+                </div>
+            </main>
 
             {/* Modal Layer */}
             {reviewing && (
