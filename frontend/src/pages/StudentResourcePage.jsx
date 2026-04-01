@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAllResources } from '../services/resourceService';
+import UserHeader from '../components/common/UserHeader';
 import {
     Building2, FlaskConical, Users, MonitorPlay, Archive,
     GraduationCap, Search, RefreshCw, CheckCircle2,
@@ -52,6 +53,7 @@ export default function StudentResourcePage() {
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+            <UserHeader />
             {/* ── HERO ── */}
             <div className="relative overflow-hidden border-b border-[#1c105c] bg-[#241571] px-10 py-12">
                 {/* Decorative shapes */}
