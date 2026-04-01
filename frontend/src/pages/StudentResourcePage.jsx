@@ -85,32 +85,32 @@ export default function StudentResourcePage() {
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
             <UserHeader />
             {/* ── HERO ── */}
-            <div className="relative overflow-hidden border-b border-[#1c105c] bg-[#241571] px-10 py-12">
+            <div className="relative overflow-hidden border-b border-[#241571] bg-gradient-to-br from-[#1c105c] via-[#241571] to-[#2e1a8a] px-10 py-14">
                 {/* Decorative shapes */}
-                <div className="absolute -top-16 right-[10%] h-64 w-64 rounded-full bg-blue-500/20 blur-3xl animate-pulse" />
-                <div className="absolute -bottom-10 right-[5%] h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl pointer-events-none" />
-                <div className="absolute top-[30%] right-[45%] h-32 w-32 rounded-full bg-blue-400/20 blur-2xl pointer-events-none" />
+                <div className="absolute -top-16 right-[10%] h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl animate-pulse" />
+                <div className="absolute -bottom-10 right-[5%] h-56 w-56 rounded-full bg-blue-400/5 blur-3xl pointer-events-none" />
+                <div className="absolute top-[30%] right-[45%] h-32 w-32 rounded-full bg-indigo-400/10 blur-2xl pointer-events-none" />
 
                 <div className="relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-10">
                     <div className="flex-1">
-                        <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold tracking-wide text-blue-200 shadow-sm backdrop-blur-md border border-white/5">
+                        <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3.5 py-1.5 text-xs font-bold tracking-wide text-indigo-200 shadow-sm backdrop-blur-md border border-white/5">
                             <GraduationCap className="h-4 w-4" /> Student Portal
                         </div>
-                        <h1 className="mb-3 text-5xl font-extrabold leading-tight text-white">
+                        <h1 className="mb-3 text-5xl font-black leading-tight text-white tracking-tight">
                             Find the perfect<br />
-                            <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">campus space</span>
+                            <span className="bg-gradient-to-r from-indigo-400 to-blue-300 bg-clip-text text-transparent underline decoration-indigo-500/20 underline-offset-8">campus space</span>
                         </h1>
-                        <p className="mb-6 max-w-lg text-base leading-relaxed text-blue-100">
-                            Discover available lecture halls, labs, meeting rooms and equipment across campus.
+                        <p className="mb-8 max-w-lg text-base font-medium leading-relaxed text-indigo-100/70">
+                            Discover and reserve available lecture halls, labs, and equipment instantly across our campus.
                         </p>
-                        <div className="flex max-w-lg items-center gap-3 rounded-2xl border border-white/20 bg-white/10 p-2 shadow-inner backdrop-blur-md focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/20 hover:bg-white/20 transition-all">
-                            <Search className="ml-2 h-5 w-5 text-blue-200" />
-                            <input className="flex-1 bg-transparent text-sm text-white placeholder-blue-300 outline-none"
+                        <div className="flex max-w-lg items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-2 shadow-inner backdrop-blur-md focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-400/20 hover:bg-white/10 transition-all">
+                            <Search className="ml-2 h-5 w-5 text-indigo-300" />
+                            <input className="flex-1 bg-transparent text-sm text-white placeholder-indigo-300 outline-none"
                                 placeholder="Search rooms, labs, equipment..."
                                 value={search} onChange={handleSearch} />
-                            <button className="flex items-center justify-center rounded-xl bg-blue-500 p-2 text-white shadow-md transition-all hover:bg-blue-400 hover:scale-105"
+                            <button className="flex items-center justify-center rounded-xl bg-indigo-600 p-2 text-white shadow-md transition-all hover:bg-indigo-500 hover:scale-105 active:scale-95"
                                 onClick={load} title="Refresh">
-                                <RefreshCw className="h-4 w-4" />
+                                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                             </button>
                         </div>
                     </div>
@@ -119,16 +119,16 @@ export default function StudentResourcePage() {
                     <div className="grid shrink-0 grid-cols-2 gap-3 animate-in fade-in slide-in-from-right-4 duration-700">
                         {[
                             { lbl: 'Available', v: resources.length, ico: CheckCircle2, textClass: 'text-emerald-400' },
-                            { lbl: 'Halls', v: resources.filter(r => r.type === 'LECTURE_HALL').length, ico: Building2, textClass: 'text-blue-300' },
-                            { lbl: 'Labs', v: resources.filter(r => r.type === 'LAB').length, ico: FlaskConical, textClass: 'text-cyan-300' },
-                            { lbl: 'Rooms', v: resources.filter(r => r.type === 'MEETING_ROOM').length, ico: Users, textClass: 'text-teal-300' },
+                            { lbl: 'Halls', v: resources.filter(r => r.type === 'LECTURE_HALL').length, ico: Building2, textClass: 'text-indigo-300' },
+                            { lbl: 'Labs', v: resources.filter(r => r.type === 'LAB').length, ico: FlaskConical, textClass: 'text-blue-300' },
+                            { lbl: 'Rooms', v: resources.filter(r => r.type === 'MEETING_ROOM').length, ico: Users, textClass: 'text-indigo-200' },
                         ].map((st, i) => {
                             const Icon = st.ico;
                             return (
-                                <div key={i} className="flex min-w-[110px] flex-col items-center gap-1 rounded-2xl border border-white/10 bg-white/10 p-5 shadow-lg backdrop-blur-md transition-all hover:bg-white/20 hover:-translate-y-1">
-                                    <Icon className={`h-8 w-8 ${st.textClass || 'text-blue-300'}`} />
-                                    <span className="text-3xl font-extrabold text-white">{st.v}</span>
-                                    <span className="text-[11px] font-bold text-blue-200 uppercase tracking-widest">{st.lbl}</span>
+                                <div key={i} className="flex min-w-[110px] flex-col items-center gap-1 rounded-2xl border border-white/5 bg-white/5 p-5 shadow-lg backdrop-blur-md transition-all hover:bg-white/10 hover:-translate-y-1">
+                                    <Icon className={`h-8 w-8 ${st.textClass}`} />
+                                    <span className="text-3xl font-black text-white">{st.v}</span>
+                                    <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">{st.lbl}</span>
                                 </div>
                             );
                         })}
