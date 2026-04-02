@@ -4,17 +4,20 @@ import { Bell, User, LayoutDashboard, Home, BookOpen, Calendar, Ticket } from 'l
 
 const UserHeader = () => {
   return (
-    <header className="sticky top-0 z-[100] w-full border-b border-slate-200 bg-white/90 backdrop-blur-md shadow-sm transition-all duration-300">
+    <header className="sticky top-0 z-[100] w-full border-b border-white/10 bg-[#241571] shadow-lg transition-all duration-300">
       <div className="flex h-20 w-full items-center justify-between px-12">
 
         {/* Left Side: Logo & Title */}
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 shadow-md shadow-indigo-200 transition-transform hover:scale-105">
-            <LayoutDashboard className="h-6 w-6 text-white" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white shadow-md shadow-black/10 border border-white/5 transition-transform hover:scale-105">
+            <LayoutDashboard className="h-5 w-5" />
           </div>
-          <span className="text-xl font-black tracking-tight text-slate-800">
-            Uni<span className="text-indigo-600">Ops</span>
-          </span>
+          <div className="flex flex-col">
+            <span className="text-xl font-black tracking-tight text-white leading-none">
+              Uni<span className="text-blue-400">Ops</span>
+            </span>
+            <span className="mt-0.5 text-[10px] font-bold uppercase tracking-tighter text-blue-300/60">Campus Hub</span>
+          </div>
         </div>
 
         {/* Middle: Navigation Links */}
@@ -22,7 +25,9 @@ const UserHeader = () => {
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all ${isActive ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+              `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive 
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40' 
+                : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
               }`
             }
           >
@@ -31,7 +36,9 @@ const UserHeader = () => {
           <NavLink
             to="/resoursestudent"
             className={({ isActive }) =>
-              `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all ${isActive ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+              `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive 
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40' 
+                : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
               }`
             }
           >
@@ -40,7 +47,9 @@ const UserHeader = () => {
           <NavLink
             to="/student-bookings"
             className={({ isActive }) =>
-              `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all ${isActive ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+              `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive 
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40' 
+                : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
               }`
             }
           >
@@ -48,7 +57,7 @@ const UserHeader = () => {
           </NavLink>
           <NavLink
             to="#"
-            className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-slate-500 transition-all hover:bg-slate-50 hover:text-slate-900"
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-blue-100/70 transition-all duration-200 hover:bg-white/10 hover:text-white"
           >
             <Ticket className="h-4 w-4" /> Tickets
           </NavLink>
@@ -56,20 +65,20 @@ const UserHeader = () => {
 
         {/* Right Side: Notification & Profile */}
         <div className="flex items-center gap-4">
-          <button className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 shadow-sm">
+          <button className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-blue-300 transition-all hover:bg-white/10 hover:text-white shadow-sm">
             <Bell className="h-5 w-5" />
-            <span className="absolute top-2.5 right-2.5 flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white"></span>
+            <span className="absolute top-2.5 right-2.5 flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-[#241571]"></span>
           </button>
 
-          <div className="h-8 w-px bg-slate-200"></div>
+          <div className="h-8 w-px bg-white/10"></div>
 
-          <button className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-1 pr-4 shadow-sm transition-all hover:border-indigo-200 hover:shadow-md">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold text-sm">
+          <button className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-1 pr-4 shadow-sm transition-all hover:bg-white/10 hover:border-white/20">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold text-sm shadow-md">
               <User className="h-5 w-5" />
             </div>
             <div className="flex flex-col items-start leading-tight">
-              <span className="text-sm font-bold text-slate-700">John Doe</span>
-              <span className="text-[10px] font-medium text-slate-400">User Profile</span>
+              <span className="text-sm font-bold text-white">John Doe</span>
+              <span className="text-[10px] font-bold uppercase tracking-tight text-blue-400/80">User Profile</span>
             </div>
           </button>
         </div>
