@@ -45,8 +45,10 @@ export default function AdminSidebar({ isOpen, onToggle, activePage }) {
                             <LayoutDashboard className="h-5 w-5" />
                         </div>
                         <div className="overflow-hidden whitespace-nowrap text-left">
-                            <div className="font-black text-white text-lg tracking-tight">UniOps</div>
-                            <div className="mt-0.5 text-[10px] font-bold uppercase tracking-tighter text-blue-300/80">Admin Panel</div>
+                            <div className="font-black tracking-tight text-white text-lg leading-none">
+                                Uni<span className="text-blue-400">Ops</span>
+                            </div>
+                            <div className="mt-1 text-[10px] font-bold uppercase tracking-tighter text-blue-300/60">Admin Panel</div>
                         </div>
                     </div>
                 )}

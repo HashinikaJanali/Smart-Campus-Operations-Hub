@@ -144,7 +144,7 @@ export default function HomePage() {
             </section>
 
             {/* ── CALL TO ACTION ── */}
-            <section className="py-14 animate-in fade-in duration-1000">
+            <section className="py-14 bg-indigo-100/40 border-y border-indigo-200/50 animate-in fade-in duration-1000">
                 <div className="mx-auto max-w-7xl px-8">
                     <div className="group text-center rounded-[3rem] bg-gradient-to-br from-black via-slate-900 to-indigo-900 p-12 sm:p-16 shadow-2xl relative overflow-hidden ring-1 ring-white/10 transition-all duration-700 hover:shadow-indigo-500/20">
                         <div className="absolute top-0 right-0 h-96 w-96 bg-indigo-500/20 blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:scale-110 transition-transform duration-1000" />
