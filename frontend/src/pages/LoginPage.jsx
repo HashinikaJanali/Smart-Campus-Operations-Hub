@@ -17,7 +17,7 @@ export default function LoginPage() {
         </div>
 
         <h1 className="text-2xl font-black text-slate-900 mb-2">
-          Uni<span className="text-indigo-600">Ops</span>
+          Welcome to Uni<span className="text-indigo-600">Ops</span>
         </h1>
         <p className="text-sm text-slate-500 font-medium mb-8">
           Smart Campus Operations Hub
