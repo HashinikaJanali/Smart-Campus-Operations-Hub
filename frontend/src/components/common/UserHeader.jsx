@@ -56,8 +56,13 @@ const UserHeader = () => {
             <Calendar className="h-4 w-4" /> Bookings
           </NavLink>
           <NavLink
-            to="#"
-            className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-blue-100/70 transition-all duration-200 hover:bg-white/10 hover:text-white"
+            to="/tickets"
+            className={({ isActive }) =>
+              `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive 
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40' 
+                : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
+              }`
+            }
           >
             <Ticket className="h-4 w-4" /> Tickets
           </NavLink>
