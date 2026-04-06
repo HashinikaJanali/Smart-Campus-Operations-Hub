@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { getAllResources, deleteResource } from '../services/resourceService';
 import ResourceForm from '../components/resource/ResourceForm';
+
 import Sidebar from '../components/common/sidebar';
+import AdminSidebar from '../components/common/AdminSidebar';
+import {
+    Building2, FlaskConical, Users, MonitorPlay,
+    Archive, LayoutDashboard, FolderOpen, Plus,
+    CheckCircle2, Wrench, Search, ClipboardList,
+    MapPin, Clock, Edit, Trash2, Loader2, RefreshCcw, Menu
+} from 'lucide-react';
 
 const injectStyles = () => {
     if (document.getElementById('crex-admin')) return;
@@ -49,13 +57,7 @@ const injectStyles = () => {
     document.head.appendChild(s);
 };
 
-import AdminSidebar from '../components/common/AdminSidebar';
-import {
-    Building2, FlaskConical, Users, MonitorPlay,
-    Archive, LayoutDashboard, FolderOpen, Plus,
-    CheckCircle2, Wrench, Search, ClipboardList,
-    MapPin, Clock, Edit, Trash2, Loader2, RefreshCcw, Menu
-} from 'lucide-react';
+
 
 
 const TC = {
@@ -68,15 +70,7 @@ const cfg = t => TC[t] || { icon:'📦', color:'#6b6b6b', bg:'#f0ede6', label: t
 
 
 export default function AdminResourcePage() {
-    const [resources,    setResources]    = useState([]);
-    const [filtered,     setFiltered]     = useState([]);
-    const [showForm,     setShowForm]     = useState(false);
-    const [editRes,      setEditRes]      = useState(null);
-    const [loading,      setLoading]      = useState(true);
-    const [search,       setSearch]       = useState('');
-    const [typeF,        setTypeF]        = useState('ALL');
-    const [statusF,      setStatusF]      = useState('ALL');
-    const [activeFilter, setActiveFilter] = useState('ALL');
+
     const [resources, setResources] = useState([]);
     const [filtered, setFiltered] = useState([]);
     const [showForm, setShowForm] = useState(false);
@@ -85,6 +79,7 @@ export default function AdminResourcePage() {
     const [search, setSearch] = useState('');
     const [typeF, setTypeF] = useState('ALL');
     const [statusF, setStatusF] = useState('ALL');
+    const [activeFilter, setActiveFilter] = useState('ALL');
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     useEffect(() => { injectStyles(); load(); }, []);
@@ -124,6 +119,7 @@ export default function AdminResourcePage() {
         flt(null, search, t, st);
     };
 
+
     const doSearch = s => {
         setSearch(s);
         flt(null, s, typeF, statusF);
@@ -139,26 +135,12 @@ export default function AdminResourcePage() {
         setShowForm(true);
     };
 
-    const active = resources.filter(r => r.status === 'ACTIVE').length;
-    const oos    = resources.filter(r => r.status === 'OUT_OF_SERVICE').length;
-
-    return (
-        <div className="ca" style={S.layout}>
-
-            {/* ── SIDEBAR ── */}
-            <Sidebar
-                onFilterChange={handleSidebarFilter}
-                onAddResource={handleSidebarAdd}
-                activeFilter={activeFilter}
-            />
-
-            {/* ── MAIN ── */}
-            <main style={S.main}>
 
     const active = resources.filter(r => r.status === 'ACTIVE').length;
     const oos = resources.filter(r => r.status === 'OUT_OF_SERVICE').length;
 
     return (
+
         <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
             {/* ── SHARED ADMIN SIDEBAR ── */}
             <AdminSidebar 
@@ -251,11 +233,8 @@ export default function AdminResourcePage() {
                         <option value="ACTIVE">✅ Active</option>
                         <option value="OUT_OF_SERVICE">🔧 Out of Service</option>
                     </select>
-                    <button style={S.rb}
-                        onClick={() => { doFilter('ALL','ALL'); setSearch(''); setActiveFilter('ALL'); }}>
-                        ↺ Reset
                     <button className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-100"
-                        onClick={() => { doFilter('ALL', 'ALL'); setSearch(''); }}>
+                        onClick={() => { doFilter('ALL', 'ALL'); setSearch(''); setActiveFilter('ALL'); }}>
                         <RefreshCcw className="h-3 w-3" /> Reset
                     </button>
                     <div style={{marginLeft:'auto'}}>

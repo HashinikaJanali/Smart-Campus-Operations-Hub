@@ -119,14 +119,26 @@ export default function ResourceForm({ existingResource, onSave, onClose }) {
 
             <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                    <label className="mb-1.5 flex items-center gap-1 block text-[11px] font-bold uppercase tracking-widest text-slate-500"><Clock className="h-3 w-3"/> Available From</label>
-                    <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100" 
-                        name="availableFrom" type="time" value={formData.availableFrom} onChange={handleChange} />
+                    <label className="mb-1.5 flex items-center gap-1 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                        <Clock className="h-3 w-3"/> 
+                        {formData.status === 'OUT_OF_SERVICE' ? 'Unavailable' : 'Available From'}
+                    </label>
+                    <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:opacity-50 disabled:cursor-not-allowed" 
+                        name="availableFrom" type="time" 
+                        value={formData.status === 'OUT_OF_SERVICE' ? '' : formData.availableFrom} 
+                        onChange={handleChange}
+                        disabled={formData.status === 'OUT_OF_SERVICE'} />
                 </div>
                 <div>
-                    <label className="mb-1.5 flex items-center gap-1 block text-[11px] font-bold uppercase tracking-widest text-slate-500"><Clock className="h-3 w-3"/> Available To</label>
-                    <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100" 
-                        name="availableTo" type="time" value={formData.availableTo} onChange={handleChange} />
+                    <label className="mb-1.5 flex items-center gap-1 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                        <Clock className="h-3 w-3"/> 
+                        {formData.status === 'OUT_OF_SERVICE' ? 'Unavailable' : 'Available To'}
+                    </label>
+                    <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 disabled:opacity-50 disabled:cursor-not-allowed" 
+                        name="availableTo" type="time" 
+                        value={formData.status === 'OUT_OF_SERVICE' ? '' : formData.availableTo} 
+                        onChange={handleChange}
+                        disabled={formData.status === 'OUT_OF_SERVICE'} />
                 </div>
             </div>
 
