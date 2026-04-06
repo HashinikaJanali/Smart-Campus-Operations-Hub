@@ -13,61 +13,53 @@ public class ResourceService {
     @Autowired
     private ResourceRepository resourceRepository;
 
-    // GET ALL
     public List<ResourceModel> getAllResources() {
         return resourceRepository.findAll();
     }
 
-    // GET BY ID
-    public ResourceModel getResourceById(Long id) {
+    public ResourceModel getResourceById(String id) {
         return resourceRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(id));
+                        new ResourceNotFoundException("Resource not found: " + id));
     }
 
-    // GET BY TYPE
     public List<ResourceModel> getResourcesByType(String type) {
         return resourceRepository.findByType(type);
     }
 
-    // GET BY STATUS
     public List<ResourceModel> getResourcesByStatus(String status) {
         return resourceRepository.findByStatus(status);
     }
 
-    // GET BY LOCATION
     public List<ResourceModel> getResourcesByLocation(String location) {
         return resourceRepository.findByLocation(location);
     }
 
-    // ADD NEW RESOURCE
-    public ResourceModel addResource(ResourceModel resourceModel) {
-        return resourceRepository.save(resourceModel);
-    }
-
-    // UPDATE RESOURCE
-    public ResourceModel updateResource(Long id, ResourceModel updatedResource) {
-        ResourceModel resource = resourceRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(id));
-
-        resource.setName(updatedResource.getName());
-        resource.setType(updatedResource.getType());
-        resource.setLocation(updatedResource.getLocation());
-        resource.setCapacity(updatedResource.getCapacity());
-        resource.setStatus(updatedResource.getStatus());
-        resource.setAvailableFrom(updatedResource.getAvailableFrom());
-        resource.setAvailableTo(updatedResource.getAvailableTo());
-        resource.setDescription(updatedResource.getDescription());
-
+    public ResourceModel addResource(ResourceModel resource) {
         return resourceRepository.save(resource);
     }
 
-    // DELETE RESOURCE
-    public void deleteResource(Long id) {
-        ResourceModel resource = resourceRepository.findById(id)
+    public ResourceModel updateResource(String id, ResourceModel updated) {
+        ResourceModel existing = resourceRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(id));
-        resourceRepository.delete(resource);
+                        new ResourceNotFoundException("Resource not found: " + id));
+
+        existing.setName(updated.getName());
+        existing.setType(updated.getType());
+        existing.setLocation(updated.getLocation());
+        existing.setCapacity(updated.getCapacity());
+        existing.setStatus(updated.getStatus());
+        existing.setAvailableFrom(updated.getAvailableFrom());
+        existing.setAvailableTo(updated.getAvailableTo());
+        existing.setDescription(updated.getDescription());
+
+        return resourceRepository.save(existing);
+    }
+
+    public void deleteResource(String id) {
+        ResourceModel existing = resourceRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Resource not found: " + id));
+        resourceRepository.delete(existing);
     }
 }

@@ -4,11 +4,7 @@ module.exports = {
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
-    extend: {
-      fontFamily: {
-        sans: ['DM Sans', 'sans-serif'],
-      },
-    },
+    extend: {},
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [],
 }
