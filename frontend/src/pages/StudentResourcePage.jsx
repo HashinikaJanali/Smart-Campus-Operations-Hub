@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getAllResources } from '../services/resourceService';
+import { createBooking } from '../services/bookingService';
+import UserHeader from '../components/common/UserHeader';
+import BookingForm from '../components/booking/BookingForm';
 import {
     Building2, FlaskConical, Users, MonitorPlay, Archive,
     GraduationCap, Search, RefreshCw, CheckCircle2,
@@ -23,6 +26,11 @@ export default function StudentResourcePage() {
     const [search, setSearch] = useState('');
     const [typeF, setTypeF] = useState('ALL');
     const [selected, setSelected] = useState(null);
+
+    // Booking form state
+    const [isBooking, setIsBooking] = useState(false);
+    const [bookingResource, setBookingResource] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => { load(); }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
 
@@ -50,53 +58,77 @@ export default function StudentResourcePage() {
     const handleType = t => { setTypeF(t); applyFilter(t, search); };
     const handleSearch = e => { setSearch(e.target.value); applyFilter(typeF, e.target.value); };
 
+    // Booking Handlers
+    const handleBookNow = (e, resource) => {
+        e.stopPropagation();
+        setBookingResource(resource);
+        setIsBooking(true);
+    };
+
+    const handleBookingSubmit = async (formData) => {
+        try {
+            setIsSubmitting(true);
+            const userId = localStorage.getItem('userId') || 'STU001'; // Fallback for demo
+            const bookingData = { ...formData, userId };
+            await createBooking(bookingData);
+            alert('Booking request sent successfully! You can track its status in the Bookings page.');
+            setIsBooking(false);
+            setBookingResource(null);
+        } catch (error) {
+            alert(error.response?.data || "Failed to submit booking request. Please check availability.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+            <UserHeader />
             {/* ── HERO ── */}
-            <div className="relative overflow-hidden border-b border-[#1c105c] bg-[#241571] px-10 py-12">
-                {/* Decorative shapes */}
-                <div className="absolute -top-16 right-[10%] h-64 w-64 rounded-full bg-blue-500/20 blur-3xl animate-pulse" />
-                <div className="absolute -bottom-10 right-[5%] h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl pointer-events-none" />
-                <div className="absolute top-[30%] right-[45%] h-32 w-32 rounded-full bg-blue-400/20 blur-2xl pointer-events-none" />
+            <div className="relative overflow-hidden border-b border-indigo-200/50 bg-indigo-100/50 px-10 py-14">
+                {/* Decorative background shapes */}
+                <div className="absolute -top-16 right-[10%] h-64 w-64 rounded-full bg-indigo-100/50 blur-3xl" />
+                <div className="absolute -bottom-10 right-[5%] h-56 w-56 rounded-full bg-blue-50/50 blur-3xl pointer-events-none" />
+                <div className="absolute top-[30%] right-[45%] h-32 w-32 rounded-full bg-indigo-50/50 blur-2xl pointer-events-none" />
 
                 <div className="relative z-10 mx-auto flex max-w-6xl items-center justify-between gap-10">
                     <div className="flex-1">
-                        <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold tracking-wide text-blue-200 shadow-sm backdrop-blur-md border border-white/5">
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-indigo-100 px-3.5 py-1.5 text-xs font-black uppercase tracking-widest text-indigo-700 shadow-sm border border-indigo-200/50">
                             <GraduationCap className="h-4 w-4" /> Student Portal
                         </div>
-                        <h1 className="mb-3 text-5xl font-extrabold leading-tight text-white">
+                        <h1 className="mb-3 text-5xl font-black leading-tight text-slate-900 tracking-tight">
                             Find the perfect<br />
-                            <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">campus space</span>
+                            <span className="text-indigo-600 underline decoration-indigo-200 underline-offset-8">campus space</span>
                         </h1>
-                        <p className="mb-6 max-w-lg text-base leading-relaxed text-blue-100">
-                            Discover available lecture halls, labs, meeting rooms and equipment across campus.
+                        <p className="mb-8 max-w-lg text-base font-medium leading-relaxed text-slate-500">
+                            Discover and reserve available lecture halls, labs, and equipment instantly across our campus.
                         </p>
-                        <div className="flex max-w-lg items-center gap-3 rounded-2xl border border-white/20 bg-white/10 p-2 shadow-inner backdrop-blur-md focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/20 hover:bg-white/20 transition-all">
-                            <Search className="ml-2 h-5 w-5 text-blue-200" />
-                            <input className="flex-1 bg-transparent text-sm text-white placeholder-blue-300 outline-none"
+                        <div className="flex max-w-lg items-center gap-3 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-indigo-100/20 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-400/10 transition-all">
+                            <Search className="ml-2 h-5 w-5 text-slate-400" />
+                            <input className="flex-1 bg-transparent text-sm text-slate-900 placeholder-slate-400 outline-none"
                                 placeholder="Search rooms, labs, equipment..."
                                 value={search} onChange={handleSearch} />
-                            <button className="flex items-center justify-center rounded-xl bg-blue-500 p-2 text-white shadow-md transition-all hover:bg-blue-400 hover:scale-105"
+                            <button className="flex items-center justify-center rounded-xl bg-indigo-600 p-2 text-white shadow-md transition-all hover:bg-indigo-700 hover:scale-105 active:scale-95"
                                 onClick={load} title="Refresh">
-                                <RefreshCw className="h-4 w-4" />
+                                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                             </button>
                         </div>
                     </div>
 
                     {/* Hero stats */}
-                    <div className="grid shrink-0 grid-cols-2 gap-3 animate-in fade-in slide-in-from-right-4 duration-700">
+                    <div className="grid shrink-0 grid-cols-2 gap-4 animate-in fade-in slide-in-from-right-4 duration-700">
                         {[
-                            { lbl: 'Available', v: resources.length, ico: CheckCircle2, textClass: 'text-emerald-400' },
-                            { lbl: 'Halls', v: resources.filter(r => r.type === 'LECTURE_HALL').length, ico: Building2, textClass: 'text-blue-300' },
-                            { lbl: 'Labs', v: resources.filter(r => r.type === 'LAB').length, ico: FlaskConical, textClass: 'text-cyan-300' },
-                            { lbl: 'Rooms', v: resources.filter(r => r.type === 'MEETING_ROOM').length, ico: Users, textClass: 'text-teal-300' },
+                            { lbl: 'Available', v: resources.length, ico: CheckCircle2, textClass: 'text-emerald-500', bgClass: 'bg-emerald-50', borderClass: 'border-emerald-100' },
+                            { lbl: 'Halls', v: resources.filter(r => r.type === 'LECTURE_HALL').length, ico: Building2, textClass: 'text-indigo-600', bgClass: 'bg-indigo-50', borderClass: 'border-indigo-100' },
+                            { lbl: 'Labs', v: resources.filter(r => r.type === 'LAB').length, ico: FlaskConical, textClass: 'text-blue-600', bgClass: 'bg-blue-50', borderClass: 'border-blue-100' },
+                            { lbl: 'Rooms', v: resources.filter(r => r.type === 'MEETING_ROOM').length, ico: Users, textClass: 'text-slate-600', bgClass: 'bg-slate-50', borderClass: 'border-slate-200' },
                         ].map((st, i) => {
                             const Icon = st.ico;
                             return (
-                                <div key={i} className="flex min-w-[110px] flex-col items-center gap-1 rounded-2xl border border-white/10 bg-white/10 p-5 shadow-lg backdrop-blur-md transition-all hover:bg-white/20 hover:-translate-y-1">
-                                    <Icon className={`h-8 w-8 ${st.textClass || 'text-blue-300'}`} />
-                                    <span className="text-3xl font-extrabold text-white">{st.v}</span>
-                                    <span className="text-[11px] font-bold text-blue-200 uppercase tracking-widest">{st.lbl}</span>
+                                <div key={i} className={`flex min-w-[125px] flex-col items-center gap-1 rounded-3xl border ${st.borderClass} ${st.bgClass} p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-1`}>
+                                    <Icon className={`h-8 w-8 ${st.textClass}`} />
+                                    <span className="text-3xl font-black text-slate-900">{st.v}</span>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${st.textClass} opacity-70`}>{st.lbl}</span>
                                 </div>
                             );
                         })}
@@ -128,7 +160,7 @@ export default function StudentResourcePage() {
                         return (
                             <button key={t} onClick={() => handleType(t)}
                                 className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all shadow-sm ${typeF === t
-                                        ? 'border-blue-600 bg-blue-600 text-white shadow-blue-500/30'
+                                        ? 'border-indigo-600 bg-indigo-600 text-white shadow-indigo-500/30'
                                         : 'border-slate-200 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-900'
                                     }`}>
                                 <Icon className="h-4 w-4" /> {lbl}
@@ -173,11 +205,11 @@ export default function StudentResourcePage() {
                             const Icon = c.icon;
                             return (
                                 <div key={r.id} onClick={() => setSelected(r)}
-                                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-blue-400 hover:shadow-xl hover:shadow-blue-900/5 animate-in fade-in zoom-in-95"
+                                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm shadow-indigo-500/5 transition-all duration-300 hover:-translate-y-2 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/10 animate-in fade-in zoom-in-95"
                                     style={{ animationDelay: `${i * .05}s` }}>
 
-                                    {/* Blue accent top */}
-                                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 opacity-0 transition-opacity group-hover:opacity-100" />
+                                    {/* Indigo accent top */}
+                                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 to-blue-400 opacity-0 transition-opacity group-hover:opacity-100" />
 
                                     <div className="mb-4 flex items-start justify-between">
                                         <div className={`flex h-12 w-12 items-center justify-center rounded-xl border ${c.bgClass} ${c.textClass} ${c.borderClass}`}>
@@ -206,17 +238,20 @@ export default function StudentResourcePage() {
                                     </div>
 
                                     {r.description && (
-                                        <div className="mb-4 border-l-2 border-slate-200 pl-3 text-xs italic text-slate-400 line-clamp-2">
+                                        <div className="mb-4 border-l-2 border-indigo-100 pl-3 text-xs italic text-slate-400 line-clamp-2 min-h-[32px]">
                                             {r.description}
                                         </div>
                                     )}
 
                                     <div className="mt-2 flex items-center justify-between pt-4 border-t border-slate-50">
-                                        <span className={`inline-block rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${c.bgClass} ${c.textClass} ${c.borderClass}`}>
-                                            {c.label}
-                                        </span>
-                                        <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
-                                            View →
+                                        <button 
+                                            onClick={(e) => handleBookNow(e, r)}
+                                            className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-600/20 transition-all hover:bg-indigo-700 hover:shadow-indigo-500/30"
+                                        >
+                                            Book Now
+                                        </button>
+                                        <span className="text-xs font-bold text-indigo-600 flex items-center gap-1 group-hover:underline">
+                                            Details <ArrowRight className="h-3 w-3" />
                                         </span>
                                     </div>
                                 </div>
@@ -230,7 +265,7 @@ export default function StudentResourcePage() {
             {selected && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-md transition-all" onClick={() => setSelected(null)}>
                     <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
-                        <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-500 to-cyan-400`} />
+                        <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-indigo-500 to-blue-400`} />
 
                         <div className="mb-6 flex items-start gap-5">
                             <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border ${cfg(selected.type).bgClass} ${cfg(selected.type).textClass} ${cfg(selected.type).borderClass}`}>
@@ -270,20 +305,40 @@ export default function StudentResourcePage() {
                             })}
                         </div>
 
-                        <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-2 pl-4">
-                            <div className="flex items-center gap-2 text-sm font-bold text-emerald-600">
+                        <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t border-slate-100">
+                            <div className="flex-1 flex items-center gap-2 text-sm font-bold text-emerald-600">
                                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                                     <Check className="h-4 w-4" />
                                 </span>
                                 Available for Booking
                             </div>
-                            <button className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-blue-500/30" onClick={() => setSelected(null)}>
-                                Close Modal
+                            <button 
+                                onClick={(e) => { setSelected(null); handleBookNow(e, selected); }}
+                                className="w-full sm:w-auto rounded-xl bg-indigo-600 px-8 py-3 text-sm font-bold text-white shadow-md shadow-indigo-600/20 transition-all hover:bg-indigo-700 hover:shadow-indigo-500/30"
+                            >
+                                Book Now
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── BOOKING MODAL ── */}
+            {isBooking && (
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="w-full max-w-xl scale-in-center overflow-hidden">
+                        <BookingForm 
+                            initialResourceId={bookingResource?.id}
+                            onClose={() => { setIsBooking(false); setBookingResource(null); }}
+                            onSubmit={handleBookingSubmit}
+                            isLoading={isSubmitting}
+                        />
                     </div>
                 </div>
             )}
         </div>
     );
 }
+
+// Helper for detail modal
+const ArrowRight = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>;
