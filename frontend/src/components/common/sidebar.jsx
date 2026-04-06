@@ -149,19 +149,18 @@ export default function Sidebar({ onFilterChange, onAddResource, activeFilter })
                 flexShrink:0,
             }}>
                 <div style={{
-    width: '40px',
-    height: '40px',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-}}>
-    <img 
-        src="/UniOps.png" 
-        alt="UniOps Logo" 
-        style={{ width: '24px', height: '24px', objectFit: 'contain' }}
-    />
-</div>
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    flexShrink: 0
+                }}>
+                    <img 
+                        src="/logo.png" 
+                        alt="Logo" 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                </div>
                 <div>
                     <div style={{fontWeight:'700',fontSize:'15px',color:'#1a1a1a'}}>UniOps</div>
                     <div style={{fontSize:'11px',color:'#aaa',marginTop:'1px'}}>Smart Campus Operations Hub</div>

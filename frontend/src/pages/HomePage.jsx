@@ -174,7 +174,9 @@ export default function HomePage() {
             <footer className="bg-slate-50 py-10 border-t border-slate-100">
                 <div className="mx-auto max-w-7xl px-8 text-center">
                     <div className="flex items-center justify-center gap-2 mb-4">
-                        <LayoutDashboard className="h-5 w-5 text-indigo-600" />
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-indigo-50 shadow-sm border border-indigo-100 overflow-hidden">
+                            <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
+                        </div>
                         <span className="text-lg font-black tracking-tight text-slate-800">
                             Uni<span className="text-indigo-600">Ops</span>
                         </span>

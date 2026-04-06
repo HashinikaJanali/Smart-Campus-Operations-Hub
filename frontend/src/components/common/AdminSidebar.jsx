@@ -41,8 +41,8 @@ export default function AdminSidebar({ isOpen, onToggle, activePage }) {
             <div className={`mb-8 flex items-center border-b border-white/10 pb-5 w-full ${isOpen ? 'justify-between' : 'justify-center'}`}>
                 {isOpen && (
                     <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-300">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white shadow-md shadow-black/10 border border-white/5">
-                            <LayoutDashboard className="h-5 w-5" />
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10 shadow-md shadow-black/10 border border-white/5 overflow-hidden">
+                            <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
                         </div>
                         <div className="overflow-hidden whitespace-nowrap text-left">
                             <div className="font-black tracking-tight text-white text-lg leading-none">
