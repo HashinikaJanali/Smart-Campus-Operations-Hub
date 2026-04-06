@@ -1,121 +1,75 @@
 import React, { useState, useEffect } from 'react';
+import {
+    Building2, FlaskConical, Users, MonitorPlay,
+    Plus, Search, RefreshCcw, LayoutDashboard,
+    Globe, Info, MapPin, Trash2, Edit, Loader2,
+    Database, SlidersHorizontal, Filter, X,
+    CalendarDays, Clock, CheckCircle2, Wrench
+} from 'lucide-react';
 import { getAllResources, deleteResource } from '../services/resourceService';
 import ResourceForm from '../components/resource/ResourceForm';
 import AdminSidebar from '../components/common/AdminSidebar';
-import {
-    Building2, FlaskConical, Users, MonitorPlay,
-    Archive, LayoutDashboard, FolderOpen, Plus,
-    CheckCircle2, Wrench, Search, ClipboardList,
-    MapPin, Clock, Edit, Trash2, Loader2, RefreshCcw, Menu
-} from 'lucide-react';
-
-const injectStyles = () => {
-    if (document.getElementById('crex-admin')) return;
-    const s = document.createElement('style');
-    s.id = 'crex-admin';
-    s.innerHTML = `
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
-
-        @keyframes fadeUp  { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes shimY   { 0%{background-position:-200% center} 100%{background-position:200% center} }
-        @keyframes spin    { from{transform:rotate(0)} to{transform:rotate(360deg)} }
-        @keyframes modalIn { from{opacity:0;transform:scale(.96) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
-
-        body { background:#f5f3ee !important; }
-        .ca  { font-family:'DM Sans',sans-serif !important; }
-
-        .sa { animation:fadeUp .5s ease forwards; opacity:0; }
-        .sa:nth-child(1){animation-delay:.05s}
-        .sa:nth-child(2){animation-delay:.12s}
-        .sa:nth-child(3){animation-delay:.19s}
-        .sa:nth-child(4){animation-delay:.26s}
-
-        .sh { transition:all .25s ease !important; }
-        .sh:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.08) !important; }
-
-        .shimY {
-            background:linear-gradient(90deg,#1a1a1a,#d4a017,#e8b923,#1a1a1a);
-            background-size:200% auto;
-            -webkit-background-clip:text;
-            -webkit-text-fill-color:transparent;
-            animation:shimY 3s linear infinite;
-        }
-
-        .tr-c:hover { background:#faf9f6 !important; }
-        .btn-c { transition:all .15s ease !important; }
-        .btn-c:hover { transform:scale(1.05); }
-        .row-c { animation:fadeUp .4s ease forwards; opacity:0; }
-        .min   { animation:modalIn .3s ease forwards; }
-        .add-c:hover {
-            background:#1a1a1a !important;
-            transform:translateY(-2px);
-            box-shadow:0 8px 20px rgba(26,26,26,.25) !important;
-        }
-    `;
-    document.head.appendChild(s);
-};
 
 const TC = {
-    LECTURE_HALL: { icon:'🏛️', color:'#1a1a1a', bg:'#f0ede6', label:'Lecture Hall' },
-    LAB:          { icon:'🔬', color:'#c47d0e', bg:'#fef3dc', label:'Lab' },
-    MEETING_ROOM: { icon:'🤝', color:'#2d6a4f', bg:'#d8f3dc', label:'Meeting Room' },
-    EQUIPMENT:    { icon:'📽️', color:'#5e4b8b', bg:'#ede7f6', label:'Equipment' },
+    LECTURE_HALL: { icon: Building2, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', label: 'Lecture Hall' },
+    LAB:          { icon: FlaskConical, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', label: 'Lab' },
+    MEETING_ROOM: { icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', label: 'Meeting Room' },
+    EQUIPMENT:    { icon: MonitorPlay, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', label: 'Equipment' },
 };
-const cfg = t => TC[t] || { icon:'📦', color:'#6b6b6b', bg:'#f0ede6', label: t };
-
+const cfg = (t) => TC[t] || { icon: Database, color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-100', label: t };
 
 export default function AdminResourcePage() {
-    const [resources,    setResources]    = useState([]);
-    const [filtered,     setFiltered]     = useState([]);
-    const [showForm,     setShowForm]     = useState(false);
-    const [editRes,      setEditRes]      = useState(null);
-    const [loading,      setLoading]      = useState(true);
-    const [search,       setSearch]       = useState('');
-    const [typeF,        setTypeF]        = useState('ALL');
-    const [statusF,      setStatusF]      = useState('ALL');
-    const [activeFilter, setActiveFilter] = useState('ALL');
-    const [sidebarOpen,  setSidebarOpen]  = useState(true);
+    const [resources, setResources] = useState([]);
+    const [filtered, setFiltered] = useState([]);
+    const [showForm, setShowForm] = useState(false);
+    const [editRes, setEditRes] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
 
-    useEffect(() => { injectStyles(); load(); }, []);
+    // Filter States
+    const [search, setSearch] = useState('');
+    const [typeF, setTypeF] = useState('ALL');
+    const [statusF, setStatusF] = useState('ALL');
+    const [activeFilter, setActiveFilter] = useState('ALL');
+
+    useEffect(() => { load(); }, []);
 
     const load = async () => {
         try {
             setLoading(true);
             const d = await getAllResources();
             setResources(d);
-            flt(d, '', 'ALL', 'ALL');
-        } catch(e) { console.error(e); }
-        finally { setLoading(false); }
+            applyFilters(d, search, typeF, statusF);
+        } catch (e) {
+            console.error("Failed to load resources", e);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const flt = (data, s, t, st) => {
-        let f = data ?? resources;
-        if (t  !== 'ALL') f = f.filter(r => r.type   === t);
+    const applyFilters = (data, s, t, st) => {
+        let f = data || resources;
+        if (t !== 'ALL') f = f.filter(r => r.type === t);
         if (st !== 'ALL') f = f.filter(r => r.status === st);
-        if (s)  f = f.filter(r =>
-            r.name.toLowerCase().includes(s.toLowerCase()) ||
-            r.location.toLowerCase().includes(s.toLowerCase())
-        );
+        if (s) {
+            const lowS = s.toLowerCase();
+            f = f.filter(r =>
+                (r.name || '').toLowerCase().includes(lowS) ||
+                (r.location || '').toLowerCase().includes(lowS) ||
+                (r.id || '').toLowerCase().includes(lowS)
+            );
+        }
         setFiltered(f);
     };
 
-    const onDelete = async id => {
-        if (!window.confirm('Delete this resource?')) return;
-        try { await deleteResource(id); load(); } catch(e) { console.error(e); }
+    const handleSearch = (val) => {
+        setSearch(val);
+        applyFilters(null, val, typeF, statusF);
     };
-
-    const onEdit  = r => { setEditRes(r); setShowForm(true); };
-    const onSave  = () => { setShowForm(false); setEditRes(null); load(); };
-    const onClose = () => { setShowForm(false); setEditRes(null); };
 
     const doFilter = (t, st) => {
         setTypeF(t); setStatusF(st);
-        flt(null, search, t, st);
-    };
-
-    const doSearch = s => {
-        setSearch(s);
-        flt(null, s, typeF, statusF);
+        applyFilters(null, search, t, st);
     };
 
     const handleSidebarFilter = (type, status) => {
@@ -123,206 +77,260 @@ export default function AdminResourcePage() {
         doFilter(type, status);
     };
 
-    const handleSidebarAdd = () => {
-        setEditRes(null);
+    const onDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this resource?')) return;
+        try {
+            await deleteResource(id);
+            load();
+        } catch (e) {
+            console.error("Failed to delete resource", e);
+        }
+    };
+
+    const onEdit = (r) => {
+        setEditRes(r);
         setShowForm(true);
+    };
+
+    const onSave = () => {
+        setShowForm(false);
+        setEditRes(null);
+        load();
+    };
+
+    const onClose = () => {
+        setShowForm(false);
+        setEditRes(null);
     };
 
     const activeCount = resources.filter(r => r.status === 'ACTIVE').length;
     const oosCount    = resources.filter(r => r.status === 'OUT_OF_SERVICE').length;
 
     return (
-        <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900 ca">
-            {/* ── SHARED ADMIN SIDEBAR ── */}
+        <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
             <AdminSidebar 
                 isOpen={sidebarOpen} 
                 onToggle={() => setSidebarOpen(!sidebarOpen)} 
                 activePage="resources"
                 onFilterChange={handleSidebarFilter}
-                onAddResource={handleSidebarAdd}
                 activeFilter={activeFilter}
             />
 
-            {/* ── MAIN ── */}
             <main className={`flex-1 p-8 transition-all duration-300 ${sidebarOpen ? 'ml-[265px]' : 'ml-20'}`}>
-                {/* Topbar */}
-                <div style={S.topbar}>
+                
+                {/* ── HEADER SECTION ── */}
+                <div className="mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                     <div>
-                        <div style={S.welcome}>Welcome back, Admin 👋</div>
-                        <h1 style={S.title}>
-                            Facilities <span className="shimY">& Assets</span>
+                        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-600 border border-indigo-100 shadow-sm">
+                            <LayoutDashboard className="w-3.5 h-3.5" /> Operations Hub
+                        </div>
+                        <h1 className="text-4xl font-black text-slate-900 leading-tight">
+                            Facilities <span className="text-indigo-600">& Assets</span>
                         </h1>
-                        <p style={S.sub}>
-                            {new Date().toLocaleDateString('en-US',{
-                                weekday:'long', year:'numeric',
-                                month:'long', day:'numeric'
+                        <p className="text-slate-500 mt-2 font-medium">
+                            {new Date().toLocaleDateString('en-US', {
+                                weekday: 'long', year: 'numeric',
+                                month: 'long', day: 'numeric'
                             })}
                         </p>
                     </div>
-                    <div style={S.topRight}>
-                        <div style={S.sw}>
-                            <span style={{color:'#aaa',fontSize:'14px'}}>🔍</span>
+                    <div className="flex items-center gap-3">
+                        <div className="relative group w-64">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                             <input
-                                style={S.si}
+                                style={{ background: 'white' }}
+                                type="text"
                                 placeholder="Search resources..."
+                                className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500 shadow-sm transition-all"
                                 value={search}
-                                onChange={e => doSearch(e.target.value)}
+                                onChange={(e) => handleSearch(e.target.value)}
                             />
                         </div>
-                        <button
-                            className="add-c"
-                            style={S.addBtn}
-                            onClick={() => { setEditRes(null); setShowForm(true); }}>
-                            ＋ Add Resource
+                        <button 
+                            onClick={() => { setEditRes(null); setShowForm(true); }}
+                            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95 hover:-translate-y-0.5"
+                        >
+                            <Plus className="w-4 h-4" /> Add Resource
                         </button>
                     </div>
                 </div>
 
-                {/* Stats */}
-                <div style={S.sg}>
+                {/* ── STATS GRID ── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     {[
-                        {lbl:'Total Resources', v:resources.length,                           ico:'🗂️', accent:'#e8b923'},
-                        {lbl:'Active',          v:activeCount,                                ico:'✅', accent:'#2d6a4f'},
-                        {lbl:'Out of Service',  v:oosCount,                                   ico:'🔧', accent:'#c0392b'},
-                        {lbl:'Labs Available',  v:resources.filter(r=>r.type==='LAB').length, ico:'🔬', accent:'#c47d0e'},
-                    ].map((st,i) => (
-                        <div key={i} className="sa sh"
-                            style={{...S.sc, borderBottom:`3px solid ${st.accent}`}}>
-                            <div style={S.scTop}>
-                                <span style={{fontSize:'28px'}}>{st.ico}</span>
-                                <span style={{...S.sv, color:st.accent}}>{st.v}</span>
+                        { label: 'Total Resources', count: resources.length, icon: Database, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
+                        { label: 'Active', count: activeCount, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+                        { label: 'Out of Service', count: oosCount, icon: Wrench, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
+                        { label: 'Labs Available', count: resources.filter(r => r.type === 'LAB').length, icon: FlaskConical, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+                    ].map((s, idx) => (
+                        <div key={idx} className={`bg-white border ${s.border} rounded-2xl p-5 shadow-sm shadow-indigo-500/5 transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-indigo-500/10`}>
+                            <div className="flex items-start justify-between mb-2">
+                                <div className={`p-2 rounded-lg ${s.bg} ${s.color}`}>
+                                    <s.icon className="w-6 h-6" />
+                                </div>
+                                <span className={`text-3xl font-extrabold ${s.color}`}>{s.count}</span>
                             </div>
-                            <div style={S.sl}>{st.lbl}</div>
+                            <div className="text-sm font-medium text-slate-500">{s.label}</div>
                         </div>
                     ))}
                 </div>
 
-                {/* Active filter indicator */}
-                {activeFilter !== 'ALL' && (
-                    <div style={S.filterIndicator}>
-                        <span>🔍 Filtered by: <strong>{activeFilter.replace(/_/g,' ')}</strong></span>
-                        <button
-                            style={S.clearFilter}
-                            onClick={() => { handleSidebarFilter('ALL','ALL'); }}>
-                            ✕ Clear
-                        </button>
-                    </div>
-                )}
+                {/* ── FILTERS BAR ── */}
+                <div className="bg-white rounded-xl border border-indigo-100 p-4 mb-6 shadow-sm shadow-indigo-500/5">
+                    <div className="flex flex-wrap items-center gap-6">
+                        <div className="flex items-center gap-2 text-indigo-600">
+                            <SlidersHorizontal className="w-4 h-4" />
+                            <span className="text-sm font-bold uppercase tracking-tight text-slate-400">Filters:</span>
+                        </div>
 
-                {/* Filter bar */}
-                <div style={S.fb}>
-                    <span style={{fontSize:'14px',color:'#6b6b6b'}}>🎛️ Filters:</span>
-                    <select style={S.sel} value={typeF}
-                        onChange={e => { doFilter(e.target.value, statusF); setActiveFilter(e.target.value); }}>
-                        <option value="ALL">All Types</option>
-                        <option value="LECTURE_HALL">🏛️ Lecture Hall</option>
-                        <option value="LAB">🔬 Lab</option>
-                        <option value="MEETING_ROOM">🤝 Meeting Room</option>
-                        <option value="EQUIPMENT">📽️ Equipment</option>
-                    </select>
-                    <select style={S.sel} value={statusF}
-                        onChange={e => { doFilter(typeF, e.target.value); setActiveFilter(e.target.value); }}>
-                        <option value="ALL">All Status</option>
-                        <option value="ACTIVE">✅ Active</option>
-                        <option value="OUT_OF_SERVICE">🔧 Out of Service</option>
-                    </select>
-                    <button style={S.rb}
-                        onClick={() => { doFilter('ALL', 'ALL'); setSearch(''); setActiveFilter('ALL'); }}>
-                        <RefreshCcw className="inline-block h-3 w-3 mr-1" /> Reset
-                    </button>
-                    <div style={{marginLeft:'auto'}}>
-                        <span style={S.cp}>{filtered.length} results</span>
+                        <select
+                            className="pl-4 pr-10 py-2 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-700 outline-none focus:border-indigo-500 focus:bg-white appearance-none cursor-pointer transition-all"
+                            value={typeF}
+                            onChange={(e) => doFilter(e.target.value, statusF)}
+                        >
+                            <option value="ALL">All Types</option>
+                            <option value="LECTURE_HALL">🏛️ Lecture Hall</option>
+                            <option value="LAB">🔬 Lab</option>
+                            <option value="MEETING_ROOM">🤝 Meeting Room</option>
+                            <option value="EQUIPMENT">📽️ Equipment</option>
+                        </select>
+
+                        <select
+                            className="pl-4 pr-10 py-2 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-700 outline-none focus:border-indigo-500 focus:bg-white appearance-none cursor-pointer transition-all"
+                            value={statusF}
+                            onChange={(e) => doFilter(typeF, e.target.value)}
+                        >
+                            <option value="ALL">All Status</option>
+                            <option value="ACTIVE">✅ Active</option>
+                            <option value="OUT_OF_SERVICE">🔧 Out of Service</option>
+                        </select>
+
+                        <button 
+                            onClick={() => { doFilter('ALL', 'ALL'); setSearch(''); setActiveFilter('ALL'); }}
+                            className="flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-100"
+                        >
+                            <RefreshCcw className="h-3 w-3" /> Reset
+                        </button>
+
+                        <div className="ml-auto">
+                            <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">{filtered.length} results</span>
+                        </div>
                     </div>
                 </div>
 
-                {/* Table */}
-                {loading ? (
-                    <div style={S.lw}>
-                        <div style={{fontSize:'36px', animation:'spin 1.5s linear infinite', display:'inline-block'}}>⚙️</div>
-                        <div style={S.lt}>Loading resources...</div>
-                    </div>
-                ) : filtered.length === 0 ? (
-                    <div style={S.ec}>
-                        <div style={{fontSize:'52px', marginBottom:'12px'}}>🔍</div>
-                        <div style={S.et}>No resources found</div>
-                        <div style={S.es}>Try adjusting your filters</div>
-                    </div>
-                ) : (
-                    <div style={S.tc}>
-                        <div style={S.th2}>
-                            <span style={S.tt}>📋 Resource Catalogue</span>
-                            <span style={S.tcnt}>{filtered.length} resources</span>
+                {/* ── RESOURCES TABLE ── */}
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="flex items-center justify-between border-b border-indigo-100 bg-slate-50 px-6 py-4">
+                        <div className="flex items-center gap-2 font-bold text-slate-900 uppercase tracking-tight text-sm">
+                             <Database className="h-5 w-5 text-indigo-600" /> Resource Catalogue
                         </div>
-                        <table style={{width:'100%', borderCollapse:'collapse'}}>
-                            <thead>
-                                <tr style={{background:'#f0ede6'}}>
-                                    {['Resource','Type','Location','Capacity','Availability','Status','Actions'].map(h => (
-                                        <th key={h} style={S.thh}>{h}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filtered.map((r, i) => {
-                                    const c = cfg(r.type);
-                                    return (
-                                        <tr key={r.id} className="tr-c row-c"
-                                            style={{borderBottom:'1px solid #f0ede6', animationDelay:`${i*.04}s`}}>
-                                            <td style={S.td}>
-                                                <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
-                                                    <div style={{...S.rib, background:c.bg}}>
-                                                        <span style={{fontSize:'17px'}}>{c.icon}</span>
-                                                    </div>
-                                                    <div>
-                                                        <div style={S.rn}>{r.name}</div>
-                                                        <div style={S.ri}>ID #{r.id}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td style={S.td}>
-                                                <span style={{...S.tp, background:c.bg, color:c.color}}>
-                                                    {c.icon} {r.type?.replace(/_/g,' ')}
-                                                </span>
-                                            </td>
-                                            <td style={S.td}>
-                                                <span style={S.mu}>📍 {r.location}</span>
-                                            </td>
-                                            <td style={S.td}>
-                                                <span style={S.mu}>{r.capacity > 0 ? `👥 ${r.capacity}` : '—'}</span>
-                                            </td>
-                                            <td style={S.td}>
-                                                <span style={S.mu}>🕐 {r.availableFrom}–{r.availableTo}</span>
-                                            </td>
-                                            <td style={S.td}>
-                                                <span style={{
-                                                    display:'inline-flex', alignItems:'center', gap:'5px',
-                                                    padding:'5px 12px', borderRadius:'20px',
-                                                    fontSize:'12px', fontWeight:'600',
-                                                    background: r.status==='ACTIVE' ? '#1a1a1a' : '#fff0ee',
-                                                    color:      r.status==='ACTIVE' ? '#e8b923' : '#c0392b',
-                                                }}>
-                                                    {r.status==='ACTIVE' ? '● ACTIVE' : '● OUT OF SERVICE'}
-                                                </span>
-                                            </td>
-                                            <td style={S.td}>
-                                                <div style={{display:'flex', gap:'6px'}}>
-                                                    <button className="btn-c" style={S.eb} onClick={() => onEdit(r)}>✏️ Edit</button>
-                                                    <button className="btn-c" style={S.db} onClick={() => onDelete(r.id)}>🗑️</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                        <span className="rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-xs font-black text-indigo-700">{filtered.length} assets</span>
                     </div>
-                )}
+
+                    <div className="overflow-x-auto">
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center py-20">
+                                <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                                <p className="mt-4 text-sm font-medium text-slate-500">Loading resources...</p>
+                            </div>
+                        ) : filtered.length === 0 ? (
+                            <div className="py-20 flex flex-col items-center justify-center">
+                                <div className="bg-slate-50 p-6 rounded-full mb-4">
+                                    <Search className="h-12 w-12 text-slate-300" />
+                                </div>
+                                <div className="text-xl font-black text-slate-900">No resources found</div>
+                                <p className="mt-2 text-sm text-slate-500 font-medium">Try broadening your search or filters.</p>
+                            </div>
+                        ) : (
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr className="border-b border-slate-200 bg-indigo-50/30 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                                        <th className="px-6 py-3">Resource</th>
+                                        <th className="px-6 py-3">Type</th>
+                                        <th className="px-6 py-3">Location</th>
+                                        <th className="px-6 py-3">Capacity</th>
+                                        <th className="px-6 py-3">Availability</th>
+                                        <th className="px-6 py-3 text-center">Status</th>
+                                        <th className="px-6 py-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {filtered.map((r) => {
+                                        const c = cfg(r.type);
+                                        const Icon = c.icon;
+                                        return (
+                                            <tr key={r.id} className="group transition-colors hover:bg-slate-50/80">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${c.bg} ${c.color} border ${c.border} shadow-sm group-hover:scale-105 transition-transform`}>
+                                                            <Icon className="h-5 w-5" />
+                                                        </div>
+                                                        <div className="overflow-hidden">
+                                                            <div className="text-sm font-bold text-slate-900 truncate tracking-tight">{r.name}</div>
+                                                            <div className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">ID #{r.id?.slice(-8) || 'N/A'}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-widest border ${c.bg} ${c.color} ${c.border}`}>
+                                                        {c.label}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                                                        <MapPin className="h-3.5 w-3.5 text-indigo-400" /> {r.location}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500">
+                                                        {r.capacity > 0 ? `👥 ${r.capacity}` : '—'}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500">
+                                                        <Clock className="h-3.5 w-3.5 text-slate-300" /> {r.availableFrom}–{r.availableTo}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest border shadow-sm
+                                                        ${r.status === 'ACTIVE' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`
+                                                    }>
+                                                        <span className={`h-1.5 w-1.5 rounded-full ${r.status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-rose-500 animate-pulse'}`} />
+                                                        {r.status === 'ACTIVE' ? 'Active' : 'Out of Service'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                    <div className="flex justify-end gap-2">
+                                                        <button 
+                                                            onClick={() => onEdit(r)}
+                                                            className="p-2 rounded-xl bg-slate-50 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-200 hover:border-indigo-100 transition-all shadow-sm"
+                                                            title="Edit Resource"
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => onDelete(r.id)}
+                                                            className="p-2 rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 hover:border-rose-100 transition-all shadow-sm"
+                                                            title="Delete Resource"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                </div>
             </main>
 
-            {/* ── FORM MODAL ── */}
+            {/* ── MODALS ── */}
             {showForm && (
-                <div style={S.ov}
-                    onClick={e => { if(e.target === e.currentTarget) onClose(); }}>
-                    <div className="min" style={S.mb}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                    <div className="w-full max-w-xl transform transition-transform animate-in zoom-in-95 duration-200 shadow-2xl overflow-hidden rounded-3xl">
                         <ResourceForm
                             existingResource={editRes}
                             onSave={onSave}
@@ -334,47 +342,3 @@ export default function AdminResourcePage() {
         </div>
     );
 }
-
-const S = {
-    layout:          {display:'flex',minHeight:'100vh',background:'#f5f3ee',fontFamily:"'DM Sans',sans-serif"},
-    main:            {marginLeft:'260px',flex:1,padding:'32px'},
-    topbar:          {display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'28px'},
-    welcome:         {fontSize:'13px',color:'#aaa',marginBottom:'4px',fontWeight:'500'},
-    title:           {fontSize:'30px',fontWeight:'700',color:'#1a1a1a',lineHeight:1.1},
-    sub:             {fontSize:'13px',color:'#aaa',marginTop:'4px'},
-    topRight:        {display:'flex',alignItems:'center',gap:'12px'},
-    sw:              {display:'flex',alignItems:'center',gap:'8px',background:'#fff',border:'1px solid #e8e4da',borderRadius:'12px',padding:'10px 16px',boxShadow:'0 1px 6px rgba(0,0,0,.04)'},
-    si:              {background:'none',border:'none',outline:'none',fontSize:'13px',color:'#1a1a1a',width:'170px',fontFamily:"'DM Sans',sans-serif"},
-    addBtn:          {background:'#e8b923',color:'#1a1a1a',border:'none',padding:'11px 22px',borderRadius:'12px',fontSize:'13.5px',fontWeight:'700',cursor:'pointer',boxShadow:'0 4px 12px rgba(232,185,35,.3)',fontFamily:"'DM Sans',sans-serif",transition:'all .2s ease'},
-    sg:              {display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'16px',marginBottom:'20px'},
-    sc:              {background:'#fff',borderRadius:'14px',padding:'20px',boxShadow:'0 1px 6px rgba(0,0,0,.04)',border:'1px solid #f0ede6'},
-    scTop:           {display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'},
-    sv:              {fontSize:'36px',fontWeight:'800'},
-    sl:              {fontSize:'12px',color:'#aaa',fontWeight:'500'},
-    filterIndicator: {display:'flex',alignItems:'center',justifyContent:'space-between',background:'#fef3dc',border:'1px solid #f5d78a',borderRadius:'10px',padding:'10px 16px',marginBottom:'14px',fontSize:'13px',color:'#c47d0e',fontWeight:'500'},
-    clearFilter:     {background:'none',border:'none',color:'#c47d0e',cursor:'pointer',fontSize:'12px',fontWeight:'700',fontFamily:"'DM Sans',sans-serif"},
-    fb:              {display:'flex',alignItems:'center',gap:'10px',background:'#fff',border:'1px solid #e8e4da',borderRadius:'12px',padding:'12px 18px',marginBottom:'20px',boxShadow:'0 1px 6px rgba(0,0,0,.04)'},
-    sel:             {background:'#f5f3ee',border:'1px solid #e8e4da',color:'#1a1a1a',borderRadius:'8px',padding:'8px 12px',fontSize:'13px',outline:'none',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"},
-    rb:              {background:'#fff0ee',border:'1px solid #ffd0cc',color:'#c0392b',borderRadius:'8px',padding:'8px 12px',fontSize:'12px',fontWeight:'600',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"},
-    cp:              {background:'#1a1a1a',color:'#e8b923',padding:'4px 12px',borderRadius:'20px',fontSize:'12px',fontWeight:'700'},
-    lw:              {textAlign:'center',padding:'80px'},
-    lt:              {marginTop:'14px',fontSize:'14px',color:'#aaa'},
-    ec:              {textAlign:'center',padding:'80px',background:'#fff',borderRadius:'16px',border:'1px solid #e8e4da'},
-    et:              {fontSize:'18px',fontWeight:'700',color:'#1a1a1a'},
-    es:              {fontSize:'13px',color:'#aaa',marginTop:'6px'},
-    tc:              {background:'#fff',borderRadius:'16px',border:'1px solid #e8e4da',boxShadow:'0 2px 12px rgba(0,0,0,.04)',overflow:'hidden'},
-    th2:             {display:'flex',justifyContent:'space-between',alignItems:'center',padding:'16px 22px',borderBottom:'1px solid #f0ede6',background:'#faf9f6'},
-    tt:              {fontWeight:'700',fontSize:'15px',color:'#1a1a1a'},
-    tcnt:            {background:'#1a1a1a',color:'#e8b923',padding:'4px 12px',borderRadius:'20px',fontSize:'12px',fontWeight:'600'},
-    thh:             {padding:'10px 18px',textAlign:'left',fontSize:'10px',fontWeight:'700',color:'#aaa',textTransform:'uppercase',letterSpacing:'.8px',borderBottom:'1px solid #f0ede6'},
-    td:              {padding:'14px 18px',fontSize:'13.5px',color:'#333'},
-    rib:             {width:'38px',height:'38px',borderRadius:'10px',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0},
-    rn:              {fontWeight:'600',color:'#1a1a1a',fontSize:'14px'},
-    ri:              {fontSize:'11px',color:'#bbb',marginTop:'2px'},
-    tp:              {display:'inline-block',padding:'4px 10px',borderRadius:'20px',fontSize:'11px',fontWeight:'600'},
-    mu:              {color:'#888',fontSize:'13px'},
-    eb:              {background:'#f5f3ee',color:'#1a1a1a',border:'1px solid #e8e4da',padding:'5px 12px',borderRadius:'8px',fontSize:'12px',fontWeight:'600',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"},
-    db:              {background:'#fff0ee',color:'#c0392b',border:'1px solid #ffd0cc',padding:'5px 10px',borderRadius:'8px',fontSize:'12px',cursor:'pointer'},
-    ov:              {position:'fixed',inset:0,zIndex:9999,background:'rgba(26,26,26,.5)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center'},
-    mb:              {width:'580px',maxHeight:'92vh',overflowY:'auto',borderRadius:'20px',boxShadow:'0 40px 80px rgba(0,0,0,.2)'},
-};
