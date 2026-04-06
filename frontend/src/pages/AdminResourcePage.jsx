@@ -1,53 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { getAllResources, deleteResource } from '../services/resourceService';
 import ResourceForm from '../components/resource/ResourceForm';
-import Sidebar from '../components/common/sidebar';
-
-const injectStyles = () => {
-    if (document.getElementById('crex-admin')) return;
-    const s = document.createElement('style');
-    s.id = 'crex-admin';
-    s.innerHTML = `
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
-
-        @keyframes fadeUp  { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes shimY   { 0%{background-position:-200% center} 100%{background-position:200% center} }
-        @keyframes spin    { from{transform:rotate(0)} to{transform:rotate(360deg)} }
-        @keyframes modalIn { from{opacity:0;transform:scale(.96) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
-
-        body { background:#f5f3ee !important; }
-        .ca  { font-family:'DM Sans',sans-serif !important; }
-
-        .sa { animation:fadeUp .5s ease forwards; opacity:0; }
-        .sa:nth-child(1){animation-delay:.05s}
-        .sa:nth-child(2){animation-delay:.12s}
-        .sa:nth-child(3){animation-delay:.19s}
-        .sa:nth-child(4){animation-delay:.26s}
-
-        .sh { transition:all .25s ease !important; }
-        .sh:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.08) !important; }
-
-        .shimY {
-            background:linear-gradient(90deg,#1a1a1a,#d4a017,#e8b923,#1a1a1a);
-            background-size:200% auto;
-            -webkit-background-clip:text;
-            -webkit-text-fill-color:transparent;
-            animation:shimY 3s linear infinite;
-        }
-
-        .tr-c:hover { background:#faf9f6 !important; }
-        .btn-c { transition:all .15s ease !important; }
-        .btn-c:hover { transform:scale(1.05); }
-        .row-c { animation:fadeUp .4s ease forwards; opacity:0; }
-        .min   { animation:modalIn .3s ease forwards; }
-        .add-c:hover {
-            background:#1a1a1a !important;
-            transform:translateY(-2px);
-            box-shadow:0 8px 20px rgba(26,26,26,.25) !important;
-        }
-    `;
-    document.head.appendChild(s);
-};
+import AdminSidebar from '../components/common/AdminSidebar';
+import {
+    Building2, FlaskConical, Users, MonitorPlay,
+    Archive, LayoutDashboard, FolderOpen, Plus,
+    CheckCircle2, Wrench, Search, ClipboardList,
+    MapPin, Clock, Edit, Trash2, Loader2, RefreshCcw, Menu
+} from 'lucide-react';
 
 const TC = {
     LECTURE_HALL: { icon:'🏛️', color:'#1a1a1a', bg:'#f0ede6', label:'Lecture Hall' },
@@ -57,16 +17,17 @@ const TC = {
 };
 const cfg = t => TC[t] || { icon:'📦', color:'#6b6b6b', bg:'#f0ede6', label: t };
 
+
 export default function AdminResourcePage() {
-    const [resources,    setResources]    = useState([]);
-    const [filtered,     setFiltered]     = useState([]);
-    const [showForm,     setShowForm]     = useState(false);
-    const [editRes,      setEditRes]      = useState(null);
-    const [loading,      setLoading]      = useState(true);
-    const [search,       setSearch]       = useState('');
-    const [typeF,        setTypeF]        = useState('ALL');
-    const [statusF,      setStatusF]      = useState('ALL');
-    const [activeFilter, setActiveFilter] = useState('ALL');
+    const [resources, setResources] = useState([]);
+    const [filtered, setFiltered] = useState([]);
+    const [showForm, setShowForm] = useState(false);
+    const [editRes, setEditRes] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [typeF, setTypeF] = useState('ALL');
+    const [statusF, setStatusF] = useState('ALL');
+    const [sidebarOpen, setSidebarOpen] = useState(true);
 
     useEffect(() => { injectStyles(); load(); }, []);
 
@@ -105,37 +66,21 @@ export default function AdminResourcePage() {
         flt(null, search, t, st);
     };
 
-    const doSearch = s => {
-        setSearch(s);
-        flt(null, s, typeF, statusF);
-    };
-
-    const handleSidebarFilter = (type, status) => {
-        setActiveFilter(status !== 'ALL' ? status : type !== 'ALL' ? type : 'ALL');
-        doFilter(type, status);
-    };
-
-    const handleSidebarAdd = () => {
-        setEditRes(null);
-        setShowForm(true);
-    };
-
     const active = resources.filter(r => r.status === 'ACTIVE').length;
     const oos    = resources.filter(r => r.status === 'OUT_OF_SERVICE').length;
 
     return (
-        <div className="ca" style={S.layout}>
-
-            {/* ── SIDEBAR ── */}
-            <Sidebar
-                onFilterChange={handleSidebarFilter}
-                onAddResource={handleSidebarAdd}
-                activeFilter={activeFilter}
+        <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+            {/* ── SHARED ADMIN SIDEBAR ── */}
+            <AdminSidebar 
+                isOpen={sidebarOpen} 
+                onToggle={() => setSidebarOpen(!sidebarOpen)} 
+                activePage="resources"
             />
 
-            {/* ── MAIN ── */}
-            <main style={S.main}>
 
+            {/* ── MAIN ── */}
+            <main className={`flex-1 p-8 transition-all duration-300 ${sidebarOpen ? 'ml-[265px]' : 'ml-20'}`}>
                 {/* Topbar */}
                 <div style={S.topbar}>
                     <div>
@@ -217,9 +162,9 @@ export default function AdminResourcePage() {
                         <option value="ACTIVE">✅ Active</option>
                         <option value="OUT_OF_SERVICE">🔧 Out of Service</option>
                     </select>
-                    <button style={S.rb}
-                        onClick={() => { doFilter('ALL','ALL'); setSearch(''); setActiveFilter('ALL'); }}>
-                        ↺ Reset
+                    <button className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-100"
+                        onClick={() => { doFilter('ALL', 'ALL'); setSearch(''); }}>
+                        <RefreshCcw className="h-3 w-3" /> Reset
                     </button>
                     <div style={{marginLeft:'auto'}}>
                         <span style={S.cp}>{filtered.length} results</span>
