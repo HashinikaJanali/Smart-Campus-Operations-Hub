@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { getAllResources, deleteResource } from '../services/resourceService';
 import ResourceForm from '../components/resource/ResourceForm';
-import Sidebar from '../components/common/sidebar';
+import AdminSidebar from '../components/common/AdminSidebar';
+import {
+    Building2, FlaskConical, Users, MonitorPlay,
+    Archive, LayoutDashboard, FolderOpen, Plus,
+    CheckCircle2, Wrench, Search, ClipboardList,
+    MapPin, Clock, Edit, Trash2, Loader2, RefreshCcw, Menu
+} from 'lucide-react';
 
 const injectStyles = () => {
     if (document.getElementById('crex-admin')) return;
@@ -49,15 +55,6 @@ const injectStyles = () => {
     document.head.appendChild(s);
 };
 
-import AdminSidebar from '../components/common/AdminSidebar';
-import {
-    Building2, FlaskConical, Users, MonitorPlay,
-    Archive, LayoutDashboard, FolderOpen, Plus,
-    CheckCircle2, Wrench, Search, ClipboardList,
-    MapPin, Clock, Edit, Trash2, Loader2, RefreshCcw, Menu
-} from 'lucide-react';
-
-
 const TC = {
     LECTURE_HALL: { icon:'🏛️', color:'#1a1a1a', bg:'#f0ede6', label:'Lecture Hall' },
     LAB:          { icon:'🔬', color:'#c47d0e', bg:'#fef3dc', label:'Lab' },
@@ -77,15 +74,7 @@ export default function AdminResourcePage() {
     const [typeF,        setTypeF]        = useState('ALL');
     const [statusF,      setStatusF]      = useState('ALL');
     const [activeFilter, setActiveFilter] = useState('ALL');
-    const [resources, setResources] = useState([]);
-    const [filtered, setFiltered] = useState([]);
-    const [showForm, setShowForm] = useState(false);
-    const [editRes, setEditRes] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
-    const [typeF, setTypeF] = useState('ALL');
-    const [statusF, setStatusF] = useState('ALL');
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen,  setSidebarOpen]  = useState(true);
 
     useEffect(() => { injectStyles(); load(); }, []);
 
@@ -139,34 +128,20 @@ export default function AdminResourcePage() {
         setShowForm(true);
     };
 
-    const active = resources.filter(r => r.status === 'ACTIVE').length;
-    const oos    = resources.filter(r => r.status === 'OUT_OF_SERVICE').length;
+    const activeCount = resources.filter(r => r.status === 'ACTIVE').length;
+    const oosCount    = resources.filter(r => r.status === 'OUT_OF_SERVICE').length;
 
     return (
-        <div className="ca" style={S.layout}>
-
-            {/* ── SIDEBAR ── */}
-            <Sidebar
-                onFilterChange={handleSidebarFilter}
-                onAddResource={handleSidebarAdd}
-                activeFilter={activeFilter}
-            />
-
-            {/* ── MAIN ── */}
-            <main style={S.main}>
-
-    const active = resources.filter(r => r.status === 'ACTIVE').length;
-    const oos = resources.filter(r => r.status === 'OUT_OF_SERVICE').length;
-
-    return (
-        <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+        <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900 ca">
             {/* ── SHARED ADMIN SIDEBAR ── */}
             <AdminSidebar 
                 isOpen={sidebarOpen} 
                 onToggle={() => setSidebarOpen(!sidebarOpen)} 
                 activePage="resources"
+                onFilterChange={handleSidebarFilter}
+                onAddResource={handleSidebarAdd}
+                activeFilter={activeFilter}
             />
-
 
             {/* ── MAIN ── */}
             <main className={`flex-1 p-8 transition-all duration-300 ${sidebarOpen ? 'ml-[265px]' : 'ml-20'}`}>
@@ -207,8 +182,8 @@ export default function AdminResourcePage() {
                 <div style={S.sg}>
                     {[
                         {lbl:'Total Resources', v:resources.length,                           ico:'🗂️', accent:'#e8b923'},
-                        {lbl:'Active',          v:active,                                     ico:'✅', accent:'#2d6a4f'},
-                        {lbl:'Out of Service',  v:oos,                                        ico:'🔧', accent:'#c0392b'},
+                        {lbl:'Active',          v:activeCount,                                ico:'✅', accent:'#2d6a4f'},
+                        {lbl:'Out of Service',  v:oosCount,                                   ico:'🔧', accent:'#c0392b'},
                         {lbl:'Labs Available',  v:resources.filter(r=>r.type==='LAB').length, ico:'🔬', accent:'#c47d0e'},
                     ].map((st,i) => (
                         <div key={i} className="sa sh"
@@ -252,11 +227,8 @@ export default function AdminResourcePage() {
                         <option value="OUT_OF_SERVICE">🔧 Out of Service</option>
                     </select>
                     <button style={S.rb}
-                        onClick={() => { doFilter('ALL','ALL'); setSearch(''); setActiveFilter('ALL'); }}>
-                        ↺ Reset
-                    <button className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-100"
-                        onClick={() => { doFilter('ALL', 'ALL'); setSearch(''); }}>
-                        <RefreshCcw className="h-3 w-3" /> Reset
+                        onClick={() => { doFilter('ALL', 'ALL'); setSearch(''); setActiveFilter('ALL'); }}>
+                        <RefreshCcw className="inline-block h-3 w-3 mr-1" /> Reset
                     </button>
                     <div style={{marginLeft:'auto'}}>
                         <span style={S.cp}>{filtered.length} results</span>

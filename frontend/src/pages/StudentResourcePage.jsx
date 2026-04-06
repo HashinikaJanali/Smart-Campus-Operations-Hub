@@ -41,7 +41,7 @@ export default function StudentResourcePage() {
             const active = d.filter(r => r.status === 'ACTIVE');
             setResources(active); setFiltered(active);
         } catch (e) {
-            setError('Could not connect to backend on port 8090.');
+            setError('Could not connect to backend on port 8085.');
         } finally { setLoading(false); }
     };
 
