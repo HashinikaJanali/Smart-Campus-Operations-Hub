@@ -2,34 +2,3 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  body {
-    @apply bg-slate-50 font-sans text-slate-900;
-  }
-}
-
-@layer utilities {
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { @apply bg-slate-50; }
-  ::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-md; }
-  ::-webkit-scrollbar-thumb:hover { @apply bg-blue-500; }
-  
-  .shimY {
-    background: linear-gradient(90deg, #1e293b, #3b82f6, #60a5fa, #1e293b);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: shimY 3s linear infinite;
-  }
-  @keyframes shimY {
-    0% { background-position: -200% center; }
-    100% { background-position: 200% center; }
-  }
-}
