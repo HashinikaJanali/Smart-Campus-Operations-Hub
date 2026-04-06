@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Bell, User, LayoutDashboard, Home, BookOpen, Calendar, Ticket } from 'lucide-react';
+import { LayoutDashboard, Home, BookOpen, Calendar, Ticket } from 'lucide-react';
+import NotificationPanel from '../notifications/NotificationPanel';
 
 const UserHeader = () => {
   return (
@@ -68,24 +69,23 @@ const UserHeader = () => {
           </NavLink>
         </nav>
 
-        {/* Right Side: Notification & Profile */}
+        {/* Right Side: Login Button */}
         <div className="flex items-center gap-4">
-          <button className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-blue-300 transition-all hover:bg-white/10 hover:text-white shadow-sm">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-2.5 right-2.5 flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-[#241571]"></span>
-          </button>
+          <NotificationPanel />
 
           <div className="h-8 w-px bg-white/10"></div>
 
-          <button className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-1 pr-4 shadow-sm transition-all hover:bg-white/10 hover:border-white/20">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold text-sm shadow-md">
-              <User className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col items-start leading-tight">
-              <span className="text-sm font-bold text-white">John Doe</span>
-              <span className="text-[10px] font-bold uppercase tracking-tight text-blue-400/80">User Profile</span>
-            </div>
-          </button>
+          <NavLink
+            to="/login"
+            className={({ isActive }) =>
+              `flex items-center gap-2 rounded-xl px-4 py-2 font-bold transition-all duration-200 ${isActive 
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40' 
+                : 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white hover:shadow-lg hover:shadow-indigo-950/40'
+              }`
+            }
+          >
+            Login
+          </NavLink>
         </div>
 
       </div>
