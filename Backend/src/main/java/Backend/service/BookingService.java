@@ -59,7 +59,7 @@ public class BookingService {
         return bookingRepository.save(booking);
     }
 
-    public BookingModel updateBookingStatus(Long id, String status, String reason) {
+    public BookingModel updateBookingStatus(String id, String status, String reason) {
         Optional<BookingModel> bookingOpt = bookingRepository.findById(id);
         if (bookingOpt.isPresent()) {
             BookingModel booking = bookingOpt.get();
@@ -76,7 +76,7 @@ public class BookingService {
         throw new RuntimeException("Booking not found");
     }
 
-    public BookingModel cancelBooking(Long id, String userId) {
+    public BookingModel cancelBooking(String id, String userId) {
         Optional<BookingModel> bookingOpt = bookingRepository.findById(id);
         if (bookingOpt.isPresent()) {
             BookingModel booking = bookingOpt.get();

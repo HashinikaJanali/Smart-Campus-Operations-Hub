@@ -40,7 +40,7 @@ public class BookingController {
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<?> updateBookingStatus(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> updateBookingStatus(@PathVariable String id, @RequestBody Map<String, String> payload) {
         try {
             String status = payload.get("status");
             String reason = payload.get("reason");
@@ -52,7 +52,7 @@ public class BookingController {
     }
 
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelBooking(@PathVariable Long id, @RequestParam(required = false) String userId) {
+    public ResponseEntity<?> cancelBooking(@PathVariable String id, @RequestParam(required = false) String userId) {
         try {
             BookingModel cancelled = bookingService.cancelBooking(id, userId);
             return ResponseEntity.ok(cancelled);
