@@ -9,8 +9,8 @@ const UserHeader = () => {
 
         {/* Left Side: Logo & Title */}
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white shadow-md shadow-black/10 border border-white/5 transition-transform hover:scale-105">
-            <LayoutDashboard className="h-5 w-5" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 shadow-md shadow-black/10 border border-white/5 overflow-hidden transition-transform hover:scale-105">
+            <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-black tracking-tight text-white leading-none">
