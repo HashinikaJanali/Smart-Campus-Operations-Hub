@@ -7,6 +7,7 @@ import AdminBookingPage from './pages/AdminBookingPage';
 import StudentBookingPage from './pages/StudentBookingPage';
 import TicketingPage from './pages/TicketingPage';
 import AdminTicketingPage from './pages/AdminTicketingPage';
+import LoginPage from './pages/LoginPage';
 
 function App() {
     const role = localStorage.getItem("role");
@@ -16,6 +17,7 @@ function App() {
         <div className="min-h-screen bg-slate-50">
             <Routes>
                 <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
                 <Route path="/resourseadmin" element={<AdminResourcePage />} />
                 <Route path="/resoursestudent" element={<StudentResourcePage />} />
                 <Route path="/admin-bookings" element={<AdminBookingPage />} />
