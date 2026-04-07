@@ -98,7 +98,7 @@ export default function UserBookingPage() {
                 <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
                         <h2 className="text-3xl font-black tracking-tight text-slate-900 italic">
-                            My <span className="text-indigo-600">Reservations</span>
+                            My <span className="text-indigo-600">Bookings</span>
                         </h2>
                         <p className="text-sm font-medium text-slate-500 mt-1">Manage and track your resource booking requests.</p>
                     </div>
@@ -143,7 +143,7 @@ export default function UserBookingPage() {
                 ) : filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-32 text-slate-500">
                         <Bookmark className="w-16 h-16 mb-4 text-slate-300" />
-                        <h3 className="text-xl font-bold text-slate-700">No Reservations Found</h3>
+                        <h3 className="text-xl font-bold text-slate-700">No Bookings Found</h3>
                         <p className="mt-2 text-sm">You haven't made any bookings that match your criteria.</p>
                     </div>
                 ) : (
@@ -206,8 +206,8 @@ export default function UserBookingPage() {
 
             {/* Modal */}
             {showForm && (
-                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-                     <div className="w-full max-w-2xl transform transition-transform animate-in zoom-in-95 duration-200">
+                 <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                     <div className="w-full max-w-lg transform transition-transform animate-in zoom-in-95 duration-200">
                          <BookingForm 
                             onSubmit={handleCreateBooking}
                             onClose={() => setShowForm(false)}
