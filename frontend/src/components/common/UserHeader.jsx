@@ -46,7 +46,7 @@ const UserHeader = () => {
             <BookOpen className="h-4 w-4" /> Resources
           </NavLink>
           <NavLink
-            to="/student-bookings"
+            to="/bookings"
             className={({ isActive }) =>
               `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive 
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40' 

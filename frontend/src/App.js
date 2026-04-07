@@ -4,7 +4,7 @@ import HomePage from './pages/HomePage';
 import AdminResourcePage from './pages/AdminResourcePage';
 import StudentResourcePage from './pages/StudentResourcePage';
 import AdminBookingPage from './pages/AdminBookingPage';
-import StudentBookingPage from './pages/StudentBookingPage';
+import UserBookingPage from './pages/UserBookingPage';
 import TicketingPage from './pages/TicketingPage';
 import AdminTicketingPage from './pages/AdminTicketingPage';
 import LoginPage from './pages/LoginPage';
@@ -23,7 +23,7 @@ function App() {
                 <Route path="/resourseadmin" element={<AdminResourcePage />} />
                 <Route path="/resoursestudent" element={<StudentResourcePage />} />
                 <Route path="/admin-bookings" element={<AdminBookingPage />} />
-                <Route path="/student-bookings" element={<StudentBookingPage />} />
+                <Route path="/bookings" element={<UserBookingPage />} />
                 <Route path="/tickets" element={<TicketingPage />} />
                 <Route path="/admin-tickets" element={<AdminTicketingPage />} />
                 <Route path="*" element={<Navigate to="/" />} />

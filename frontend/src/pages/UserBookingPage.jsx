@@ -4,7 +4,7 @@ import { CalendarDays, Clock, MapPin, Search, Plus, Loader2, CheckCircle2, XCirc
 import { getBookingsByUser, createBooking, cancelBooking } from '../services/bookingService';
 import BookingForm from '../components/booking/BookingForm';
 
-export default function StudentBookingPage() {
+export default function UserBookingPage() {
     const [bookings, setBookings] = useState([]);
     const [filtered, setFiltered] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -13,7 +13,7 @@ export default function StudentBookingPage() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
 
-    const userId = localStorage.getItem("userId") || "student123";
+    const userId = localStorage.getItem("userId") || "STU001";
 
     useEffect(() => { loadBookings(); }, []);
 
