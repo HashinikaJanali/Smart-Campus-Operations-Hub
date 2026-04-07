@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Edit3, Users, Loader2, Info } from 'lucide-react';
+import { Calendar, Clock, Edit3, Users, Loader2, Info, X } from 'lucide-react';
 import { getAllResources } from '../../services/resourceService';
 
 export default function BookingForm({ onSubmit, onClose, isLoading, initialResourceId }) {
@@ -45,25 +45,25 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
     return (
         <div className="bg-white rounded-3xl w-full text-slate-800 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden border border-slate-200">
             {/* Header with Light/Indigo Aesthetic */}
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-8 border-b border-indigo-100">
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 border-b border-indigo-100">
                 <div className="flex justify-between items-start">
                     <div>
-                        <h2 className="text-3xl font-black text-indigo-900">
-                            New Reservation
+                        <h2 className="text-2xl font-black text-indigo-900">
+                            New Booking
                         </h2>
-                        <p className="text-indigo-600/80 mt-2 text-sm font-medium">Secure a facility or equipment instantly.</p>
+                        <p className="text-indigo-600/80 mt-1 text-xs font-medium">Secure a facility or equipment instantly.</p>
                     </div>
                     <button 
                         onClick={onClose}
                         className="text-slate-400 hover:text-slate-700 transition-colors p-2 bg-white rounded-full hover:bg-slate-100 border border-slate-200 shadow-sm"
                     >
-                        ✕
+                        <X className="w-4 h-4" />
                     </button>
                 </div>
             </div>
 
             {/* Form Content */}
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 
                 {/* Resource Selection */}
                 <div className="space-y-2">
@@ -76,7 +76,7 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
                             name="resourceId"
                             value={formData.resourceId}
                             onChange={handleChange}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer appearance-none shadow-sm"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-slate-900 focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer appearance-none shadow-sm"
                         >
                             <option value="" disabled>Select a facility or equipment</option>
                             {resources.map(r => (
@@ -100,7 +100,7 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
                         <input 
                             required type="date" name="bookingDate" value={formData.bookingDate} onChange={handleChange}
                             min={new Date().toISOString().split('T')[0]}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm"
                         />
                     </div>
                      {/* Attendees */}
@@ -110,7 +110,7 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
                         </label>
                         <input 
                             required type="number" min="1" name="attendees" value={formData.attendees} onChange={handleChange}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm"
                             placeholder="Expected numbers"
                         />
                     </div>
@@ -124,7 +124,7 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
                         </label>
                         <input 
                             required type="time" name="startTime" value={formData.startTime} onChange={handleChange}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm"
                         />
                     </div>
 
@@ -135,7 +135,7 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
                         </label>
                         <input 
                             required type="time" name="endTime" value={formData.endTime} onChange={handleChange}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm"
                         />
                     </div>
                 </div>
@@ -147,8 +147,8 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
                     </label>
                     <textarea 
                         required name="purpose" value={formData.purpose} onChange={handleChange} rows="3"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none shadow-sm placeholder-slate-400"
-                        placeholder="State the objective of this reservation..."
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all resize-none shadow-sm placeholder-slate-400"
+                        placeholder="State the objective of this booking..."
                     />
                 </div>
 

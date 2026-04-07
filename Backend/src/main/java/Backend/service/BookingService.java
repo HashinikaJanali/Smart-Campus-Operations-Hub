@@ -28,16 +28,28 @@ public class BookingService {
     }
 
     public BookingModel createBooking(BookingModel booking) {
-        // Validate timeframe overlap
-        List<BookingModel> overlaps = bookingRepository.findOverlappingBookings(
-                booking.getResourceId(),
-                booking.getBookingDate(),
-                booking.getStartTime(),
-                booking.getEndTime()
+        // ------------------------------------------------------------------
+        // Scheduling conflict check (done in Java for reliability)
+        // Two bookings [A,B] and [C,D] overlap when: A < D  AND  C < B
+        // Times are stored as HH:MM (24h, zero-padded) so String.compareTo
+        // gives correct lexicographic ordering.
+        // ------------------------------------------------------------------
+        List<BookingModel> activeBookings = bookingRepository
+                .findByResourceIdAndBookingDateAndStatusIn(
+                        booking.getResourceId(),
+                        booking.getBookingDate(),
+                        java.util.Arrays.asList("PENDING", "APPROVED")
+                );
+
+        boolean hasConflict = activeBookings.stream().anyMatch(existing ->
+                existing.getStartTime().compareTo(booking.getEndTime()) < 0
+                && existing.getEndTime().compareTo(booking.getStartTime()) > 0
         );
 
-        if (!overlaps.isEmpty()) {
-            throw new RuntimeException("Scheduling conflict: The resource is already booked during this time range.");
+        if (hasConflict) {
+            throw new RuntimeException(
+                "Scheduling conflict: This resource is already booked during the requested time period."
+            );
         }
 
         // Validate resource capacity if attendees specified
