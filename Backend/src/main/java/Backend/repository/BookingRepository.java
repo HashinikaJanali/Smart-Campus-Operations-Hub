@@ -2,7 +2,6 @@ package Backend.repository;
 
 import Backend.model.BookingModel;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,11 +11,11 @@ public interface BookingRepository extends MongoRepository<BookingModel, String>
     
     List<BookingModel> findByUserId(String userId);
 
-    @Query("{'resourceId': ?0, 'bookingDate': ?3, 'status': { $in: ['PENDING', 'APPROVED'] }, $or: [ { 'startTime': { $lt: ?2 }, 'endTime': { $gt: ?1 } } ] }")
-    List<BookingModel> findOverlappingBookings(
+    // Fetch all active bookings for a given resource on a given date.
+    // Overlap logic is handled in Java (BookingService) for reliability.
+    List<BookingModel> findByResourceIdAndBookingDateAndStatusIn(
             String resourceId,
-            String startTime,
-            String endTime,
-            String bookingDate
+            String bookingDate,
+            java.util.List<String> statuses
     );
 }

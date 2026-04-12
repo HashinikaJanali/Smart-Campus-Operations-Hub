@@ -37,7 +37,7 @@ export default function HomePage() {
                                 <span className="text-indigo-600">Simplified & Unified</span>
                             </h1>
                             <p className="mb-8 text-base font-medium text-slate-500 leading-relaxed md:text-lg">
-                                Empowering Students, Lecturers, and Staff with a state-of-the-art platform for resource reservation, issue tracking, and real-time operations management.
+                                Empowering Students, Lecturers, and Staff with a state-of-the-art platform for resource booking, issue tracking, and real-time operations management.
                             </p>
                             <div className="flex flex-col gap-3 sm:flex-row">
                                 <NavLink
@@ -73,7 +73,7 @@ export default function HomePage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {[
                             {
-                                title: "Smart Reservations",
+                                title: "Smart Bookings",
                                 desc: "Instantly check availability and book lecture halls or labs with real-time approvals and schedules.",
                                 icon: Zap,
                                 color: "text-indigo-600",

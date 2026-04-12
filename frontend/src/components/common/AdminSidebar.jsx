@@ -36,7 +36,7 @@ export default function AdminSidebar({ isOpen, onToggle, activePage }) {
             id: 'tickets',
             label: 'Ticket Management',
             icon: Ticket,
-            path: '#' // Placeholder until Ticket module is implemented
+            path: '/admin-tickets'
         }
     ];
 
