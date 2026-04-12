@@ -13,7 +13,7 @@ export default function UserBookingPage() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
 
-    const userId = localStorage.getItem("userId") || "STU001";
+    const userId = localStorage.getItem("userId") || "User";
 
     useEffect(() => { loadBookings(); }, []);
 

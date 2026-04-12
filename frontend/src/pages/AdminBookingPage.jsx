@@ -139,7 +139,7 @@ export default function AdminBookingPage() {
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Search Student ID or Resource..."
+                                placeholder="Search User ID or Resource..."
                                 className="w-full pl-11 pr-4 py-2 rounded-xl border border-slate-200 bg-slate-50/50 text-sm outline-none focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-100 transition-all font-normal"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
@@ -249,7 +249,7 @@ export default function AdminBookingPage() {
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
                                                     <span className="text-sm font-bold text-slate-700 tracking-tight">{req.userId}</span>
-                                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mt-0.5">Campus Student</span>
+                                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mt-0.5">Campus User</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
