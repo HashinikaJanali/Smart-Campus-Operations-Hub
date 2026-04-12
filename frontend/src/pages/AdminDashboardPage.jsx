@@ -5,7 +5,7 @@ import {
     AreaChart, Area 
 } from 'recharts';
 import { LayoutDashboard, Users, Clock, Activity, Loader2, ArrowUpRight } from 'lucide-react';
-import { getAllResources } from '../services/resourceService';
+import { getSummaryStats, getTopResources, getPeakHours } from '../services/analyticsService';
 
 export default function AdminDashboardPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -13,21 +13,12 @@ export default function AdminDashboardPage() {
     const [stats, setStats] = useState({
         totalResources: 0,
         activeResources: 0,
-        monthlyBookings: 142, // Mocked 
-        avgUtilization: '68%' // Mocked
+        totalBookings: 0,
+        avgUtilization: '0%'
     });
     
     const [topResources, setTopResources] = useState([]);
-
-    // Mock peak hours data
-    const peakHoursData = [
-        { time: '08:00', bookings: 12 },
-        { time: '10:00', bookings: 45 },
-        { time: '12:00', bookings: 32 },
-        { time: '14:00', bookings: 58 },
-        { time: '16:00', bookings: 24 },
-        { time: '18:00', bookings: 10 },
-    ];
+    const [peakHoursData, setPeakHoursData] = useState([]);
 
     useEffect(() => {
         loadData();
@@ -36,36 +27,26 @@ export default function AdminDashboardPage() {
     const loadData = async () => {
         try {
             setLoading(true);
-            const resources = await getAllResources();
             
-            // Calculate real resource stats
-            setStats(prev => ({
-                ...prev,
-                totalResources: resources.length,
-                activeResources: resources.filter(r => r.status === 'ACTIVE').length
-            }));
+            // Fetch all statistics in parallel
+            const [summary, top, peak] = await Promise.all([
+                getSummaryStats(),
+                getTopResources(),
+                getPeakHours()
+            ]);
 
-            // Generate mock Top Resources based on real resource names if available
-            const sortedResources = [...resources]
-                .sort((a,b) => (b.capacity || 0) - (a.capacity || 0))
-                .slice(0, 5)
-                .map(r => ({
-                    name: r.name.substring(0, 15),
-                    reservations: Math.floor(Math.random() * 50) + 10 // Mock booking count
-                }));
-            
-            if (sortedResources.length > 0) {
-                setTopResources(sortedResources);
-            } else {
-                setTopResources([
-                    { name: 'Lecture Hall A', reservations: 45 },
-                    { name: 'Bio Lab 1', reservations: 32 },
-                    { name: 'Conference RM', reservations: 28 },
-                    { name: 'Projector', reservations: 18 },
-                ]);
-            }
+            setStats({
+                totalResources: summary.totalResources,
+                activeResources: summary.activeResources,
+                totalBookings: summary.totalBookings,
+                avgUtilization: summary.avgUtilization
+            });
+
+            setTopResources(top);
+            setPeakHoursData(peak);
+
         } catch (error) {
-            console.error(error);
+            console.error("Failed to load analytics:", error);
         } finally {
             setLoading(false);
         }
@@ -110,7 +91,7 @@ export default function AdminDashboardPage() {
                             {[
                                 { lbl: 'Total Resources', val: stats.totalResources, icon: LayoutDashboard, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+12%' },
                                 { lbl: 'Active Resources', val: stats.activeResources, icon: Clock, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: 'Healthy' },
-                                { lbl: 'Total Bookings (M)', val: stats.monthlyBookings, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: '+24%' },
+                                { lbl: 'Total Bookings', val: stats.totalBookings, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: '+24%' },
                                 { lbl: 'Avg Utilization', val: stats.avgUtilization, icon: Activity, color: 'text-amber-600', bg: 'bg-amber-50', trend: '+5%' },
                             ].map((s, i) => {
                                 const Icon = s.icon;
