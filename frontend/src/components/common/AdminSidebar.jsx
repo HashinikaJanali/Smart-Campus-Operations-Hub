@@ -7,12 +7,19 @@ import {
     Menu,
     ChevronLeft,
     ChevronRight,
-    LogOut
+    LogOut,
+    Activity
 } from 'lucide-react';
 
 export default function AdminSidebar({ isOpen, onToggle, activePage }) {
 
     const menuItems = [
+        {
+            id: 'dashboard',
+            label: 'Analytics Dashboard',
+            icon: Activity,
+            path: '/admin-dashboard'
+        },
         {
             id: 'resources',
             label: 'Resource Management',

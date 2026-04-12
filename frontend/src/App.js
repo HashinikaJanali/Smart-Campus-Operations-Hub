@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminResourcePage from './pages/AdminResourcePage';
 import StudentResourcePage from './pages/StudentResourcePage';
 import AdminBookingPage from './pages/AdminBookingPage';
@@ -20,6 +21,7 @@ function App() {
             <Routes>
 
                 <Route path="/" element={<HomePage />} />
+                <Route path="/admin-dashboard" element={<AdminDashboardPage />} />
                 <Route path="/resourseadmin" element={<AdminResourcePage />} />
                 <Route path="/resoursestudent" element={<StudentResourcePage />} />
                 <Route path="/admin-bookings" element={<AdminBookingPage />} />
