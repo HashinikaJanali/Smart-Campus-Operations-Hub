@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_BASE = 'http://localhost:8085/api';
+const FILE_BASE = 'http://localhost:8085';
 
 const api = axios.create({
     baseURL: API_BASE,
@@ -35,3 +36,9 @@ export const editComment = (ticketId, commentId, text) =>
     api.put(`/tickets/${ticketId}/comments/${commentId}`, { text });
 export const deleteComment = (ticketId, commentId) =>
     api.delete(`/tickets/${ticketId}/comments/${commentId}`);
+
+export const resolveTicketImageUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `${FILE_BASE}${url.startsWith('/') ? url : `/${url}`}`;
+};

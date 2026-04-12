@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import {
     getAllTickets, updateTicketStatus, assignTicket,
-    getComments, addComment, editComment, deleteComment
+    getComments, addComment, editComment, deleteComment,
+    resolveTicketImageUrl
 } from '../services/ticketService';
 
 const CATEGORIES = [
@@ -272,9 +273,9 @@ function AdminTicketCard({ ticket, onUpdated }) {
                                 <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Evidence</p>
                                 <div className="flex gap-2 flex-wrap">
                                     {ticket.imageUrls.map((url, i) => (
-                                        <img key={i} src={url} alt={`ev-${i}`}
+                                        <img key={i} src={resolveTicketImageUrl(url)} alt={`ev-${i}`}
                                             className="h-24 w-24 rounded-xl object-cover border border-slate-200 cursor-pointer hover:opacity-90"
-                                            onClick={() => window.open(url, '_blank')} />
+                                            onClick={() => window.open(resolveTicketImageUrl(url), '_blank')} />
                                     ))}
                                 </div>
                             </div>
