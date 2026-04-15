@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = "http://localhost:8085/api/resources";
+const API_URL = "http://localhost:8090/api/resources";
 
 // GET ALL
 export const getAllResources = async () => {
