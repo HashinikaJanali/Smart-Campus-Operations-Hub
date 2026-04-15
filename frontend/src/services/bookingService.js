@@ -30,3 +30,8 @@ export const cancelBooking = async (id, userId) => {
     const response = await axios.put(url);
     return response.data;
 };
+
+export const checkInBooking = async (id) => {
+    const response = await axios.post(`${API_URL}/${id}/checkin`);
+    return response.data;
+};

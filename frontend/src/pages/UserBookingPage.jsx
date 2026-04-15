@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import UserHeader from '../components/common/UserHeader';
-import { CalendarDays, Clock, MapPin, Search, Plus, Loader2, CheckCircle2, XCircle, AlertCircle, Bookmark } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, Search, Plus, Loader2, CheckCircle2, XCircle, AlertCircle, Bookmark, QrCode, UserCheck } from 'lucide-react';
 import { getBookingsByUser, createBooking, cancelBooking } from '../services/bookingService';
 import BookingForm from '../components/booking/BookingForm';
+import QRModal from '../components/booking/QRModal';
+import CheckInScanner from '../components/booking/CheckInScanner';
 
 export default function UserBookingPage() {
     const [bookings, setBookings] = useState([]);
@@ -12,6 +14,9 @@ export default function UserBookingPage() {
     const [submitting, setSubmitting] = useState(false);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const [selectedBooking, setSelectedBooking] = useState(null);
+    const [showQR, setShowQR] = useState(false);
+    const [showScanner, setShowScanner] = useState(false);
 
     const userId = localStorage.getItem("userId") || "User";
 
@@ -197,6 +202,35 @@ export default function UserBookingPage() {
                                             </button>
                                          </div>
                                      )}
+
+                                     {booking.status === 'APPROVED' && !booking.checkedIn && (
+                                         <div className="mt-4 flex gap-3 relative z-10">
+                                             <button 
+                                                onClick={() => { setSelectedBooking(booking); setShowQR(true); }}
+                                                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm border border-indigo-100 hover:bg-indigo-100 transition-colors"
+                                            >
+                                                <QrCode className="w-4 h-4" /> QR Code
+                                            </button>
+                                            <button 
+                                                onClick={() => { setSelectedBooking(booking); setShowScanner(true); }}
+                                                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-md shadow-indigo-600/20 hover:bg-indigo-700 transition-colors"
+                                            >
+                                                <UserCheck className="w-4 h-4" /> Check-in
+                                            </button>
+                                         </div>
+                                     )}
+
+                                     {booking.checkedIn && (
+                                         <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-3 relative z-10">
+                                              <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center">
+                                                  <CheckCircle2 className="w-4 h-4" />
+                                              </div>
+                                              <div>
+                                                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Checked In</p>
+                                                  <p className="text-xs font-bold text-slate-800">{new Date(booking.checkInTime).toLocaleString()}</p>
+                                              </div>
+                                         </div>
+                                     )}
                                 </div>
                             );
                         })}
@@ -212,6 +246,34 @@ export default function UserBookingPage() {
                             onSubmit={handleCreateBooking}
                             onClose={() => setShowForm(false)}
                             isLoading={submitting}
+                         />
+                     </div>
+                 </div>
+            )}
+
+            {/* QR Modal */}
+            {showQR && selectedBooking && (
+                 <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                     <div className="transform transition-transform animate-in zoom-in-95 duration-200">
+                         <QRModal 
+                            booking={selectedBooking} 
+                            onClose={() => { setShowQR(false); setSelectedBooking(null); }} 
+                         />
+                     </div>
+                 </div>
+            )}
+
+            {/* Scanner Modal */}
+            {showScanner && (
+                 <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                     <div className="transform transition-transform animate-in zoom-in-95 duration-200 w-full max-w-lg">
+                         <CheckInScanner 
+                            onClose={() => { setShowScanner(false); setSelectedBooking(null); }} 
+                            onSuccess={() => {
+                                setShowScanner(false);
+                                setSelectedBooking(null);
+                                loadBookings();
+                            }}
                          />
                      </div>
                  </div>

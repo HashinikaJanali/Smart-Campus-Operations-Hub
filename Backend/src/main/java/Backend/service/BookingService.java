@@ -107,4 +107,24 @@ public class BookingService {
         }
         throw new RuntimeException("Booking not found");
     }
+
+    public BookingModel checkIn(String id) {
+        Optional<BookingModel> bookingOpt = bookingRepository.findById(id);
+        if (bookingOpt.isPresent()) {
+            BookingModel booking = bookingOpt.get();
+
+            if (!"APPROVED".equals(booking.getStatus())) {
+                throw new RuntimeException("Only approved bookings can be checked in. Current status: " + booking.getStatus());
+            }
+
+            if (booking.isCheckedIn()) {
+                throw new RuntimeException("Booking is already checked in.");
+            }
+
+            booking.setCheckedIn(true);
+            booking.setCheckInTime(java.time.LocalDateTime.now().toString());
+            return bookingRepository.save(booking);
+        }
+        throw new RuntimeException("Booking not found");
+    }
 }
