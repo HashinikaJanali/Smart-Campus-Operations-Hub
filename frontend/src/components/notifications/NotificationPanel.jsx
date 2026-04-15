@@ -27,20 +27,29 @@ export default function NotificationPanel() {
     const loadNotifications = async () => {
         try {
             const data = await notificationService.getMyNotifications();
-            setNotifications(data);
+            // Make sure it's always an array
+            setNotifications(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error loading notifications', error);
+            setNotifications([]); // set empty array on error
         }
     };
 
     const handleMarkRead = async (id) => {
-        await notificationService.markAsRead(id);
-        setNotifications(prev =>
-            prev.map(n => n.id === id ? { ...n, isRead: true } : n)
-        );
+        try {
+            await notificationService.markAsRead(id);
+            setNotifications(prev =>
+                prev.map(n => n.id === id ? { ...n, isRead: true } : n)
+            );
+        } catch (error) {
+            console.error('Error marking as read', error);
+        }
     };
 
-    const unreadCount = notifications.filter(n => !n.isRead).length;
+    // Safe unread count
+    const unreadCount = Array.isArray(notifications)
+        ? notifications.filter(n => !n.isRead).length
+        : 0;
 
     const getTypeColor = (type) => {
         switch (type) {

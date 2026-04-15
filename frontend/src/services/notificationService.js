@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8080/api/notifications';
+const API_URL = 'http://localhost:8085/api/notifications';
 
 const notificationService = {
   getMyNotifications: async () => {

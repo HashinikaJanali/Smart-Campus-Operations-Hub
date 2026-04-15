@@ -14,7 +14,7 @@ export default function AdminUserManagementPage() {
     const loadUsers = async () => {
         try {
             setLoading(true);
-            const res = await fetch('http://localhost:8080/api/users', {
+            const res = await fetch('http://localhost:8085/api/users', {
                 credentials: 'include'
             });
             const data = await res.json();
@@ -39,7 +39,7 @@ export default function AdminUserManagementPage() {
     const handleRoleChange = async (userId, newRole) => {
         try {
             setUpdatingId(userId);
-            await fetch(`http://localhost:8080/api/users/${userId}/role`, {
+            await fetch(`http://localhost:8085/api/users/${userId}/role`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
