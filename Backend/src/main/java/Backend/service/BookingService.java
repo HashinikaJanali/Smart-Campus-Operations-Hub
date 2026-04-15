@@ -57,6 +57,7 @@ public class BookingService {
         if(resOpt.isPresent()) {
             ResourceModel currentResource = resOpt.get();
             booking.setResourceName(currentResource.getName()); // Keep denormalized copy
+            booking.setResourceType(currentResource.getType());
             if (booking.getAttendees() > currentResource.getCapacity() && currentResource.getCapacity() > 0) {
                  throw new RuntimeException("Capacity exceeded: Selected resource has max capacity of " + currentResource.getCapacity());
             }

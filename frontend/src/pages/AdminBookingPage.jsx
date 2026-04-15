@@ -3,7 +3,7 @@ import {
     Clock, CheckCircle2, XCircle, AlertCircle, MapPin,
     CalendarDays, Eye, Loader2, ArrowRight, Search,
     SlidersHorizontal, Filter, Database, X, RefreshCcw,
-    ChevronLeft, ChevronRight
+    ChevronLeft, ChevronRight, Building2, FlaskConical, Users
 } from 'lucide-react';
 import { getAllBookings, updateBookingStatus } from '../services/bookingService';
 import ReviewModal from '../components/booking/ReviewModal';
@@ -241,13 +241,27 @@ export default function AdminBookingPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {paginated.map((req) => (
-                                        <tr key={req.id} className="group border-b border-slate-100 transition-colors hover:bg-slate-50/80">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 shadow-sm transition-transform group-hover:scale-105">
-                                                        <MapPin className="h-5 w-5" />
-                                                    </div>
+                                     {paginated.map((req) => {
+                                         // Resource Type Icon Mapping with Name Fallback
+                                         const getResourceIcon = (b) => {
+                                             const type = b.resourceType;
+                                             const name = (b.resourceName || '').toUpperCase();
+                                             
+                                             if (type === 'LECTURE_HALL' || name.includes('HALL') || name.includes('LECTURE')) return Building2;
+                                             if (type === 'LAB' || name.includes('LAB')) return FlaskConical;
+                                             if (type === 'MEETING_ROOM' || name.includes('ROOM') || name.includes('MEETING')) return Users;
+                                             
+                                             return MapPin;
+                                         };
+                                         const ResourceIcon = getResourceIcon(req);
+
+                                         return (
+                                             <tr key={req.id} className="group border-b border-slate-100 transition-colors hover:bg-slate-50/80">
+                                                 <td className="px-6 py-4">
+                                                     <div className="flex items-center gap-3">
+                                                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 shadow-sm transition-transform group-hover:scale-105">
+                                                             <ResourceIcon className="h-5 w-5" />
+                                                         </div>
                                                     <div className="overflow-hidden">
                                                         <div className="text-sm font-bold text-slate-900 truncate tracking-tight">{req.resourceName || `Resource #${req.resourceId}`}</div>
                                                         <div className="text-xs text-slate-400">ID #{req.id}</div>
@@ -312,7 +326,8 @@ export default function AdminBookingPage() {
                                                 </button>
                                             </td>
                                         </tr>
-                                    ))}
+                                         );
+                                     })}
                                 </tbody>
                             </table>
                         )}

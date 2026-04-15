@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, XCircle, Info, Loader2, X } from 'lucide-react';
+import { CheckCircle2, XCircle, Info, Loader2, X, MapPin, Building2, FlaskConical, Users } from 'lucide-react';
 
 export default function ReviewModal({ booking, onDecision, onClose, isLoading }) {
     const [reason, setReason] = useState('');
@@ -44,7 +44,20 @@ export default function ReviewModal({ booking, onDecision, onClose, isLoading })
                     <div className="grid grid-cols-2 gap-y-4 gap-x-6">
                         <div>
                             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Resource</div>
-                            <div className="font-bold text-indigo-700">{booking.resourceName || `Resource ID ${booking.resourceId}`}</div>
+                            <div className="flex items-center gap-2">
+                                {(() => {
+                                    const type = booking.resourceType;
+                                    const name = (booking.resourceName || '').toUpperCase();
+                                    let Icon = MapPin;
+                                    
+                                    if (type === 'LECTURE_HALL' || name.includes('HALL') || name.includes('LECTURE')) Icon = Building2;
+                                    else if (type === 'LAB' || name.includes('LAB')) Icon = FlaskConical;
+                                    else if (type === 'MEETING_ROOM' || name.includes('ROOM') || name.includes('MEETING')) Icon = Users;
+                                    
+                                    return <Icon className="w-4 h-4 text-indigo-500" />;
+                                })()}
+                                <div className="font-bold text-indigo-700">{booking.resourceName || `Resource ID ${booking.resourceId}`}</div>
+                            </div>
                         </div>
                         <div>
                             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">User</div>
