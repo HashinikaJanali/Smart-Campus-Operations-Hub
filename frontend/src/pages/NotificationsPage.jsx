@@ -14,9 +14,11 @@ export default function NotificationsPage() {
         try {
             setLoading(true);
             const data = await notificationService.getMyNotifications();
-            setNotifications(data);
+            // Make sure it's always an array
+            setNotifications(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error loading notifications', error);
+            setNotifications([]);
         } finally {
             setLoading(false);
         }
@@ -43,9 +45,13 @@ export default function NotificationsPage() {
     };
 
     const handleMarkAllRead = async () => {
-        const unread = notifications.filter(n => !n.isRead);
-        await Promise.all(unread.map(n => notificationService.markAsRead(n.id)));
-        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        try {
+            const unread = notifications.filter(n => !n.isRead);
+            await Promise.all(unread.map(n => notificationService.markAsRead(n.id)));
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        } catch (error) {
+            console.error('Error marking all as read', error);
+        }
     };
 
     const getTypeConfig = (type) => {
@@ -71,7 +77,9 @@ export default function NotificationsPage() {
             ? notifications.filter(n => !n.isRead)
             : notifications.filter(n => n.isRead);
 
-    const unreadCount = notifications.filter(n => !n.isRead).length;
+    const unreadCount = Array.isArray(notifications)
+        ? notifications.filter(n => !n.isRead).length
+        : 0;
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
