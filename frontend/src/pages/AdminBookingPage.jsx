@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { getAllBookings, updateBookingStatus } from '../services/bookingService';
 import ReviewModal from '../components/booking/ReviewModal';
+import { useNotificationRefresh } from '../contexts/NotificationContext';
 
 import AdminSidebar from '../components/common/AdminSidebar';
 
@@ -18,6 +19,7 @@ export default function AdminBookingPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
+    const { refreshNotifications } = useNotificationRefresh();
 
     // Filter States
     const [search, setSearch] = useState('');
@@ -46,6 +48,8 @@ export default function AdminBookingPage() {
             await updateBookingStatus(id, status, reason);
             setReviewing(null);
             loadAllBookings();
+            // Refresh notifications to show the approval/rejection notification
+            refreshNotifications();
         } catch (error) {
             alert(error.response?.data || "Failed to update status");
         } finally {

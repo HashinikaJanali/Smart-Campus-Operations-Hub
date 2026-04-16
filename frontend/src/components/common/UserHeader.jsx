@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, BookOpen, Calendar, Ticket, LogOut, ShieldCheck, User, ChevronDown, Bell } from 'lucide-react';
+import { Home, BookOpen, Calendar, Ticket, LogOut, ShieldCheck, User, ChevronDown } from 'lucide-react';
 import NotificationPanel from '../notifications/NotificationPanel';
 import authService from '../../services/authService';
 import logo from '../../assets/logo.png';
@@ -168,13 +168,6 @@ const UserHeader = () => {
                       </span>
                     </div>
                     <div className="py-1">
-                      <button
-                        onClick={() => { navigate('/notifications'); setDropdownOpen(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
-                      >
-                        <Bell className="h-4 w-4 text-slate-400" />
-                        Notifications
-                      </button>
                       {isAdmin && (
                         <button
                           onClick={() => { navigate('/admin/users'); setDropdownOpen(false); }}

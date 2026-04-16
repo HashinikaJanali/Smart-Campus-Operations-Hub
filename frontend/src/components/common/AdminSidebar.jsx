@@ -6,11 +6,18 @@ import {
     Ticket,
     Menu,
     LogOut,
-    Activity
+    Activity,
+    Users
 } from 'lucide-react';
 import logo from '../../assets/logo.png';
+import authService from '../../services/authService';
 
 export default function AdminSidebar({ isOpen, onToggle, activePage }) {
+
+    const user = authService.getUser();
+    const displayName = user?.name || 'System Admin';
+    const displayEmail = user?.email || '';
+    const avatarLetter = displayName.charAt(0).toUpperCase();
 
     const menuItems = [
         {
@@ -36,6 +43,12 @@ export default function AdminSidebar({ isOpen, onToggle, activePage }) {
             label: 'Ticket Management',
             icon: Ticket,
             path: '/admin-tickets'
+        },
+        {
+            id: 'users',
+            label: 'User Management',
+            icon: Users,
+            path: '/admin/users'
         }
     ];
 
@@ -93,26 +106,25 @@ export default function AdminSidebar({ isOpen, onToggle, activePage }) {
             </div>
 
             {/* User Profile / Logout Section Footer */}
-            <div className={`mt-auto flex items-center border-t border-white/10 pt-6 w-full ${isOpen ? 'gap-3 px-2' : 'justify-center'}`}>
+            <div className={`mt-auto flex items-center border-t border-white/10 pt-6 w-full ${isOpen ? 'gap-3 px-2' : 'flex-col gap-3 items-center'}`}>
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white p-0.5 shadow-lg shadow-black/20 ring-1 ring-white/10">
-                    <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-100 text-xs font-black text-[#241571]">A</div>
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-slate-100 text-xs font-black text-[#241571]">{avatarLetter}</div>
                 </div>
 
                 {isOpen && (
-                    <div className="overflow-hidden whitespace-nowrap flex-1 text-left">
-                        <div className="text-sm font-semibold text-white leading-none">System Admin</div>
-                        <div className="mt-1 text-[10px] text-blue-400/80 font-bold uppercase tracking-tight">Admin Account</div>
+                    <div className="overflow-hidden flex-1 text-left min-w-0">
+                        <div className="text-sm font-semibold text-white leading-none truncate">{displayName}</div>
+                        <div className="mt-1 text-[10px] text-blue-400/80 font-medium tracking-tight truncate">{displayEmail}</div>
                     </div>
                 )}
 
-                {isOpen && (
-                    <button
-                        className="group flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/5 text-blue-300 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200 shadow-sm"
-                        title="Log out"
-                    >
-                        <LogOut className="h-4 w-4 transition-colors duration-200 group-hover:text-rose-500" />
-                    </button>
-                )}
+                <button
+                    onClick={() => authService.logout()}
+                    className="group flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/5 text-blue-300 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200 shadow-sm"
+                    title="Log out"
+                >
+                    <LogOut className="h-4 w-4 transition-colors duration-200 group-hover:text-rose-500" />
+                </button>
             </div>
         </aside>
     );

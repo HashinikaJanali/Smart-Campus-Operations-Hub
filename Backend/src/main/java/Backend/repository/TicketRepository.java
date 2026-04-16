@@ -9,6 +9,7 @@ import java.util.List;
 @Repository
 public interface TicketRepository extends MongoRepository<TicketModel, String> {
 
+    List<TicketModel> findByUserId(String userId);
     List<TicketModel> findBySubmittedBy(String submittedBy);
     List<TicketModel> findByAssignedTo(String assignedTo);
     List<TicketModel> findByStatus(String status);

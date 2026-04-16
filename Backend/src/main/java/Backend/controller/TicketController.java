@@ -24,11 +24,11 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.getAllTickets());
     }
 
-    // GET /api/tickets/my?submittedBy=userId
+    // GET /api/tickets/my?userId=xxx
     @GetMapping("/my")
     public ResponseEntity<List<TicketModel>> getMyTickets(
-            @RequestParam(required = false, defaultValue = "anonymous") String submittedBy) {
-        return ResponseEntity.ok(ticketService.getMyTickets(submittedBy));
+            @RequestParam(required = false) String userId) {
+        return ResponseEntity.ok(ticketService.getMyTickets(userId));
     }
 
     // GET /api/tickets/{id}
@@ -50,13 +50,14 @@ public class TicketController {
             @RequestParam("description") String description,
             @RequestParam(value = "priority", defaultValue = "MEDIUM") String priority,
             @RequestParam(value = "submittedBy", defaultValue = "anonymous") String submittedBy,
+            @RequestParam(value = "userId", required = false) String userId,
             @RequestParam(value = "contactPhone", required = false) String contactPhone,
             @RequestParam(value = "contactEmail", required = false) String contactEmail,
             @RequestParam(value = "images", required = false) List<MultipartFile> images) {
         try {
             TicketModel created = ticketService.createTicket(
                     resource, location, category, description, priority,
-                    submittedBy, contactPhone, contactEmail, images);
+                    submittedBy, userId, contactPhone, contactEmail, images);
             return ResponseEntity.ok(created);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed to create ticket: " + e.getMessage());

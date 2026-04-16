@@ -1,28 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, CheckCheck, X, BellOff } from 'lucide-react';
+import { Bell, CheckCheck, X, BellOff, Zap } from 'lucide-react';
 import notificationService from '../../services/notificationService';
 import { useNavigate } from 'react-router-dom';
 
 export default function NotificationPanel() {
     const [notifications, setNotifications] = useState([]);
     const [open, setOpen] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
     const panelRef = useRef(null);
     const navigate = useNavigate();
-
-    useEffect(() => {
-        loadNotifications();
-    }, []);
-
-    // Close when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (panelRef.current && !panelRef.current.contains(e.target)) {
-                setOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
 
     const loadNotifications = async () => {
         try {
@@ -35,6 +21,48 @@ export default function NotificationPanel() {
         }
     };
 
+    useEffect(() => {
+        loadNotifications();
+        fetchCurrentUser();
+        
+        // Poll for new notifications every 10 seconds for better responsiveness
+        const interval = setInterval(loadNotifications, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const fetchCurrentUser = async () => {
+        try {
+            const user = await notificationService.getCurrentUserInfo();
+            if (user) {
+                setCurrentUser(user);
+                console.log('Current user from backend:', user);
+                console.log('UserID from localStorage:', localStorage.getItem('userId'));
+            }
+        } catch (error) {
+            console.error('Error fetching current user', error);
+        }
+    };
+
+    // Close when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (panelRef.current && !panelRef.current.contains(e.target)) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleMarkAllRead = async () => {
+        try {
+            await notificationService.markAllAsRead();
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        } catch (error) {
+            console.error('Error marking all as read', error);
+        }
+    };
+
     const handleMarkRead = async (id) => {
         try {
             await notificationService.markAsRead(id);
@@ -43,6 +71,18 @@ export default function NotificationPanel() {
             );
         } catch (error) {
             console.error('Error marking as read', error);
+        }
+    };
+
+    const handleTestNotification = async () => {
+        try {
+            const result = await notificationService.createTestNotification();
+            if (result) {
+                // Reload notifications to show the test notification
+                await loadNotifications();
+            }
+        } catch (error) {
+            console.error('Error creating test notification', error);
         }
     };
 
@@ -92,20 +132,47 @@ export default function NotificationPanel() {
                                 </span>
                             )}
                         </div>
-                        <button
-                            onClick={() => setOpen(false)}
-                            className="p-1 rounded-lg hover:bg-slate-100 transition-colors"
-                        >
-                            <X className="w-4 h-4 text-slate-400" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                            {unreadCount > 0 && (
+                                <button
+                                    onClick={handleMarkAllRead}
+                                    className="p-1 rounded-lg hover:bg-slate-100 transition-colors"
+                                    title="Mark all as read"
+                                >
+                                    <CheckCheck className="w-4 h-4 text-indigo-500" />
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setOpen(false)}
+                                className="p-1 rounded-lg hover:bg-slate-100 transition-colors"
+                            >
+                                <X className="w-4 h-4 text-slate-400" />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Notifications List */}
                     <div className="max-h-80 overflow-y-auto">
                         {notifications.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                            <div className="flex flex-col items-center justify-center py-8 px-4 text-slate-400">
                                 <BellOff className="w-8 h-8 mb-2 text-slate-300" />
-                                <p className="text-sm font-medium">No notifications</p>
+                                <p className="text-sm font-medium mb-4">No notifications</p>
+                                <button
+                                    onClick={handleTestNotification}
+                                    className="flex items-center gap-2 rounded-lg bg-indigo-50 border border-indigo-200 px-3 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-100 transition-colors mb-3"
+                                    title="Create a test notification (dev only)"
+                                >
+                                    <Zap className="w-3.5 h-3.5" />
+                                    Test Notification
+                                </button>
+                                {currentUser && (
+                                    <div className="text-[10px] text-slate-400 mt-3 p-2 bg-slate-50 rounded border border-slate-200 max-w-xs">
+                                        <p><strong>Debug Info:</strong></p>
+                                        <p>Backend ID: {currentUser.mongodbId?.substring(0, 8)}...</p>
+                                        <p>LocalStorage: {localStorage.getItem('userId')?.substring(0, 8)}...</p>
+                                        <p>Match: {currentUser.mongodbId === localStorage.getItem('userId') ? '✓' : '✗'}</p>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             notifications.slice(0, 8).map(n => (

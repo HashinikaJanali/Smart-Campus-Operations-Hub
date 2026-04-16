@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import UserHeader from '../components/common/UserHeader';
 import useRequireAuth from '../hooks/userRequireAuth';
+import { useNotificationRefresh } from '../contexts/NotificationContext';
 import {
     Plus, X, AlertCircle, CheckCircle2, Clock, Wrench,
     ChevronDown, ChevronUp, MessageSquare, Send, Pencil,
@@ -95,6 +96,9 @@ function CreateTicketModal({ onClose, onCreated }) {
             const fd = new FormData();
             Object.entries(form).forEach(([k, v]) => fd.append(k, v));
             images.forEach(img => fd.append('images', img));
+            // Attach user identity so the backend can send notifications
+            fd.append('userId', localStorage.getItem('userId') || '');
+            fd.append('submittedBy', localStorage.getItem('username') || 'anonymous');
             await createTicket(fd);
             onCreated();
         } catch (e) {
@@ -229,7 +233,7 @@ function CreateTicketModal({ onClose, onCreated }) {
     );
 }
 
-function CommentSection({ ticketId }) {
+function CommentSection({ ticketId, onRefreshNotifications }) {
     const [comments, setComments] = useState([]);
     const [text, setText] = useState('');
     const [editId, setEditId] = useState(null);
@@ -251,8 +255,13 @@ function CommentSection({ ticketId }) {
         if (!text.trim()) return;
         try {
             setLoading(true);
-            await addComment(ticketId, text.trim());
-            setText(''); fetchComments();
+            await addComment(ticketId, text.trim(), currentUser);
+            setText(''); 
+            fetchComments();
+            // Refresh notifications when a comment is added
+            if (onRefreshNotifications) {
+                onRefreshNotifications();
+            }
         } finally { setLoading(false); }
     };
 
@@ -315,7 +324,7 @@ function CommentSection({ ticketId }) {
     );
 }
 
-function TicketCard({ ticket }) {
+function TicketCard({ ticket, onRefreshNotifications }) {
     const [expanded, setExpanded] = useState(false);
     const cat = CATEGORIES.find(c => c.value === ticket.category)?.label || ticket.category;
 
@@ -376,7 +385,7 @@ function TicketCard({ ticket }) {
                                 <p className="text-sm text-rose-800">{ticket.rejectionReason}</p>
                             </div>
                         )}
-                        <CommentSection ticketId={ticket.id} />
+                        <CommentSection ticketId={ticket.id} onRefreshNotifications={onRefreshNotifications} />
                     </div>
                 )}
             </div>
@@ -391,11 +400,13 @@ export default function TicketingPage() {
     const [showCreate, setShowCreate] = useState(false);
     const [filterStatus, setFilterStatus] = useState('ALL');
     const requireAuth = useRequireAuth();  // ← added
+    const { refreshNotifications } = useNotificationRefresh();
 
     const fetchTickets = async () => {
         try {
             setLoading(true); setError('');
-            const res = await getMyTickets();
+            const userId = localStorage.getItem('userId') || '';
+            const res = await getMyTickets(userId);
             setTickets(Array.isArray(res.data) ? res.data : []);
         } catch (e) {
             console.error(e);
@@ -475,7 +486,7 @@ export default function TicketingPage() {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {filtered.map(t => <TicketCard key={t.id} ticket={t} />)}
+                        {filtered.map(t => <TicketCard key={t.id} ticket={t} onRefreshNotifications={refreshNotifications} />)}
                     </div>
                 )}
             </div>
@@ -483,7 +494,7 @@ export default function TicketingPage() {
             {showCreate && (
                 <CreateTicketModal
                     onClose={() => setShowCreate(false)}
-                    onCreated={() => { setShowCreate(false); fetchTickets(); }}
+                    onCreated={() => { setShowCreate(false); fetchTickets(); refreshNotifications(); }}
                 />
             )}
         </div>

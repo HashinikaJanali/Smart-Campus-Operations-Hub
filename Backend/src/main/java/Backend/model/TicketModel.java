@@ -20,7 +20,8 @@ public class TicketModel {
     private String priority;
     private String status;
 
-    private String submittedBy;
+    private String userId;       // MongoDB User.id of the ticket owner
+    private String submittedBy;  // Display name of the submitter
     private String assignedTo;
 
     private String contactPhone;
@@ -61,6 +62,7 @@ public class TicketModel {
     }
 
     public String getId() { return id; }
+    public String getUserId() { return userId; }
     public String getResource() { return resource; }
     public String getLocation() { return location; }
     public String getCategory() { return category; }
@@ -78,6 +80,7 @@ public class TicketModel {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
     public void setId(String id) { this.id = id; }
+    public void setUserId(String userId) { this.userId = userId; }
     public void setResource(String resource) { this.resource = resource; }
     public void setLocation(String location) { this.location = location; }
     public void setCategory(String category) { this.category = category; }
