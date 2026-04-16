@@ -5,6 +5,7 @@ const api = axios.create({
     withCredentials: true,
     headers: { 'Content-Type': 'application/json' }
 });
+const API_URL = "http://localhost:8085/api/resources";
 
 // GET ALL
 export const getAllResources = async () => {
