@@ -13,11 +13,35 @@ export default function NotificationPanel() {
     const loadNotifications = async () => {
         try {
             const data = await notificationService.getMyNotifications();
-            // Make sure it's always an array
-            setNotifications(Array.isArray(data) ? data : []);
+            if (Array.isArray(data)) {
+                // Merge server data with local state to preserve manually marked items
+                setNotifications(prevNotifications => {
+                    const serverMap = new Map(data.map(n => [n.id, n]));
+                    
+                    // For each existing notification, keep its local read status if it was marked as read locally
+                    const merged = prevNotifications.map(localN => {
+                        const serverN = serverMap.get(localN.id);
+                        if (!serverN) return localN; // Notification was deleted on server
+                        
+                        // If locally marked as read but server says unread, keep local state
+                        if (localN.isRead && !serverN.isRead) {
+                            return { ...serverN, isRead: true };
+                        }
+                        return serverN;
+                    });
+                    
+                    // Add any new notifications from server
+                    const localIds = new Set(prevNotifications.map(n => n.id));
+                    const newNotifications = data.filter(n => !localIds.has(n.id));
+                    
+                    return [...merged, ...newNotifications];
+                });
+            } else {
+                setNotifications([]);
+            }
         } catch (error) {
             console.error('Error loading notifications', error);
-            setNotifications([]); // set empty array on error
+            setNotifications([]);
         }
     };
 
@@ -25,8 +49,8 @@ export default function NotificationPanel() {
         loadNotifications();
         fetchCurrentUser();
         
-        // Poll for new notifications every 10 seconds for better responsiveness
-        const interval = setInterval(loadNotifications, 10000);
+        // Poll for new notifications every 30 seconds to avoid overwriting local state too frequently
+        const interval = setInterval(loadNotifications, 30000);
         return () => clearInterval(interval);
     }, []);
 
