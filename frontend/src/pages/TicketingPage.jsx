@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import UserHeader from '../components/common/UserHeader';
+import useRequireAuth from '../hooks/userRequireAuth';
 import {
     Plus, X, AlertCircle, CheckCircle2, Clock, Wrench,
     ChevronDown, ChevronUp, MessageSquare, Send, Pencil,
@@ -270,9 +271,7 @@ function CommentSection({ ticketId }) {
             <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-500">
                 <MessageSquare className="h-3.5 w-3.5" /> Comments ({comments.length})
             </h4>
-
             {comments.length === 0 && <p className="text-xs text-slate-400 italic">No comments yet.</p>}
-
             {comments.map(c => (
                 <div key={c.id} className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
                     {editId === c.id ? (
@@ -302,7 +301,6 @@ function CommentSection({ ticketId }) {
                     )}
                 </div>
             ))}
-
             <div className="flex gap-2 pt-1">
                 <input className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-colors"
                     placeholder="Add a comment..." value={text} onChange={e => setText(e.target.value)}
@@ -340,9 +338,7 @@ function TicketCard({ ticket }) {
                         <PriorityBadge priority={ticket.priority} />
                     </div>
                 </div>
-
                 <p className="mt-3 text-sm text-slate-600 leading-relaxed line-clamp-2">{ticket.description}</p>
-
                 <div className="mt-4 flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-3 text-[11px] text-slate-400">
                         <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : 'Recently'}</span>
@@ -353,7 +349,6 @@ function TicketCard({ ticket }) {
                         {expanded ? <><ChevronUp className="h-3.5 w-3.5" /> Hide</> : <><ChevronDown className="h-3.5 w-3.5" /> Details & Comments</>}
                     </button>
                 </div>
-
                 {expanded && (
                     <div className="mt-4 border-t border-slate-100 pt-4 space-y-3">
                         {ticket.imageUrls?.length > 0 && (
@@ -394,12 +389,13 @@ export default function TicketingPage() {
     const [error, setError] = useState('');
     const [showCreate, setShowCreate] = useState(false);
     const [filterStatus, setFilterStatus] = useState('ALL');
+    const requireAuth = useRequireAuth();  // ← added
 
     const fetchTickets = async () => {
         try {
             setLoading(true); setError('');
             const res = await getMyTickets();
-            setTickets(res.data);
+            setTickets(Array.isArray(res.data) ? res.data : []);
         } catch (e) {
             console.error(e);
             setError('Could not load tickets. Make sure the backend is running.');
@@ -407,6 +403,10 @@ export default function TicketingPage() {
     };
 
     useEffect(() => { fetchTickets(); }, []);
+
+    const handleNewTicket = () => {
+        requireAuth(() => setShowCreate(true));  // ← redirect to login if not logged in
+    };
 
     const filtered = filterStatus === 'ALL' ? tickets : tickets.filter(t => t.status === filterStatus);
 
@@ -428,7 +428,8 @@ export default function TicketingPage() {
                         <button onClick={fetchTickets} className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-colors shadow-sm">
                             <RefreshCw className="h-4 w-4" />
                         </button>
-                        <button onClick={() => setShowCreate(true)}
+                        <button
+                            onClick={handleNewTicket}  // ← updated
                             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/25 transition-all">
                             <Plus className="h-4 w-4" /> New Ticket
                         </button>
