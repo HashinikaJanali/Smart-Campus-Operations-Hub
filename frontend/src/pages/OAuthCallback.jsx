@@ -1,8 +1,6 @@
-import React, { useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
 
-export default function OAuthCallback() {
-
+function OAuthCallback() {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const id    = params.get('id');
@@ -10,8 +8,6 @@ export default function OAuthCallback() {
         const email = params.get('email');
         const role  = params.get('role');
         const error = params.get('error');
-
-        console.log('OAuth Callback params:', { id, name, email, role });
 
         if (error || !id) {
             window.location.href = '/login';
@@ -23,24 +19,20 @@ export default function OAuthCallback() {
         localStorage.setItem('role', role);
         localStorage.setItem('userId', id);
 
-        console.log('User saved to localStorage:', user);
+        // Check if they were trying to do something before login
+        const redirectTo = localStorage.getItem('redirectAfterLogin');
+        localStorage.removeItem('redirectAfterLogin');
 
-        // Use window.location.href instead of navigate
-        // so the whole page reloads and header re-reads localStorage
-        if (role === 'ADMIN') {
+        if (redirectTo && redirectTo !== '/login') {
+            window.location.href = redirectTo;
+        } else if (role === 'ADMIN') {
             window.location.href = '/resourseadmin';
         } else {
             window.location.href = '/';
         }
-
     }, []);
 
-    return (
-        <div className="min-h-screen bg-white flex flex-col items-center justify-center font-sans gap-4">
-            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-            <p className="text-sm font-bold text-slate-500">
-                Signing you in...
-            </p>
-        </div>
-    );
+    return null;
 }
+
+export default OAuthCallback;

@@ -13,7 +13,6 @@ const UserHeader = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -36,7 +35,7 @@ const UserHeader = () => {
         {/* Left Side: Logo & Title */}
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 shadow-md shadow-black/10 border border-white/5 overflow-hidden transition-transform hover:scale-105">
-            <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
+            <img src="/logo.svg" alt="Logo" className="h-full w-full object-cover" />
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-black tracking-tight text-white leading-none">
@@ -46,7 +45,7 @@ const UserHeader = () => {
           </div>
         </div>
 
-        {/* Middle: Navigation Links */}
+        {/* Middle: Navigation — always show all tabs */}
         <nav className="flex items-center gap-1">
           <NavLink
             to="/"
@@ -60,10 +59,47 @@ const UserHeader = () => {
             <Home className="h-4 w-4" /> Home
           </NavLink>
 
-          {isLoggedIn && (
+          <NavLink
+            to="/resoursestudent"
+            className={({ isActive }) =>
+              `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40'
+                : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
+              }`
+            }
+          >
+            <BookOpen className="h-4 w-4" /> Resources
+          </NavLink>
+
+          <NavLink
+            to="/bookings"
+            className={({ isActive }) =>
+              `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40'
+                : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
+              }`
+            }
+          >
+            <Calendar className="h-4 w-4" /> Bookings
+          </NavLink>
+
+          <NavLink
+            to="/tickets"
+            className={({ isActive }) =>
+              `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40'
+                : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
+              }`
+            }
+          >
+            <Ticket className="h-4 w-4" /> Tickets
+          </NavLink>
+
+          {/* Admin only links */}
+          {isAdmin && (
             <>
               <NavLink
-                to="/resoursestudent"
+                to="/resourseadmin"
                 className={({ isActive }) =>
                   `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40'
@@ -71,10 +107,10 @@ const UserHeader = () => {
                   }`
                 }
               >
-                <BookOpen className="h-4 w-4" /> Resources
+                <ShieldCheck className="h-4 w-4" /> Admin
               </NavLink>
               <NavLink
-                to="/bookings"
+                to="/admin/users"
                 className={({ isActive }) =>
                   `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40'
@@ -82,46 +118,8 @@ const UserHeader = () => {
                   }`
                 }
               >
-                <Calendar className="h-4 w-4" /> Bookings
+                Users
               </NavLink>
-              <NavLink
-                to="/tickets"
-                className={({ isActive }) =>
-                  `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40'
-                    : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
-                  }`
-                }
-              >
-                <Ticket className="h-4 w-4" /> Tickets
-              </NavLink>
-
-              {isAdmin && (
-                <>
-                  <NavLink
-                    to="/resourseadmin"
-                    className={({ isActive }) =>
-                      `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40'
-                        : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
-                      }`
-                    }
-                  >
-                    <ShieldCheck className="h-4 w-4" /> Admin
-                  </NavLink>
-                  <NavLink
-                    to="/admin/users"
-                    className={({ isActive }) =>
-                      `flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200 ${isActive
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40'
-                        : 'text-blue-100/70 hover:bg-white/10 hover:text-white'
-                      }`
-                    }
-                  >
-                    Users
-                  </NavLink>
-                </>
-              )}
             </>
           )}
         </nav>
@@ -130,18 +128,13 @@ const UserHeader = () => {
         <div className="flex items-center gap-4">
           {isLoggedIn ? (
             <>
-              {/* Notification Bell */}
               <NotificationPanel />
-
               <div className="h-8 w-px bg-white/10"></div>
-
-              {/* User Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-white/10 transition-all duration-200"
                 >
-                  {/* Avatar */}
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-sm font-black text-white shadow-md">
                     {user?.name?.charAt(0).toUpperCase()}
                   </div>
@@ -151,11 +144,8 @@ const UserHeader = () => {
                   <ChevronDown className={`h-4 w-4 text-blue-300 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* Dropdown Menu */}
                 {dropdownOpen && (
                   <div className="absolute right-0 top-12 w-56 bg-white rounded-2xl shadow-xl shadow-black/20 border border-slate-100 overflow-hidden z-50">
-
-                    {/* User Info */}
                     <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-sm font-black text-white">
@@ -167,8 +157,8 @@ const UserHeader = () => {
                         </div>
                       </div>
                       <span className={`mt-2 inline-flex text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                        user?.role === 'ADMIN' 
-                          ? 'bg-indigo-100 text-indigo-600' 
+                        user?.role === 'ADMIN'
+                          ? 'bg-indigo-100 text-indigo-600'
                           : user?.role === 'TECHNICIAN'
                             ? 'bg-amber-100 text-amber-600'
                             : 'bg-emerald-100 text-emerald-600'
@@ -176,11 +166,14 @@ const UserHeader = () => {
                         {user?.role}
                       </span>
                     </div>
-
-                    {/* Menu Items */}
                     <div className="py-1">
-                      
-
+                      <button
+                        onClick={() => { navigate('/notifications'); setDropdownOpen(false); }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                      >
+                        <Bell className="h-4 w-4 text-slate-400" />
+                        Notifications
+                      </button>
                       {isAdmin && (
                         <button
                           onClick={() => { navigate('/admin/users'); setDropdownOpen(false); }}
@@ -190,7 +183,6 @@ const UserHeader = () => {
                           Manage Users
                         </button>
                       )}
-
                       <div className="border-t border-slate-100 mt-1 pt-1">
                         <button
                           onClick={handleLogout}
@@ -217,7 +209,6 @@ const UserHeader = () => {
             </>
           )}
         </div>
-
       </div>
     </header>
   );

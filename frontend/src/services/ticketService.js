@@ -5,14 +5,16 @@ const FILE_BASE = 'http://localhost:8085';
 
 const api = axios.create({
     baseURL: API_BASE,
+    withCredentials: true,  
     headers: { 'Content-Type': 'application/json' }
 });
 
-api.interceptors.request.use(config => {
-    const token = localStorage.getItem('token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-});
+// Remove the Bearer token interceptor - not needed for OAuth session
+// api.interceptors.request.use(config => {
+//     const token = localStorage.getItem('token');
+//     if (token) config.headers.Authorization = `Bearer ${token}`;
+//     return config;
+// });
 
 export const getAllTickets = () => api.get('/tickets');
 export const getMyTickets = () => api.get('/tickets/my');

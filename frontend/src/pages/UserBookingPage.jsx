@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import UserHeader from '../components/common/UserHeader';
+import useRequireAuth from '../hooks/userRequireAuth';
 import { CalendarDays, Clock, MapPin, Search, Plus, Loader2, CheckCircle2, XCircle, AlertCircle, Bookmark } from 'lucide-react';
 import { getBookingsByUser, createBooking, cancelBooking } from '../services/bookingService';
 import BookingForm from '../components/booking/BookingForm';
@@ -12,6 +13,7 @@ export default function UserBookingPage() {
     const [submitting, setSubmitting] = useState(false);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const requireAuth = useRequireAuth();  // ← added
 
     const userId = localStorage.getItem("userId") || "User";
 
@@ -21,10 +23,12 @@ export default function UserBookingPage() {
         try {
             setLoading(true);
             const data = await getBookingsByUser(userId);
-            setBookings(data);
-            applyFilters(data, search, statusFilter);
+            setBookings(Array.isArray(data) ? data : []);
+            applyFilters(Array.isArray(data) ? data : [], search, statusFilter);
         } catch (error) {
             console.error("Error loading bookings", error);
+            setBookings([]);
+            setFiltered([]);
         } finally {
             setLoading(false);
         }
@@ -33,13 +37,13 @@ export default function UserBookingPage() {
     const applyFilters = (data, pSearch, pStatus) => {
         let result = data;
         if (pStatus !== 'ALL') {
-             result = result.filter(b => b.status === pStatus);
+            result = result.filter(b => b.status === pStatus);
         }
         if (pSearch) {
-             result = result.filter(b => 
-                 (b.resourceName && b.resourceName.toLowerCase().includes(pSearch.toLowerCase())) ||
-                 b.purpose.toLowerCase().includes(pSearch.toLowerCase())
-             );
+            result = result.filter(b =>
+                (b.resourceName && b.resourceName.toLowerCase().includes(pSearch.toLowerCase())) ||
+                (b.purpose && b.purpose.toLowerCase().includes(pSearch.toLowerCase()))
+            );
         }
         setFiltered(result);
     };
@@ -53,6 +57,10 @@ export default function UserBookingPage() {
     const handleFilter = (status) => {
         setStatusFilter(status);
         applyFilters(bookings, search, status);
+    };
+
+    const handleNewBooking = () => {
+        requireAuth(() => setShowForm(true));  // ← redirect to login if not logged in
     };
 
     const handleCreateBooking = async (formData) => {
@@ -94,7 +102,6 @@ export default function UserBookingPage() {
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col items-center">
             <UserHeader />
             <main className="w-full max-w-7xl px-8 py-10 flex-1">
-                {/* Page Title & Action */}
                 <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
                         <h2 className="text-3xl font-black tracking-tight text-slate-900 italic">
@@ -102,19 +109,18 @@ export default function UserBookingPage() {
                         </h2>
                         <p className="text-sm font-medium text-slate-500 mt-1">Manage and track your resource booking requests.</p>
                     </div>
-                    <button 
-                        onClick={() => setShowForm(true)}
+                    <button
+                        onClick={handleNewBooking}  // ← updated
                         className="flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-600/20 transition-all hover:bg-indigo-700 hover:-translate-y-1 active:translate-y-0"
                     >
                         <Plus className="w-5 h-5" /> Create New Booking
                     </button>
                 </div>
 
-                {/* Advanced Search/Filter Bar */}
                 <div className="flex bg-white border border-slate-200 text-slate-800 rounded-2xl p-2 mb-8 items-center justify-between shadow-sm">
                     <div className="flex items-center gap-3 pl-4 flex-1">
                         <Search className="w-5 h-5 text-slate-400" />
-                        <input 
+                        <input
                             type="text"
                             placeholder="Search by resource, purpose..."
                             value={search}
@@ -135,7 +141,6 @@ export default function UserBookingPage() {
                     </div>
                 </div>
 
-                {/* Grid View */}
                 {loading ? (
                     <div className="flex justify-center py-20">
                         <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
@@ -151,11 +156,10 @@ export default function UserBookingPage() {
                         {filtered.map(booking => {
                             const sc = getStatusConfig(booking.status);
                             const StatusIcon = sc.icon;
-                            
                             return (
                                 <div key={booking.id} className="group relative bg-white border border-slate-200 rounded-3xl p-6 hover:shadow-lg hover:border-indigo-300 transition-all font-sans overflow-hidden">
-                                     <div className="flex justify-between items-start mb-6 relative z-10">
-                                         <div className="flex items-center gap-3">
+                                    <div className="flex justify-between items-start mb-6 relative z-10">
+                                        <div className="flex items-center gap-3">
                                             <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shadow-sm">
                                                 <MapPin className="w-5 h-5 text-indigo-600" />
                                             </div>
@@ -163,14 +167,13 @@ export default function UserBookingPage() {
                                                 <h3 className="font-bold text-lg text-slate-900 leading-tight">{booking.resourceName || `Ref #${booking.resourceId}`}</h3>
                                                 <p className="text-xs text-slate-500 font-medium">ID {booking.id}</p>
                                             </div>
-                                         </div>
-                                         <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border ${sc.bg} ${sc.color} ${sc.border}`}>
-                                             <StatusIcon className="w-3.5 h-3.5" />
-                                             {booking.status}
-                                         </span>
-                                     </div>
-
-                                     <div className="space-y-4 relative z-10">
+                                        </div>
+                                        <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border ${sc.bg} ${sc.color} ${sc.border}`}>
+                                            <StatusIcon className="w-3.5 h-3.5" />
+                                            {booking.status}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-4 relative z-10">
                                         <div className="flex items-center gap-3 text-slate-600">
                                             <CalendarDays className="w-5 h-5 text-slate-400" />
                                             <span className="font-medium">{booking.bookingDate}</span>
@@ -181,22 +184,21 @@ export default function UserBookingPage() {
                                         </div>
                                         {booking.adminReason && (
                                             <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                                                 <p className="text-xs font-bold text-slate-500 uppercase mb-1">Admin Feedback</p>
-                                                 <p className="text-sm italic text-slate-700">{booking.adminReason}</p>
+                                                <p className="text-xs font-bold text-slate-500 uppercase mb-1">Admin Feedback</p>
+                                                <p className="text-sm italic text-slate-700">{booking.adminReason}</p>
                                             </div>
                                         )}
-                                     </div>
-
-                                     {(booking.status === 'PENDING' || booking.status === 'APPROVED') && (
-                                         <div className="mt-6 pt-6 border-t border-slate-100 relative z-10">
-                                             <button 
+                                    </div>
+                                    {(booking.status === 'PENDING' || booking.status === 'APPROVED') && (
+                                        <div className="mt-6 pt-6 border-t border-slate-100 relative z-10">
+                                            <button
                                                 onClick={() => handleCancel(booking.id)}
                                                 className="w-full py-2.5 rounded-xl font-bold text-sm text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-colors"
                                             >
                                                 Cancel Request
                                             </button>
-                                         </div>
-                                     )}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
@@ -204,17 +206,16 @@ export default function UserBookingPage() {
                 )}
             </main>
 
-            {/* Modal */}
             {showForm && (
-                 <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-                     <div className="w-full max-w-lg transform transition-transform animate-in zoom-in-95 duration-200">
-                         <BookingForm 
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                    <div className="w-full max-w-lg transform transition-transform animate-in zoom-in-95 duration-200">
+                        <BookingForm
                             onSubmit={handleCreateBooking}
                             onClose={() => setShowForm(false)}
                             isLoading={submitting}
-                         />
-                     </div>
-                 </div>
+                        />
+                    </div>
+                </div>
             )}
         </div>
     );
