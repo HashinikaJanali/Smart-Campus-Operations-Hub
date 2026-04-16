@@ -156,7 +156,7 @@ export default function Sidebar({ onFilterChange, onAddResource, activeFilter })
                     flexShrink: 0
                 }}>
                     <img 
-                        src="/logo.png" 
+                        src="/unioplogo.png" 
                         alt="Logo" 
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />

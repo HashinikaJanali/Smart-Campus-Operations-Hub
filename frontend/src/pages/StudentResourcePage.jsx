@@ -3,6 +3,7 @@ import { getAllResources } from '../services/resourceService';
 import { createBooking } from '../services/bookingService';
 import UserHeader from '../components/common/UserHeader';
 import BookingForm from '../components/booking/BookingForm';
+import useRequireAuth from '../hooks/userRequireAuth';
 import {
     Building2, FlaskConical, Users, MonitorPlay, Archive,
     GraduationCap, Search, RefreshCw, CheckCircle2,
@@ -59,10 +60,14 @@ export default function StudentResourcePage() {
     const handleSearch = e => { setSearch(e.target.value); applyFilter(typeF, e.target.value); };
 
     // Booking Handlers
+    const requireAuth = useRequireAuth();
+
     const handleBookNow = (e, resource) => {
         e.stopPropagation();
+        requireAuth(() => {
         setBookingResource(resource);
         setIsBooking(true);
+        });
     };
 
     const handleBookingSubmit = async (formData) => {

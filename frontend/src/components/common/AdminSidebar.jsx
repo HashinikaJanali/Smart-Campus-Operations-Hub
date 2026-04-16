@@ -10,6 +10,7 @@ import {
     LogOut,
     Activity
 } from 'lucide-react';
+import logo from '../../assets/logo.png';
 
 export default function AdminSidebar({ isOpen, onToggle, activePage }) {
 
@@ -49,7 +50,7 @@ export default function AdminSidebar({ isOpen, onToggle, activePage }) {
                 {isOpen && (
                     <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-300">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10 shadow-md shadow-black/10 border border-white/5 overflow-hidden">
-                            <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
+                            <img src={logo} alt="Logo" className="h-full w-full object-cover" />
                         </div>
                         <div className="overflow-hidden whitespace-nowrap text-left">
                             <div className="font-black tracking-tight text-white text-lg leading-none">
