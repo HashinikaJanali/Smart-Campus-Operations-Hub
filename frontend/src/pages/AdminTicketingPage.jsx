@@ -4,7 +4,7 @@ import {
     AlertCircle, CheckCircle2, Clock, Wrench, XCircle,
     ChevronDown, ChevronUp, MessageSquare, Send, Pencil,
     Trash2, MapPin, Phone, Mail, FileText, Loader2,
-    RefreshCw, UserCheck, Check, X, Ban, Filter, LayoutDashboard
+    RefreshCw, UserCheck, Check, Ban, Filter, LayoutDashboard
 } from 'lucide-react';
 import {
     getAllTickets, updateTicketStatus, assignTicket,
@@ -158,6 +158,7 @@ function CommentSection({ ticketId }) {
         try { const res = await getComments(ticketId); setComments(res.data); } catch { }
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { fetchComments(); }, [ticketId]);
 
     const handleAdd = async () => {
@@ -372,7 +373,6 @@ export default function AdminTicketingPage() {
                         <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-200 mt-0.5">Total</div>
                     </div>
                     {Object.entries(STATUSES).map(([key, s]) => {
-                        const Icon = s.icon;
                         return (
                             <button key={key} onClick={() => setFilterStatus(filterStatus === key ? 'ALL' : key)}
                                 className={`rounded-2xl border p-4 text-center transition-all ${filterStatus === key ? `${s.bg} ${s.border} shadow-sm` : 'border-slate-200 bg-white hover:border-slate-300'}`}>

@@ -30,7 +30,7 @@ public class BookingService {
     public BookingModel createBooking(BookingModel booking) {
         // ------------------------------------------------------------------
         // Scheduling conflict check (done in Java for reliability)
-        // Two bookings [A,B] and [C,D] overlap when: A < D  AND  C < B
+        // Two bookings [A,B] and [C,D] overlap when: A < D AND C < B
         // Times are stored as HH:MM (24h, zero-padded) so String.compareTo
         // gives correct lexicographic ordering.
         // ------------------------------------------------------------------
@@ -38,34 +38,32 @@ public class BookingService {
                 .findByResourceIdAndBookingDateAndStatusIn(
                         booking.getResourceId(),
                         booking.getBookingDate(),
-                        java.util.Arrays.asList("PENDING", "APPROVED")
-                );
+                        java.util.Arrays.asList("PENDING", "APPROVED"));
 
-        boolean hasConflict = activeBookings.stream().anyMatch(existing ->
-                existing.getStartTime().compareTo(booking.getEndTime()) < 0
-                && existing.getEndTime().compareTo(booking.getStartTime()) > 0
-        );
+        boolean hasConflict = activeBookings.stream()
+                .anyMatch(existing -> existing.getStartTime().compareTo(booking.getEndTime()) < 0
+                        && existing.getEndTime().compareTo(booking.getStartTime()) > 0);
 
         if (hasConflict) {
             throw new RuntimeException(
-                "Scheduling conflict: This resource is already booked during the requested time period."
-            );
+                    "Scheduling conflict: This resource is already booked during the requested time period.");
         }
 
         // Validate resource capacity if attendees specified
         Optional<ResourceModel> resOpt = resourceRepository.findById(booking.getResourceId());
-        if(resOpt.isPresent()) {
+        if (resOpt.isPresent()) {
             ResourceModel currentResource = resOpt.get();
             booking.setResourceName(currentResource.getName()); // Keep denormalized copy
             booking.setResourceType(currentResource.getType());
             if (booking.getAttendees() > currentResource.getCapacity() && currentResource.getCapacity() > 0) {
-                 throw new RuntimeException("Capacity exceeded: Selected resource has max capacity of " + currentResource.getCapacity());
+                throw new RuntimeException(
+                        "Capacity exceeded: Selected resource has max capacity of " + currentResource.getCapacity());
             }
-            if(!"ACTIVE".equals(currentResource.getStatus())) {
-                 throw new RuntimeException("Resource is unavailable: Currently OUT_OF_SERVICE.");
+            if (!"ACTIVE".equals(currentResource.getStatus())) {
+                throw new RuntimeException("Resource is unavailable: Currently OUT_OF_SERVICE.");
             }
         } else {
-             throw new RuntimeException("Resource not found.");
+            throw new RuntimeException("Resource not found.");
         }
 
         booking.setStatus("PENDING");
@@ -76,7 +74,7 @@ public class BookingService {
         Optional<BookingModel> bookingOpt = bookingRepository.findById(id);
         if (bookingOpt.isPresent()) {
             BookingModel booking = bookingOpt.get();
-            
+
             // Validate allowed status transitions
             if ("CANCELLED".equals(booking.getStatus()) || "REJECTED".equals(booking.getStatus())) {
                 throw new RuntimeException("Cannot update status of a " + booking.getStatus() + " booking.");
@@ -93,10 +91,10 @@ public class BookingService {
         Optional<BookingModel> bookingOpt = bookingRepository.findById(id);
         if (bookingOpt.isPresent()) {
             BookingModel booking = bookingOpt.get();
-            
+
             // Admin can cancel anything or User can cancel their own
-            if(userId != null && !booking.getUserId().equals(userId) && !userId.equals("ADMIN")) {
-                 throw new RuntimeException("Unauthorized to cancel this booking.");
+            if (userId != null && !booking.getUserId().equals(userId) && !userId.equals("ADMIN")) {
+                throw new RuntimeException("Unauthorized to cancel this booking.");
             }
 
             if ("CANCELLED".equals(booking.getStatus()) || "REJECTED".equals(booking.getStatus())) {
@@ -115,7 +113,8 @@ public class BookingService {
             BookingModel booking = bookingOpt.get();
 
             if (!"APPROVED".equals(booking.getStatus())) {
-                throw new RuntimeException("Only approved bookings can be checked in. Current status: " + booking.getStatus());
+                throw new RuntimeException(
+                        "Only approved bookings can be checked in. Current status: " + booking.getStatus());
             }
 
             if (booking.isCheckedIn()) {

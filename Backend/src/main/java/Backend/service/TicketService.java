@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
+
 public class TicketService {
 
     @Autowired
@@ -42,9 +43,9 @@ public class TicketService {
     }
 
     public TicketModel createTicket(String resource, String location, String category,
-                                    String description, String priority,
-                                    String submittedBy, String contactPhone, String contactEmail,
-                                    List<MultipartFile> images) throws IOException {
+            String description, String priority,
+            String submittedBy, String contactPhone, String contactEmail,
+            List<MultipartFile> images) throws IOException {
 
         List<String> imageUrls = new ArrayList<>();
         if (images != null) {
@@ -83,13 +84,16 @@ public class TicketService {
         TicketModel ticket = getTicketById(id);
 
         String newStatus = payload.get("status");
-        if (newStatus != null) ticket.setStatus(newStatus);
+        if (newStatus != null)
+            ticket.setStatus(newStatus);
 
         String resolutionNotes = payload.get("resolutionNotes");
-        if (resolutionNotes != null) ticket.setResolutionNotes(resolutionNotes);
+        if (resolutionNotes != null)
+            ticket.setResolutionNotes(resolutionNotes);
 
         String rejectionReason = payload.get("rejectionReason");
-        if (rejectionReason != null) ticket.setRejectionReason(rejectionReason);
+        if (rejectionReason != null)
+            ticket.setRejectionReason(rejectionReason);
 
         ticket.setUpdatedAt(LocalDateTime.now());
         return ticketRepository.save(ticket);

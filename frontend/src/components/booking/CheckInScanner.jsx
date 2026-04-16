@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
+import React, { useState } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
 import { X, Upload, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { checkInBooking } from '../../services/bookingService';
 

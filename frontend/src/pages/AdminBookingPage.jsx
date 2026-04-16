@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Clock, CheckCircle2, XCircle, AlertCircle, MapPin,
+    Clock, CheckCircle2, XCircle, MapPin,
     CalendarDays, Eye, Loader2, ArrowRight, Search,
-    SlidersHorizontal, Filter, Database, X, RefreshCcw,
+    SlidersHorizontal, Filter, Database, RefreshCcw,
     ChevronLeft, ChevronRight, Building2, FlaskConical, Users
 } from 'lucide-react';
 import { getAllBookings, updateBookingStatus } from '../services/bookingService';

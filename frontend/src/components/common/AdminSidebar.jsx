@@ -5,8 +5,6 @@ import {
     Calendar,
     Ticket,
     Menu,
-    ChevronLeft,
-    ChevronRight,
     LogOut,
     Activity
 } from 'lucide-react';

@@ -4,7 +4,6 @@ import UserHeader from '../components/common/UserHeader';
 import heroImage from '../assets/hero_image.png';
 import logo from '../assets/logo.png';
 import {
-    LayoutDashboard,
     ArrowRight,
     ShieldCheck,
     Zap,
