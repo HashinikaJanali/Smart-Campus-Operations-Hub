@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import UserHeader from '../components/common/UserHeader';
 import heroImage from '../assets/hero_image.png';
+import logo from '../assets/logo.png';
 import {
     LayoutDashboard,
     ArrowRight,
@@ -175,7 +176,7 @@ export default function HomePage() {
                 <div className="mx-auto max-w-7xl px-8 text-center">
                     <div className="flex items-center justify-center gap-2 mb-4">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-indigo-50 shadow-sm border border-indigo-100 overflow-hidden">
-                            <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
+                            <img src={logo} alt="Logo" className="h-full w-full object-cover" />
                         </div>
                         <span className="text-lg font-black tracking-tight text-slate-800">
                             Uni<span className="text-indigo-600">Ops</span>
