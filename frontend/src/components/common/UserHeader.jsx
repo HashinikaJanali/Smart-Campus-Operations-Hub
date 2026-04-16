@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { Home, BookOpen, Calendar, Ticket, LogOut, ShieldCheck, User, ChevronDown, Bell } from 'lucide-react';
 import NotificationPanel from '../notifications/NotificationPanel';
 import authService from '../../services/authService';
+import logo from '../../assets/logo.png';
 
 const UserHeader = () => {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ const UserHeader = () => {
         {/* Left Side: Logo & Title */}
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 shadow-md shadow-black/10 border border-white/5 overflow-hidden transition-transform hover:scale-105">
-            <img src="/logo.svg" alt="Logo" className="h-full w-full object-cover" />
+            <img src={logo} alt="Logo" className="h-full w-full object-cover" />
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-black tracking-tight text-white leading-none">
