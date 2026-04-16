@@ -18,6 +18,7 @@ function OAuthCallback() {
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('role', role);
         localStorage.setItem('userId', id);
+        localStorage.setItem('username', name);
 
         // Check if they were trying to do something before login
         const redirectTo = localStorage.getItem('redirectAfterLogin');
@@ -26,7 +27,7 @@ function OAuthCallback() {
         if (redirectTo && redirectTo !== '/login') {
             window.location.href = redirectTo;
         } else if (role === 'ADMIN') {
-            window.location.href = '/resourseadmin';
+            window.location.href = '/admin-dashboard';
         } else {
             window.location.href = '/';
         }

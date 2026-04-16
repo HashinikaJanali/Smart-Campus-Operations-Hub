@@ -5,19 +5,15 @@ const FILE_BASE = 'http://localhost:8085';
 
 const api = axios.create({
     baseURL: API_BASE,
-    withCredentials: true,  
+    withCredentials: true,
     headers: { 'Content-Type': 'application/json' }
 });
 
-// Remove the Bearer token interceptor - not needed for OAuth session
-// api.interceptors.request.use(config => {
-//     const token = localStorage.getItem('token');
-//     if (token) config.headers.Authorization = `Bearer ${token}`;
-//     return config;
-// });
-
 export const getAllTickets = () => api.get('/tickets');
-export const getMyTickets = () => api.get('/tickets/my');
+
+export const getMyTickets = (userId) =>
+    api.get('/tickets/my', { params: userId ? { userId } : {} });
+
 export const getTicketById = (id) => api.get(`/tickets/${id}`);
 
 export const createTicket = (formData) =>
@@ -32,12 +28,17 @@ export const assignTicket = (id, technicianName) =>
     api.patch(`/tickets/${id}/assign`, { assignedTo: technicianName });
 
 export const getComments = (ticketId) => api.get(`/tickets/${ticketId}/comments`);
-export const addComment = (ticketId, text) =>
-    api.post(`/tickets/${ticketId}/comments`, { text });
-export const editComment = (ticketId, commentId, text) =>
-    api.put(`/tickets/${ticketId}/comments/${commentId}`, { text });
-export const deleteComment = (ticketId, commentId) =>
-    api.delete(`/tickets/${ticketId}/comments/${commentId}`);
+
+export const addComment = (ticketId, text, authorName) =>
+    api.post(`/tickets/${ticketId}/comments`, { text, authorName });
+
+export const editComment = (ticketId, commentId, text, requestingUser) =>
+    api.put(`/tickets/${ticketId}/comments/${commentId}`, { text, requestingUser });
+
+export const deleteComment = (ticketId, commentId, requestingUser) =>
+    api.delete(`/tickets/${ticketId}/comments/${commentId}`, {
+        params: { requestingUser }
+    });
 
 export const resolveTicketImageUrl = (url) => {
     if (!url) return '';

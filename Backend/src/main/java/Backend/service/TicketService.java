@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
-
 public class TicketService {
 
     @Autowired
@@ -27,14 +26,20 @@ public class TicketService {
     @Autowired
     private CommentRepository commentRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     private final String UPLOAD_DIR = "uploads/tickets/";
 
     public List<TicketModel> getAllTickets() {
         return ticketRepository.findAll();
     }
 
-    public List<TicketModel> getMyTickets(String submittedBy) {
-        return ticketRepository.findBySubmittedBy(submittedBy);
+    public List<TicketModel> getMyTickets(String userId) {
+        if (userId != null && !userId.isBlank()) {
+            return ticketRepository.findByUserId(userId);
+        }
+        return List.of();
     }
 
     public TicketModel getTicketById(String id) {
@@ -44,7 +49,8 @@ public class TicketService {
 
     public TicketModel createTicket(String resource, String location, String category,
             String description, String priority,
-            String submittedBy, String contactPhone, String contactEmail,
+            String submittedBy, String userId,
+            String contactPhone, String contactEmail,
             List<MultipartFile> images) throws IOException {
 
         List<String> imageUrls = new ArrayList<>();
@@ -71,6 +77,7 @@ public class TicketService {
         ticket.setPriority(priority != null ? priority : "MEDIUM");
         ticket.setStatus("OPEN");
         ticket.setSubmittedBy(submittedBy);
+        ticket.setUserId(userId);
         ticket.setContactPhone(contactPhone);
         ticket.setContactEmail(contactEmail);
         ticket.setImageUrls(imageUrls);
@@ -82,6 +89,7 @@ public class TicketService {
 
     public TicketModel updateTicketStatus(String id, Map<String, String> payload) {
         TicketModel ticket = getTicketById(id);
+        String oldStatus = ticket.getStatus();
 
         String newStatus = payload.get("status");
         if (newStatus != null)
@@ -96,7 +104,17 @@ public class TicketService {
             ticket.setRejectionReason(rejectionReason);
 
         ticket.setUpdatedAt(LocalDateTime.now());
-        return ticketRepository.save(ticket);
+        TicketModel saved = ticketRepository.save(ticket);
+
+        // Notify the ticket owner if the status actually changed
+        String ticketOwnerUserId = saved.getUserId();
+        if (ticketOwnerUserId != null && !ticketOwnerUserId.isBlank()
+                && newStatus != null && !newStatus.equals(oldStatus)) {
+            String message = buildStatusChangeMessage(saved, newStatus);
+            notificationService.createNotification(ticketOwnerUserId, "TICKET_STATUS_CHANGED", message);
+        }
+
+        return saved;
     }
 
     public TicketModel assignTicket(String id, String technicianName) {
@@ -104,7 +122,18 @@ public class TicketService {
         ticket.setAssignedTo(technicianName);
         ticket.setStatus("IN_PROGRESS");
         ticket.setUpdatedAt(LocalDateTime.now());
-        return ticketRepository.save(ticket);
+        TicketModel saved = ticketRepository.save(ticket);
+
+        // Notify the ticket owner that work has started
+        String ticketOwnerUserId = saved.getUserId();
+        if (ticketOwnerUserId != null && !ticketOwnerUserId.isBlank()) {
+            String message = String.format(
+                "Your ticket \"%s\" has been assigned to %s and is now in progress.",
+                truncate(saved.getResource(), 40), technicianName);
+            notificationService.createNotification(ticketOwnerUserId, "TICKET_STATUS_CHANGED", message);
+        }
+
+        return saved;
     }
 
     public void deleteTicket(String id) {
@@ -113,5 +142,24 @@ public class TicketService {
         }
         commentRepository.deleteByTicketId(id);
         ticketRepository.deleteById(id);
+    }
+
+    // -----------------------------------------------------------------------
+    private String buildStatusChangeMessage(TicketModel ticket, String newStatus) {
+        String resource = truncate(ticket.getResource(), 40);
+        return switch (newStatus.toUpperCase()) {
+            case "IN_PROGRESS" -> String.format("Your ticket \"%s\" is now being worked on.", resource);
+            case "RESOLVED"    -> String.format("Your ticket \"%s\" has been resolved.", resource);
+            case "CLOSED"      -> String.format("Your ticket \"%s\" has been closed.", resource);
+            case "REJECTED"    -> String.format("Your ticket \"%s\" was rejected. Reason: %s",
+                    resource,
+                    ticket.getRejectionReason() != null ? ticket.getRejectionReason() : "No reason provided.");
+            default            -> String.format("Your ticket \"%s\" status changed to %s.", resource, newStatus);
+        };
+    }
+
+    private String truncate(String s, int max) {
+        if (s == null) return "";
+        return s.length() <= max ? s : s.substring(0, max) + "…";
     }
 }

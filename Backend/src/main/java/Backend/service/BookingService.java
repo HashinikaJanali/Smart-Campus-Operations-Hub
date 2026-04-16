@@ -19,6 +19,9 @@ public class BookingService {
     @Autowired
     private ResourceRepository resourceRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public List<BookingModel> getAllBookings() {
         return bookingRepository.findAll();
     }
@@ -82,7 +85,28 @@ public class BookingService {
 
             booking.setStatus(status.toUpperCase());
             booking.setAdminReason(reason);
-            return bookingRepository.save(booking);
+            BookingModel saved = bookingRepository.save(booking);
+
+            // Notify the booking owner on approval or rejection
+            String userId = saved.getUserId();
+            if (userId != null && !userId.isBlank()) {
+                String upperStatus = status.toUpperCase();
+                if ("APPROVED".equals(upperStatus)) {
+                    String msg = String.format(
+                        "Your booking for \"%s\" on %s (%s–%s) has been approved.",
+                        saved.getResourceName(), saved.getBookingDate(),
+                        saved.getStartTime(), saved.getEndTime());
+                    notificationService.createNotification(userId, "BOOKING_APPROVED", msg);
+                } else if ("REJECTED".equals(upperStatus)) {
+                    String msg = String.format(
+                        "Your booking for \"%s\" on %s has been rejected.%s",
+                        saved.getResourceName(), saved.getBookingDate(),
+                        reason != null && !reason.isBlank() ? " Reason: " + reason : "");
+                    notificationService.createNotification(userId, "BOOKING_REJECTED", msg);
+                }
+            }
+
+            return saved;
         }
         throw new RuntimeException("Booking not found");
     }
