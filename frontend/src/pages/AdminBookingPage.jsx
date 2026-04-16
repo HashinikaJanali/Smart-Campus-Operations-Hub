@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Clock, CheckCircle2, XCircle, AlertCircle, MapPin,
+    Clock, CheckCircle2, XCircle, MapPin,
     CalendarDays, Eye, Loader2, ArrowRight, Search,
-    SlidersHorizontal, Filter, Database, X, RefreshCcw
+    SlidersHorizontal, Filter, Database, RefreshCcw,
+    ChevronLeft, ChevronRight, Building2, FlaskConical, Users
 } from 'lucide-react';
 import { getAllBookings, updateBookingStatus } from '../services/bookingService';
 import ReviewModal from '../components/booking/ReviewModal';
@@ -15,6 +16,8 @@ export default function AdminBookingPage() {
     const [reviewing, setReviewing] = useState(null);
     const [processing, setProcessing] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     // Filter States
     const [search, setSearch] = useState('');
@@ -23,6 +26,7 @@ export default function AdminBookingPage() {
     const [timeF, setTimeF] = useState('');
 
     useEffect(() => { loadAllBookings(); }, []);
+    useEffect(() => { setCurrentPage(1); }, [search, statusF, dateF, timeF]);
 
     const loadAllBookings = async () => {
         try {
@@ -76,7 +80,10 @@ export default function AdminBookingPage() {
         const matchesTime = !timeF || (b.startTime || '').includes(timeF);
 
         return matchesSearch && matchesStatus && matchesDate && matchesTime;
-    });
+    }).sort((a, b) => b.id.localeCompare(a.id));
+
+    const totalPages = Math.ceil(displayed.length / itemsPerPage);
+    const paginated = displayed.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
         <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
@@ -228,18 +235,33 @@ export default function AdminBookingPage() {
                                         <th className="px-6 py-3">Resource Info</th>
                                         <th className="px-6 py-3">Requester</th>
                                         <th className="px-6 py-3">Schedule</th>
+                                        <th className="px-6 py-3 text-center">Check-in</th>
                                         <th className="px-6 py-3 text-center">Status</th>
                                         <th className="px-6 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {displayed.map((req) => (
-                                        <tr key={req.id} className="group border-b border-slate-100 transition-colors hover:bg-slate-50/80">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 shadow-sm transition-transform group-hover:scale-105">
-                                                        <MapPin className="h-5 w-5" />
-                                                    </div>
+                                     {paginated.map((req) => {
+                                         // Resource Type Icon Mapping with Name Fallback
+                                         const getResourceIcon = (b) => {
+                                             const type = b.resourceType;
+                                             const name = (b.resourceName || '').toUpperCase();
+                                             
+                                             if (type === 'LECTURE_HALL' || name.includes('HALL') || name.includes('LECTURE')) return Building2;
+                                             if (type === 'LAB' || name.includes('LAB')) return FlaskConical;
+                                             if (type === 'MEETING_ROOM' || name.includes('ROOM') || name.includes('MEETING')) return Users;
+                                             
+                                             return MapPin;
+                                         };
+                                         const ResourceIcon = getResourceIcon(req);
+
+                                         return (
+                                             <tr key={req.id} className="group border-b border-slate-100 transition-colors hover:bg-slate-50/80">
+                                                 <td className="px-6 py-4">
+                                                     <div className="flex items-center gap-3">
+                                                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 shadow-sm transition-transform group-hover:scale-105">
+                                                             <ResourceIcon className="h-5 w-5" />
+                                                         </div>
                                                     <div className="overflow-hidden">
                                                         <div className="text-sm font-bold text-slate-900 truncate tracking-tight">{req.resourceName || `Resource #${req.resourceId}`}</div>
                                                         <div className="text-xs text-slate-400">ID #{req.id}</div>
@@ -263,6 +285,20 @@ export default function AdminBookingPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-center">
+                                                {req.checkedIn ? (
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                                                            <CheckCircle2 className="w-3.5 h-3.5" /> VERIFIED
+                                                        </div>
+                                                        <div className="text-[10px] text-slate-400 font-medium">
+                                                            {req.checkInTime ? new Date(req.checkInTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'N/A'}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">Pending</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
                                                 <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold border shadow-sm
                                                     ${req.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
                                                         req.status === 'REJECTED' ? 'bg-rose-50 border-rose-200 text-rose-700' :
@@ -274,27 +310,62 @@ export default function AdminBookingPage() {
                                                                 req.status === 'PENDING' ? 'bg-amber-500 animate-pulse' :
                                                                     'bg-slate-500'
                                                         }`} />
-                                                    {req.status}
+                                                     {req.status}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                {req.status === 'PENDING' ? (
-                                                    <button
-                                                        onClick={() => setReviewing(req)}
-                                                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2 text-[11px] font-bold text-white shadow-lg shadow-indigo-600/20 transition-all hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0"
-                                                    >
-                                                        REVIEW <ArrowRight className="h-3.5 w-3.5" />
-                                                    </button>
-                                                ) : (
-                                                    <div className="text-xs font-medium text-slate-400 italic">Logs Archived</div>
-                                                )}
+                                                <button
+                                                    onClick={() => setReviewing(req)}
+                                                    className={`inline-flex items-center gap-2 rounded-xl px-5 py-2 text-[11px] font-bold shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 ${req.status === 'PENDING' ? 'bg-indigo-600 text-white shadow-indigo-600/20 hover:bg-indigo-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 shadow-slate-200/20'}`}
+                                                >
+                                                    {req.status === 'PENDING' ? (
+                                                        <>REVIEW <ArrowRight className="h-3.5 w-3.5" /></>
+                                                    ) : (
+                                                        <>DETAILS <Eye className="h-3.5 w-3.5" /></>
+                                                    )}
+                                                </button>
                                             </td>
                                         </tr>
-                                    ))}
+                                         );
+                                     })}
                                 </tbody>
                             </table>
                         )}
                     </div>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-4">
+                            <div className="text-sm text-slate-500 font-medium">
+                                Showing <span className="text-slate-900 font-bold">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-slate-900 font-bold">{Math.min(currentPage * itemsPerPage, displayed.length)}</span> of <span className="text-slate-900 font-bold">{displayed.length}</span> entries
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors shadow-sm"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <button
+                                        key={i + 1}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className={`w-9 h-9 rounded-lg border text-sm font-bold transition-all ${currentPage === i + 1 ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors shadow-sm"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </main>
 

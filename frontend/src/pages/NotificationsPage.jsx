@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import UserHeader from '../components/common/UserHeader';
-import { Bell, Loader2, CheckCheck, Trash2, BellOff } from 'lucide-react';
+import { Loader2, CheckCheck, Trash2, BellOff } from 'lucide-react';
 import notificationService from '../services/notificationService';
 
 export default function NotificationsPage() {

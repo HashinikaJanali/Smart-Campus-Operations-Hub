@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
     Building2, FlaskConical, Users, MonitorPlay,
     Plus, Search, RefreshCcw, LayoutDashboard,
-    Globe, Info, MapPin, Trash2, Edit, Loader2,
-    Database, SlidersHorizontal, Filter, X,
-    CalendarDays, Clock, CheckCircle2, Wrench
+    MapPin, Trash2, Edit, Loader2,
+    Database, SlidersHorizontal,
+    Clock, CheckCircle2, Wrench
 } from 'lucide-react';
 import { getAllResources, deleteResource } from '../services/resourceService';
 import ResourceForm from '../components/resource/ResourceForm';
@@ -32,6 +32,7 @@ export default function AdminResourcePage() {
     const [statusF, setStatusF] = useState('ALL');
     const [activeFilter, setActiveFilter] = useState('ALL');
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { load(); }, []);
 
     const load = async () => {

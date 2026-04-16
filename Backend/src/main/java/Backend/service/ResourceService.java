@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+
 public class ResourceService {
 
     @Autowired
@@ -19,8 +20,7 @@ public class ResourceService {
 
     public ResourceModel getResourceById(String id) {
         return resourceRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Resource not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + id));
     }
 
     public List<ResourceModel> getResourcesByType(String type) {
@@ -41,8 +41,7 @@ public class ResourceService {
 
     public ResourceModel updateResource(String id, ResourceModel updated) {
         ResourceModel existing = resourceRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Resource not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + id));
 
         existing.setName(updated.getName());
         existing.setType(updated.getType());
@@ -58,8 +57,7 @@ public class ResourceService {
 
     public void deleteResource(String id) {
         ResourceModel existing = resourceRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Resource not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + id));
         resourceRepository.delete(existing);
     }
 }

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import UserHeader from '../components/common/UserHeader';
 import useRequireAuth from '../hooks/userRequireAuth';
-import { CalendarDays, Clock, MapPin, Search, Plus, Loader2, CheckCircle2, XCircle, AlertCircle, Bookmark } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, Search, Plus, Loader2, CheckCircle2, XCircle, AlertCircle, Bookmark, QrCode, UserCheck, Building2, FlaskConical, Users } from 'lucide-react';
 import { getBookingsByUser, createBooking, cancelBooking } from '../services/bookingService';
 import BookingForm from '../components/booking/BookingForm';
+import QRModal from '../components/booking/QRModal';
+import CheckInScanner from '../components/booking/CheckInScanner';
 
 export default function UserBookingPage() {
     const [bookings, setBookings] = useState([]);
@@ -13,10 +15,14 @@ export default function UserBookingPage() {
     const [submitting, setSubmitting] = useState(false);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
-    const requireAuth = useRequireAuth();  // ← added
+    const [selectedBooking, setSelectedBooking] = useState(null);
+    const [showQR, setShowQR] = useState(false);
+    const [showScanner, setShowScanner] = useState(false);
+    const requireAuth = useRequireAuth();
 
     const userId = localStorage.getItem("userId") || "User";
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { loadBookings(); }, []);
 
     const loadBookings = async () => {
@@ -156,12 +162,26 @@ export default function UserBookingPage() {
                         {filtered.map(booking => {
                             const sc = getStatusConfig(booking.status);
                             const StatusIcon = sc.icon;
+
+                            // Resource Type Icon Mapping with Name Fallback
+                            const getResourceIcon = (b) => {
+                                const type = b.resourceType;
+                                const name = (b.resourceName || '').toUpperCase();
+
+                                if (type === 'LECTURE_HALL' || name.includes('HALL') || name.includes('LECTURE')) return Building2;
+                                if (type === 'LAB' || name.includes('LAB')) return FlaskConical;
+                                if (type === 'MEETING_ROOM' || name.includes('ROOM') || name.includes('MEETING')) return Users;
+
+                                return MapPin;
+                            };
+                            const ResourceIcon = getResourceIcon(booking);
+
                             return (
                                 <div key={booking.id} className="group relative bg-white border border-slate-200 rounded-3xl p-6 hover:shadow-lg hover:border-indigo-300 transition-all font-sans overflow-hidden">
                                     <div className="flex justify-between items-start mb-6 relative z-10">
                                         <div className="flex items-center gap-3">
                                             <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shadow-sm">
-                                                <MapPin className="w-5 h-5 text-indigo-600" />
+                                                <ResourceIcon className="w-5 h-5 text-indigo-600" />
                                             </div>
                                             <div>
                                                 <h3 className="font-bold text-lg text-slate-900 leading-tight">{booking.resourceName || `Ref #${booking.resourceId}`}</h3>
@@ -199,12 +219,41 @@ export default function UserBookingPage() {
                                             </button>
                                         </div>
                                     )}
-                                </div>
+
+                                    {booking.status === 'APPROVED' && !booking.checkedIn && (
+                                        <div className="mt-4 flex gap-3 relative z-10">
+                                            <button
+                                                onClick={() => { setSelectedBooking(booking); setShowQR(true); }}
+                                                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm border border-indigo-100 hover:bg-indigo-100 transition-colors"
+                                            >
+                                                <QrCode className="w-4 h-4" /> QR Code
+                                            </button>
+                                            <button
+                                                onClick={() => { setSelectedBooking(booking); setShowScanner(true); }}
+                                                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-md shadow-indigo-600/20 hover:bg-indigo-700 transition-colors"
+                                            >
+                                                <UserCheck className="w-4 h-4" /> Check-in
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {booking.checkedIn && (
+                                        <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-3 relative z-10">
+                                            <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center">
+                                                <CheckCircle2 className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Checked In</p>
+                                                <p className="text-xs font-bold text-slate-800">{new Date(booking.checkInTime).toLocaleString()}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div >
                             );
                         })}
-                    </div>
+                    </div >
                 )}
-            </main>
+            </main >
 
             {showForm && (
                 <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
@@ -217,6 +266,38 @@ export default function UserBookingPage() {
                     </div>
                 </div>
             )}
-        </div>
+
+            {/* QR Modal */}
+            {
+                showQR && selectedBooking && (
+                    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                        <div className="transform transition-transform animate-in zoom-in-95 duration-200">
+                            <QRModal
+                                booking={selectedBooking}
+                                onClose={() => { setShowQR(false); setSelectedBooking(null); }}
+                            />
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Scanner Modal */}
+            {
+                showScanner && (
+                    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                        <div className="transform transition-transform animate-in zoom-in-95 duration-200 w-full max-w-lg">
+                            <CheckInScanner
+                                onClose={() => { setShowScanner(false); setSelectedBooking(null); }}
+                                onSuccess={() => {
+                                    setShowScanner(false);
+                                    setSelectedBooking(null);
+                                    loadBookings();
+                                }}
+                            />
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }

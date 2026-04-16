@@ -1,18 +1,22 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8085/api/analytics';
+const api = axios.create({
+    baseURL: 'http://localhost:8085/api',
+    withCredentials: true,
+    headers: { 'Content-Type': 'application/json' }
+});
 
 export const getSummaryStats = async () => {
-    const response = await axios.get(`${API_URL}/stats`);
+    const response = await api.get('/analytics/stats');
     return response.data;
 };
 
 export const getTopResources = async () => {
-    const response = await axios.get(`${API_URL}/top-resources`);
+    const response = await api.get('/analytics/top-resources');
     return response.data;
 };
 
 export const getPeakHours = async () => {
-    const response = await axios.get(`${API_URL}/peak-hours`);
+    const response = await api.get('/analytics/peak-hours');
     return response.data;
 };

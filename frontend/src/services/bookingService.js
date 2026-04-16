@@ -34,3 +34,8 @@ export const cancelBooking = async (id, userId) => {
     const response = await api.put(url);
     return response.data;
 };
+
+export const checkInBooking = async (id) => {
+    const response = await api.post(`/bookings/${id}/checkin`);
+    return response.data;
+};

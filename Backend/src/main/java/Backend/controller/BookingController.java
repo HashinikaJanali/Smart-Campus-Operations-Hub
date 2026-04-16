@@ -60,4 +60,14 @@ public class BookingController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PostMapping("/{id}/checkin")
+    public ResponseEntity<?> checkInBooking(@PathVariable String id) {
+        try {
+            BookingModel updated = bookingService.checkIn(id);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Edit3, Users, Loader2, Info, X } from 'lucide-react';
+import { Calendar, Clock, Edit3, Users, Loader2, X } from 'lucide-react';
 import { getAllResources } from '../../services/resourceService';
 
 export default function BookingForm({ onSubmit, onClose, isLoading, initialResourceId }) {

@@ -11,6 +11,7 @@ public class BookingModel {
 
     private String resourceId;
     private String resourceName;
+    private String resourceType;
     private String userId;
 
     private String bookingDate; // YYYY-MM-DD
@@ -23,15 +24,19 @@ public class BookingModel {
     private String status; // PENDING, APPROVED, REJECTED, CANCELLED
     private String adminReason; // Populated if admin accepts/rejects with a reason
 
+    private boolean checkedIn; // QR Check-in status
+    private String checkInTime; // Timestamp of check-in
+
     public BookingModel() {
     }
 
-    public BookingModel(String id, String resourceId, String resourceName, String userId, String bookingDate,
+    public BookingModel(String id, String resourceId, String resourceName, String resourceType, String userId, String bookingDate,
             String startTime, String endTime, String purpose, int attendees,
-            String status, String adminReason) {
+            String status, String adminReason, boolean checkedIn, String checkInTime) {
         this.id = id;
         this.resourceId = resourceId;
         this.resourceName = resourceName;
+        this.resourceType = resourceType;
         this.userId = userId;
         this.bookingDate = bookingDate;
         this.startTime = startTime;
@@ -40,6 +45,8 @@ public class BookingModel {
         this.attendees = attendees;
         this.status = status;
         this.adminReason = adminReason;
+        this.checkedIn = checkedIn;
+        this.checkInTime = checkInTime;
     }
 
     // Getters
@@ -53,6 +60,10 @@ public class BookingModel {
 
     public String getResourceName() {
         return resourceName;
+    }
+
+    public String getResourceType() {
+        return resourceType;
     }
 
     public String getUserId() {
@@ -100,6 +111,10 @@ public class BookingModel {
         this.resourceName = resourceName;
     }
 
+    public void setResourceType(String resourceType) {
+        this.resourceType = resourceType;
+    }
+
     public void setUserId(String userId) {
         this.userId = userId;
     }
@@ -130,5 +145,21 @@ public class BookingModel {
 
     public void setAdminReason(String adminReason) {
         this.adminReason = adminReason;
+    }
+
+    public boolean isCheckedIn() {
+        return checkedIn;
+    }
+
+    public void setCheckedIn(boolean checkedIn) {
+        this.checkedIn = checkedIn;
+    }
+
+    public String getCheckInTime() {
+        return checkInTime;
+    }
+
+    public void setCheckInTime(String checkInTime) {
+        this.checkInTime = checkInTime;
     }
 }
