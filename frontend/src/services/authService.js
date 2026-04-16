@@ -12,13 +12,25 @@ const authService = {
     getRole: () => localStorage.getItem('role'),
 
     isAdmin: () => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        return user?.role === 'ADMIN';
+        try {
+            const user = localStorage.getItem('user');
+            if (!user) return false;
+            const parsed = JSON.parse(user);
+            return parsed?.role === 'ADMIN';
+        } catch (e) {
+            return false;
+        }
     },
 
     isTechnician: () => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        return user?.role === 'TECHNICIAN';
+        try {
+            const user = localStorage.getItem('user');
+            if (!user) return false;
+            const parsed = JSON.parse(user);
+            return parsed?.role === 'TECHNICIAN';
+        } catch (e) {
+            return false;
+        }
     },
 
     logout: async () => {
