@@ -46,9 +46,21 @@ export default function NotificationPanel() {
     const [notifications, setNotifications] = useState([]);
     const [open, setOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [settings, setSettings] = useState(null);
     const panelRef = useRef(null);
     const navigate = useNavigate();
     const readStatusMapRef = useRef(new Map()); // Track when items were marked as read
+
+    const loadSettings = async () => {
+        try {
+            const data = await notificationService.getSettings();
+            if (data) {
+                setSettings(data);
+            }
+        } catch (error) {
+            console.error('Error loading settings', error);
+        }
+    };
 
     const loadNotifications = async () => {
         try {
@@ -89,9 +101,13 @@ export default function NotificationPanel() {
 
     useEffect(() => {
         loadNotifications();
+        loadSettings();
         fetchCurrentUser();
 
-        const interval = setInterval(loadNotifications, 30000);
+        const interval = setInterval(() => {
+            loadNotifications();
+            loadSettings();
+        }, 30000);
         return () => clearInterval(interval);
     }, []);
 
@@ -175,10 +191,15 @@ export default function NotificationPanel() {
             {/* Bell Button */}
             <button
                 onClick={() => setOpen(!open)}
-                className="relative flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm"
+                className={`relative flex items-center justify-center w-10 h-10 rounded-xl border transition-all shadow-sm ${
+                    settings?.disableAll 
+                        ? 'border-amber-200 bg-amber-50 hover:bg-amber-100' 
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                }`}
+                title={settings?.disableAll ? 'Notifications disabled' : 'Notifications'}
             >
-                <Bell className="w-5 h-5 text-slate-600" />
-                {unreadCount > 0 && (
+                <Bell className={`w-5 h-5 ${settings?.disableAll ? 'text-amber-600' : 'text-slate-600'}`} />
+                {!settings?.disableAll && unreadCount > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white shadow">
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
@@ -227,6 +248,16 @@ export default function NotificationPanel() {
 
                     {/* Notifications List */}
                     <div className="max-h-80 overflow-y-auto">
+                        {settings?.disableAll && (
+                            <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+                                <p className="text-xs font-bold text-amber-800">
+                                    🔔 Notifications are currently disabled
+                                </p>
+                                <p className="text-[10px] text-amber-700 mt-1">
+                                    You won't receive new notifications. Enable them in notification settings.
+                                </p>
+                            </div>
+                        )}
                         {notifications.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-8 px-4 text-slate-400">
                                 <BellOff className="w-8 h-8 mb-2 text-slate-300" />

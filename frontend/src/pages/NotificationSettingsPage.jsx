@@ -108,7 +108,7 @@ export default function NotificationSettingsPage() {
                                 <div>
                                     <p className="text-sm font-black text-slate-900">Disable all notifications</p>
                                     <p className="text-xs font-medium text-slate-500 mt-0.5">
-                                        Turn off all notifications at once
+                                        Block all incoming notifications. Earlier notifications will remain visible.
                                     </p>
                                 </div>
                                 <ToggleSwitch

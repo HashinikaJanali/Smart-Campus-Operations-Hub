@@ -27,6 +27,35 @@ public class NotificationService {
     public Notification createNotification(String userId, 
                                            String type, 
                                            String message) {
+        // Check notification settings before creating
+        NotificationSettings settings = getSettings(userId);
+        
+        // If all notifications are disabled, don't create
+        if (settings.isDisableAll()) {
+            return null;
+        }
+        
+        // Check if specific notification type is enabled
+        switch(type) {
+            case "BOOKING_APPROVED":
+            case "BOOKING_REJECTED":
+            case "BOOKING_CANCELLED":
+                if (!settings.isBookingEnabled()) {
+                    return null;
+                }
+                break;
+            case "TICKET_STATUS_CHANGED":
+                if (!settings.isTicketEnabled()) {
+                    return null;
+                }
+                break;
+            case "NEW_COMMENT":
+                if (!settings.isCommentEnabled()) {
+                    return null;
+                }
+                break;
+        }
+        
         Notification notification = 
             new Notification(userId, type, message);
         return notificationRepository.save(notification);
