@@ -1,7 +1,9 @@
 package Backend.service;
 
 import Backend.model.Notification;
+import Backend.model.NotificationSettings;
 import Backend.repository.NotificationRepository;
+import Backend.repository.NotificationSettingsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -11,6 +13,9 @@ public class NotificationService {
 
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private NotificationSettingsRepository notificationSettingsRepository;
 
     // Get all notifications for a user
     public List<Notification> getNotificationsForUser(String userId) {
@@ -22,6 +27,35 @@ public class NotificationService {
     public Notification createNotification(String userId, 
                                            String type, 
                                            String message) {
+        // Check notification settings before creating
+        NotificationSettings settings = getSettings(userId);
+        
+        // If all notifications are disabled, don't create
+        if (settings.isDisableAll()) {
+            return null;
+        }
+        
+        // Check if specific notification type is enabled
+        switch(type) {
+            case "BOOKING_APPROVED":
+            case "BOOKING_REJECTED":
+            case "BOOKING_CANCELLED":
+                if (!settings.isBookingEnabled()) {
+                    return null;
+                }
+                break;
+            case "TICKET_STATUS_CHANGED":
+                if (!settings.isTicketEnabled()) {
+                    return null;
+                }
+                break;
+            case "NEW_COMMENT":
+                if (!settings.isCommentEnabled()) {
+                    return null;
+                }
+                break;
+        }
+        
         Notification notification = 
             new Notification(userId, type, message);
         return notificationRepository.save(notification);
@@ -48,5 +82,42 @@ public class NotificationService {
     // Delete a notification
     public void deleteNotification(String notificationId) {
         notificationRepository.deleteById(notificationId);
+    }
+
+    // Get notification settings for a user, creating defaults if not exists
+    public NotificationSettings getSettings(String userId) {
+        return notificationSettingsRepository.findByUserId(userId)
+            .orElseGet(() -> {
+                NotificationSettings defaults = new NotificationSettings();
+                defaults.setUserId(userId);
+                defaults.setDisableAll(false);
+                defaults.setBookingEnabled(true);
+                defaults.setTicketEnabled(true);
+                defaults.setCommentEnabled(true);
+                return notificationSettingsRepository.save(defaults);
+            });
+    }
+
+    // Save notification settings for a user
+    public NotificationSettings saveSettings(String userId,
+                                             NotificationSettings incoming) {
+        NotificationSettings existing = notificationSettingsRepository
+            .findByUserId(userId)
+            .orElseGet(() -> {
+                NotificationSettings s = new NotificationSettings();
+                s.setUserId(userId);
+                return s;
+            });
+        existing.setDisableAll(incoming.isDisableAll());
+        existing.setBookingEnabled(incoming.isBookingEnabled());
+        existing.setTicketEnabled(incoming.isTicketEnabled());
+        existing.setCommentEnabled(incoming.isCommentEnabled());
+        return notificationSettingsRepository.save(existing);
+    }
+
+    // Get unread count for a user
+    public long getUnreadCount(String userId) {
+        return notificationRepository
+            .findByUserIdAndIsRead(userId, false).size();
     }
 }

@@ -10,6 +10,7 @@ import TicketingPage from './pages/TicketingPage';
 import AdminTicketingPage from './pages/AdminTicketingPage';
 import LoginPage from './pages/LoginPage';
 import NotificationsPage from './pages/NotificationsPage';
+import NotificationSettingsPage from './pages/NotificationSettingsPage';
 import AdminUserManagementPage from './pages/AdminUserManagementPage';
 import OAuthCallback from './pages/OAuthCallback';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -30,20 +31,23 @@ function App() {
                         <NotificationsPage />
                     </ProtectedRoute>
                 } />
-                <Route path="/resoursestudent" element={
+                <Route path="/notifications/settings" element={
                     <ProtectedRoute>
-                        <StudentResourcePage />
+                        <NotificationSettingsPage />
                     </ProtectedRoute>
+                } />
+                {/* PUBLIC - anyone can view resources, but must login to book */}
+                <Route path="/resoursestudent" element={
+                    <StudentResourcePage />
                 } />
                 <Route path="/bookings" element={
                     <ProtectedRoute>
                         <UserBookingPage />
                     </ProtectedRoute>
                 } />
+                {/* PUBLIC - anyone can view tickets, but must login to create */}
                 <Route path="/tickets" element={
-                    <ProtectedRoute>
-                        <TicketingPage />
-                    </ProtectedRoute>
+                    <TicketingPage />
                 } />
 
                 {/* ADMIN ONLY */}
