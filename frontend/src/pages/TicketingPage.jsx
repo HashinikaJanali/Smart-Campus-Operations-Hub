@@ -9,7 +9,7 @@ import {
     FileText, AlertTriangle, Loader2, RefreshCw, XCircle
 } from 'lucide-react';
 import {
-    createTicket, getMyTickets, getComments,
+    createTicket, getMyTickets, getAllTickets, getComments,
     addComment, editComment, deleteComment,
     resolveTicketImageUrl
 } from '../services/ticketService';
@@ -233,7 +233,7 @@ function CreateTicketModal({ onClose, onCreated }) {
     );
 }
 
-function CommentSection({ ticketId, onRefreshNotifications }) {
+function CommentSection({ ticketId, onRefreshNotifications, isLoggedIn }) {
     const [comments, setComments] = useState([]);
     const [text, setText] = useState('');
     const [editId, setEditId] = useState(null);
@@ -266,15 +266,36 @@ function CommentSection({ ticketId, onRefreshNotifications }) {
     };
 
     const handleEdit = async (commentId) => {
-        await editComment(ticketId, commentId, editText);
+        await editComment(ticketId, commentId, editText, currentUser);
         setEditId(null); fetchComments();
     };
 
     const handleDelete = async (commentId) => {
         if (!window.confirm('Delete this comment?')) return;
-        await deleteComment(ticketId, commentId);
+        await deleteComment(ticketId, commentId, currentUser);
         fetchComments();
     };
+
+    if (!isLoggedIn) {
+        return (
+            <div className="mt-4">
+                <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">
+                    <MessageSquare className="h-3.5 w-3.5" /> Comments ({comments.length})
+                </h4>
+                {comments.length === 0 && <p className="text-xs text-slate-400 italic">No comments yet.</p>}
+                {comments.map(c => (
+                    <div key={c.id} className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 mb-2">
+                        <div>
+                            <span className="text-[11px] font-bold text-indigo-600">{c.authorName || 'User'}</span>
+                            <span className="mx-1.5 text-slate-300">·</span>
+                            <span className="text-[11px] text-slate-400">{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</span>
+                            <p className="mt-1 text-sm text-slate-700">{c.text}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
 
     return (
         <div className="mt-4 space-y-3">
@@ -324,7 +345,7 @@ function CommentSection({ ticketId, onRefreshNotifications }) {
     );
 }
 
-function TicketCard({ ticket, onRefreshNotifications }) {
+function TicketCard({ ticket, onRefreshNotifications, isLoggedIn }) {
     const [expanded, setExpanded] = useState(false);
     const cat = CATEGORIES.find(c => c.value === ticket.category)?.label || ticket.category;
 
@@ -385,7 +406,7 @@ function TicketCard({ ticket, onRefreshNotifications }) {
                                 <p className="text-sm text-rose-800">{ticket.rejectionReason}</p>
                             </div>
                         )}
-                        <CommentSection ticketId={ticket.id} onRefreshNotifications={onRefreshNotifications} />
+                        <CommentSection ticketId={ticket.id} onRefreshNotifications={onRefreshNotifications} isLoggedIn={isLoggedIn} />
                     </div>
                 )}
             </div>
@@ -399,22 +420,35 @@ export default function TicketingPage() {
     const [error, setError] = useState('');
     const [showCreate, setShowCreate] = useState(false);
     const [filterStatus, setFilterStatus] = useState('ALL');
-    const requireAuth = useRequireAuth();  // ← added
+    const [showMyTicketsOnly, setShowMyTicketsOnly] = useState(false);
+    const requireAuth = useRequireAuth();
     const { refreshNotifications } = useNotificationRefresh();
+    
+    const isLoggedIn = !!localStorage.getItem('userId');
+    const userId = localStorage.getItem('userId') || '';
 
     const fetchTickets = async () => {
         try {
-            setLoading(true); setError('');
-            const userId = localStorage.getItem('userId') || '';
-            const res = await getMyTickets(userId);
-            setTickets(Array.isArray(res.data) ? res.data : []);
+            setLoading(true); 
+            setError('');
+            // If user is logged in AND wants to see their tickets, fetch only theirs
+            // Otherwise fetch all tickets (public view)
+            if (isLoggedIn && showMyTicketsOnly && userId) {
+                const res = await getMyTickets(userId);
+                setTickets(Array.isArray(res.data) ? res.data : []);
+            } else {
+                const res = await getAllTickets();
+                setTickets(Array.isArray(res.data) ? res.data : []);
+            }
         } catch (e) {
             console.error(e);
             setError('Could not load tickets. Make sure the backend is running.');
-        } finally { setLoading(false); }
+        } finally { 
+            setLoading(false); 
+        }
     };
 
-    useEffect(() => { fetchTickets(); }, []);
+    useEffect(() => { fetchTickets(); }, [showMyTicketsOnly, isLoggedIn]);
 
     const handleNewTicket = () => {
         requireAuth(() => setShowCreate(true));  // ← redirect to login if not logged in
@@ -433,18 +467,39 @@ export default function TicketingPage() {
             <div className="mx-auto max-w-5xl px-6 py-10">
                 <div className="mb-8 flex items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-black text-slate-900">My Tickets</h1>
-                        <p className="mt-1 text-sm font-medium text-slate-500">Track your reported incidents and maintenance requests</p>
+                        <h1 className="text-3xl font-black text-slate-900">
+                            {isLoggedIn && showMyTicketsOnly ? 'My Tickets' : 'All Tickets'}
+                        </h1>
+                        <p className="mt-1 text-sm font-medium text-slate-500">
+                            {isLoggedIn && showMyTicketsOnly 
+                                ? 'Track your reported incidents and maintenance requests'
+                                : 'Browse all tickets from the campus community'
+                            }
+                        </p>
                     </div>
                     <div className="flex items-center gap-2">
+                        {isLoggedIn && (
+                            <button 
+                                onClick={() => setShowMyTicketsOnly(!showMyTicketsOnly)}
+                                className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-colors ${
+                                    showMyTicketsOnly 
+                                        ? 'border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                                        : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                                }`}
+                            >
+                                {showMyTicketsOnly ? 'View All' : 'My Tickets'}
+                            </button>
+                        )}
                         <button onClick={fetchTickets} className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-colors shadow-sm">
                             <RefreshCw className="h-4 w-4" />
                         </button>
-                        <button
-                            onClick={handleNewTicket}  // ← updated
-                            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/25 transition-all">
-                            <Plus className="h-4 w-4" /> New Ticket
-                        </button>
+                        {isLoggedIn && (
+                            <button
+                                onClick={handleNewTicket}
+                                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/25 transition-all">
+                                <Plus className="h-4 w-4" /> New Ticket
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -486,7 +541,7 @@ export default function TicketingPage() {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {filtered.map(t => <TicketCard key={t.id} ticket={t} onRefreshNotifications={refreshNotifications} />)}
+                        {filtered.map(t => <TicketCard key={t.id} ticket={t} onRefreshNotifications={refreshNotifications} isLoggedIn={isLoggedIn} />)}
                     </div>
                 )}
             </div>

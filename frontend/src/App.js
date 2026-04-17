@@ -40,20 +40,18 @@ function App() {
                         <NotificationSettingsPage />
                     </ProtectedRoute>
                 } />
+                {/* PUBLIC - anyone can view resources, but must login to book */}
                 <Route path="/resoursestudent" element={
-                    <ProtectedRoute>
-                        <StudentResourcePage />
-                    </ProtectedRoute>
+                    <StudentResourcePage />
                 } />
                 <Route path="/bookings" element={
                     <ProtectedRoute>
                         <UserBookingPage />
                     </ProtectedRoute>
                 } />
+                {/* PUBLIC - anyone can view tickets, but must login to create */}
                 <Route path="/tickets" element={
-                    <ProtectedRoute>
-                        <TicketingPage />
-                    </ProtectedRoute>
+                    <TicketingPage />
                 } />
 
                 {/* ADMIN ONLY */}
