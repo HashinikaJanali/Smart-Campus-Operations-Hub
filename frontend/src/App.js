@@ -20,11 +20,7 @@ function App() {
             <Routes>
 
                 {/* PUBLIC - no login needed */}
-                <Route path="/" element={
-                    JSON.parse(localStorage.getItem('user'))?.role === 'ADMIN'
-                        ? <Navigate to="/admin-dashboard" />
-                        : <HomePage />
-                } />
+                <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/oauth/callback" element={<OAuthCallback />} />
 
