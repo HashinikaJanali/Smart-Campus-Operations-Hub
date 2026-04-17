@@ -64,7 +64,7 @@ const notificationService = {
   createTestNotification: async () => {
     try {
       const res = await fetch(`${API_URL}/test`, {
-        method: 'POST', 
+        method: 'POST',
         credentials: 'include'
       });
       if (!res.ok) {
@@ -75,6 +75,46 @@ const notificationService = {
     } catch (error) {
       console.error('Error creating test notification:', error);
       return null;
+    }
+  },
+  getSettings: async () => {
+    try {
+      const res = await fetch(`${API_URL}/settings`, {
+        credentials: 'include'
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch (error) {
+      console.error('Error fetching notification settings:', error);
+      return null;
+    }
+  },
+  saveSettings: async (settings) => {
+    try {
+      const res = await fetch(`${API_URL}/settings`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+      });
+      if (!res.ok) return null;
+      return res.json();
+    } catch (error) {
+      console.error('Error saving notification settings:', error);
+      return null;
+    }
+  },
+  getUnreadCount: async () => {
+    try {
+      const res = await fetch(`${API_URL}/unread-count`, {
+        credentials: 'include'
+      });
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return data.count ?? 0;
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+      return 0;
     }
   }
 };

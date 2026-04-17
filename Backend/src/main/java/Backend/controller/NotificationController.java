@@ -1,6 +1,7 @@
 package Backend.controller;
 
 import Backend.model.Notification;
+import Backend.model.NotificationSettings;
 import Backend.model.User;
 import Backend.repository.UserRepository;
 import Backend.service.NotificationService;
@@ -11,6 +12,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -110,6 +112,46 @@ public class NotificationController {
                 "Your booking has been approved!"
             );
         return ResponseEntity.ok(notification);
+    }
+
+    // GET notification settings for current user
+    @GetMapping("/settings")
+    public ResponseEntity<?> getSettings(
+            @AuthenticationPrincipal OAuth2User principal) {
+        Optional<User> userOpt = getCurrentUser(principal);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(401).body("Not authenticated");
+        }
+        NotificationSettings settings = notificationService
+            .getSettings(userOpt.get().getId());
+        return ResponseEntity.ok(settings);
+    }
+
+    // PUT save notification settings for current user
+    @PutMapping("/settings")
+    public ResponseEntity<?> saveSettings(
+            @RequestBody NotificationSettings settings,
+            @AuthenticationPrincipal OAuth2User principal) {
+        Optional<User> userOpt = getCurrentUser(principal);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(401).body("Not authenticated");
+        }
+        NotificationSettings saved = notificationService
+            .saveSettings(userOpt.get().getId(), settings);
+        return ResponseEntity.ok(saved);
+    }
+
+    // GET unread count for current user
+    @GetMapping("/unread-count")
+    public ResponseEntity<?> getUnreadCount(
+            @AuthenticationPrincipal OAuth2User principal) {
+        Optional<User> userOpt = getCurrentUser(principal);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(401).body("Not authenticated");
+        }
+        long count = notificationService
+            .getUnreadCount(userOpt.get().getId());
+        return ResponseEntity.ok(Map.of("count", count));
     }
 
     // GET debug endpoint to see current user ID

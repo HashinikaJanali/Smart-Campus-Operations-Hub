@@ -10,6 +10,7 @@ import TicketingPage from './pages/TicketingPage';
 import AdminTicketingPage from './pages/AdminTicketingPage';
 import LoginPage from './pages/LoginPage';
 import NotificationsPage from './pages/NotificationsPage';
+import NotificationSettingsPage from './pages/NotificationSettingsPage';
 import AdminUserManagementPage from './pages/AdminUserManagementPage';
 import OAuthCallback from './pages/OAuthCallback';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -32,6 +33,11 @@ function App() {
                 <Route path="/notifications" element={
                     <ProtectedRoute>
                         <NotificationsPage />
+                    </ProtectedRoute>
+                } />
+                <Route path="/notifications/settings" element={
+                    <ProtectedRoute>
+                        <NotificationSettingsPage />
                     </ProtectedRoute>
                 } />
                 <Route path="/resoursestudent" element={
