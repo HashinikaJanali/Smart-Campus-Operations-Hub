@@ -93,15 +93,15 @@ public class BookingService {
                 String upperStatus = status.toUpperCase();
                 if ("APPROVED".equals(upperStatus)) {
                     String msg = String.format(
-                        "Your booking for \"%s\" on %s (%s–%s) has been approved.",
-                        saved.getResourceName(), saved.getBookingDate(),
-                        saved.getStartTime(), saved.getEndTime());
+                            "Your booking for \"%s\" on %s (%s–%s) has been approved.",
+                            saved.getResourceName(), saved.getBookingDate(),
+                            saved.getStartTime(), saved.getEndTime());
                     notificationService.createNotification(userId, "BOOKING_APPROVED", msg);
                 } else if ("REJECTED".equals(upperStatus)) {
                     String msg = String.format(
-                        "Your booking for \"%s\" on %s has been rejected.%s",
-                        saved.getResourceName(), saved.getBookingDate(),
-                        reason != null && !reason.isBlank() ? " Reason: " + reason : "");
+                            "Your booking for \"%s\" on %s has been rejected.%s",
+                            saved.getResourceName(), saved.getBookingDate(),
+                            reason != null && !reason.isBlank() ? " Reason: " + reason : "");
                     notificationService.createNotification(userId, "BOOKING_REJECTED", msg);
                 }
             }

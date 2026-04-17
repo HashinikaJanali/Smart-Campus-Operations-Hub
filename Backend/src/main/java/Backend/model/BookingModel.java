@@ -30,7 +30,8 @@ public class BookingModel {
     public BookingModel() {
     }
 
-    public BookingModel(String id, String resourceId, String resourceName, String resourceType, String userId, String bookingDate,
+    public BookingModel(String id, String resourceId, String resourceName, String resourceType, String userId,
+            String bookingDate,
             String startTime, String endTime, String purpose, int attendees,
             String status, String adminReason, boolean checkedIn, String checkInTime) {
         this.id = id;
