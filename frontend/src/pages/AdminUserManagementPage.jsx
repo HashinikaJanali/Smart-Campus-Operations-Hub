@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import UserHeader from '../components/common/UserHeader';
+import AdminSidebar from '../components/common/AdminSidebar';
 import { Users, Search, Loader2, ShieldCheck, UserCheck, Wrench } from 'lucide-react';
 
 export default function AdminUserManagementPage() {
@@ -7,6 +7,7 @@ export default function AdminUserManagementPage() {
     const [filtered, setFiltered] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [sidebarOpen, setSidebarOpen] = useState(true);
     const [updatingId, setUpdatingId] = useState(null);
 
     useEffect(() => { loadUsers(); }, []);
@@ -18,8 +19,14 @@ export default function AdminUserManagementPage() {
                 credentials: 'include'
             });
             const data = await res.json();
-            setUsers(data);
-            setFiltered(data);
+            if (Array.isArray(data)) {
+                setUsers(data);
+                setFiltered(data);
+            } else {
+                console.error('API did not return an array of users:', data);
+                setUsers([]);
+                setFiltered([]);
+            }
         } catch (error) {
             console.error('Error loading users', error);
         } finally {
@@ -63,9 +70,16 @@ export default function AdminUserManagementPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-            <UserHeader />
-            <main className="mx-auto max-w-6xl px-8 py-10">
+        <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+            {/* ── ADMIN SIDEBAR ── */}
+            <AdminSidebar
+                isOpen={sidebarOpen}
+                onToggle={() => setSidebarOpen(!sidebarOpen)}
+                activePage="users"
+            />
+
+            {/* ── MAIN ── */}
+            <main className={`flex-1 p-8 transition-all duration-300 ${sidebarOpen ? 'ml-[265px]' : 'ml-20'}`}>
 
                 {/* Header */}
                 <div className="mb-8">

@@ -11,7 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bookings")
-@CrossOrigin("*") // Enable CORS for development
+ // Enable CORS for development
 public class BookingController {
 
     @Autowired
