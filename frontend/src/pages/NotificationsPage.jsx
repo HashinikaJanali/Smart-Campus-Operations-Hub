@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UserHeader from '../components/common/UserHeader';
 import {
-    Loader2, CheckCheck, Trash2, BellOff,
+    Loader2, CheckCheck, Trash2, BellOff, Bell,
     CheckCircle2, XCircle, Calendar, Ticket,
     MessageCircle, Info, ChevronRight, ExternalLink
 } from 'lucide-react';
@@ -166,24 +166,31 @@ export default function NotificationsPage() {
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 font-sans text-slate-900">
             <UserHeader />
-            <main className="mx-auto max-w-6xl px-6 py-10">
+            <main className="mx-auto max-w-7xl px-6 py-12">
 
-                {/* Page header */}
-                <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h2 className="text-3xl font-black tracking-tight text-slate-900 italic">
-                            My <span className="text-indigo-600">Notifications</span>
-                        </h2>
-                        <p className="text-sm font-medium text-slate-500 mt-1">
-                            {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up!'}
-                        </p>
+                {/* Professional Page header */}
+                <div className="mb-8">
+                    <div className="flex items-start gap-4 mb-6">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 shadow-lg">
+                            <Bell className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-4xl font-black tracking-tight text-slate-900">
+                                Notifications
+                            </h1>
+                            <p className="text-base font-medium text-slate-600 mt-2">
+                                {unreadCount > 0 
+                                    ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` 
+                                    : '✓ You\'re all caught up!'}
+                            </p>
+                        </div>
                     </div>
                     {unreadCount > 0 && (
                         <button
                             onClick={handleMarkAllRead}
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+                            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg"
                         >
                             <CheckCheck className="w-4 h-4" /> Mark all as read
                         </button>
@@ -191,14 +198,16 @@ export default function NotificationsPage() {
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="flex gap-2 mb-5 bg-white border border-slate-200 rounded-2xl p-1.5 w-fit shadow-sm">
+                <div className="flex gap-2 mb-6 bg-white border border-slate-200 rounded-xl p-1 w-fit shadow-sm">
                     {['ALL', 'UNREAD', 'READ'].map(f => (
                         <button
                             key={f}
                             onClick={() => setFilter(f)}
-                            className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${filter === f
-                                ? 'bg-indigo-600 text-white shadow-sm'
-                                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                                filter === f
+                                    ? 'bg-indigo-600 text-white shadow-md'
+                                    : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
+                            }`}
                         >
                             {f}
                         </button>
@@ -210,17 +219,25 @@ export default function NotificationsPage() {
                         <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-32 text-slate-400">
+                    <div className="flex flex-col items-center justify-center py-24 bg-white border border-slate-200 rounded-2xl shadow-sm">
                         <BellOff className="w-16 h-16 mb-4 text-slate-300" />
-                        <h3 className="text-xl font-bold text-slate-600">No Notifications</h3>
-                        <p className="text-sm mt-2">Nothing here yet.</p>
+                        <h3 className="text-xl font-bold text-slate-700 mt-2">No Notifications</h3>
+                        <p className="text-slate-500 mt-2">{filter === 'UNREAD' ? 'All notifications are marked as read' : 'No notifications at this time'}</p>
+                        {filter !== 'ALL' && (
+                            <button
+                                onClick={() => setFilter('ALL')}
+                                className="mt-4 px-4 py-2 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-sm hover:bg-indigo-100 transition-colors"
+                            >
+                                View all notifications
+                            </button>
+                        )}
                     </div>
                 ) : (
                     /* Split panel layout */
-                    <div className="flex gap-4 items-start">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
                         {/* Left: Notification list */}
-                        <div className="w-80 flex-shrink-0 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                        <div className="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden h-fit">
                             {filtered.map((n, idx) => {
                                 const tc = getTypeConfig(n.type);
                                 const isSelected = selected?.id === n.id;
@@ -228,30 +245,25 @@ export default function NotificationsPage() {
                                     <button
                                         key={n.id}
                                         onClick={() => selectNotification(n, notifications)}
-                                        className={`w-full text-left px-4 py-3.5 flex items-start gap-3 transition-colors border-b border-slate-100 last:border-b-0 ${
+                                        className={`w-full text-left px-4 py-4 flex items-start gap-3 transition-all border-b border-slate-100 last:border-b-0 ${
                                             isSelected
-                                                ? 'bg-indigo-600 text-white'
+                                                ? 'bg-indigo-600 text-white shadow-md'
                                                 : !n.isRead
-                                                    ? 'bg-indigo-50 hover:bg-indigo-100'
+                                                    ? 'bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200'
                                                     : 'bg-white hover:bg-slate-50'
                                         }`}
                                     >
-                                        <div className="mt-0.5 flex-shrink-0">
-                                            {!n.isRead && !isSelected && (
-                                                <span className="block w-2 h-2 rounded-full bg-indigo-600 mt-1" />
-                                            )}
-                                            {(n.isRead || isSelected) && (
-                                                <span className={`block w-2 h-2 rounded-full ${isSelected ? 'bg-white/40' : 'bg-slate-200'}`} />
-                                            )}
-                                        </div>
+                                        <div className={`mt-1 flex-shrink-0 flex h-3 w-3 items-center justify-center rounded-full ${
+                                            !n.isRead ? (isSelected ? 'bg-white/60' : 'bg-indigo-600') : (isSelected ? 'bg-white/40' : 'bg-slate-200')
+                                        }`} />
                                         <div className="flex-1 min-w-0">
-                                            <p className={`text-xs font-black truncate ${isSelected ? 'text-white' : 'text-slate-800'}`}>
+                                            <p className={`text-sm font-bold truncate ${isSelected ? 'text-white' : 'text-slate-900'}`}>
                                                 {tc.label}
                                             </p>
-                                            <p className={`text-[11px] mt-0.5 truncate ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>
+                                            <p className={`text-xs mt-1.5 truncate leading-relaxed ${isSelected ? 'text-indigo-100' : 'text-slate-600'}`}>
                                                 {n.message}
                                             </p>
-                                            <p className={`text-[10px] mt-0.5 font-medium ${isSelected ? 'text-indigo-300' : 'text-slate-400'}`}>
+                                            <p className={`text-[11px] mt-2 font-medium ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>
                                                 {timeAgo(n.createdAt)}
                                             </p>
                                         </div>
@@ -261,7 +273,7 @@ export default function NotificationsPage() {
                         </div>
 
                         {/* Right: Full notification detail */}
-                        <div className="flex-1 min-w-0">
+                        <div className="lg:col-span-2">
                             {selected ? (
                                 <DetailPanel
                                     notification={selected}
@@ -270,10 +282,12 @@ export default function NotificationsPage() {
                                     navigate={navigate}
                                 />
                             ) : (
-                                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col items-center justify-center py-24 text-slate-400">
-                                    <Info className="w-10 h-10 mb-3 text-slate-300" />
-                                    <p className="text-sm font-bold text-slate-500">Select a notification to view</p>
-                                    <p className="text-xs mt-1">Click any notification on the left</p>
+                                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col items-center justify-center py-20">
+                                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 mb-4">
+                                        <Info className="w-8 h-8 text-slate-400" />
+                                    </div>
+                                    <p className="text-lg font-bold text-slate-700">Select a notification</p>
+                                    <p className="text-slate-500 mt-2">Click on any notification to view details</p>
                                 </div>
                             )}
                         </div>
@@ -290,75 +304,73 @@ function DetailPanel({ notification: n, onDelete, onMarkRead, navigate }) {
     return (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
 
-            {/* Breadcrumb */}
-            <div className="px-6 py-3 border-b border-slate-100 flex items-center gap-1.5 flex-wrap">
-                <span className="text-xs font-bold text-indigo-600 cursor-pointer hover:underline"
-                    onClick={() => navigate('/notifications')}>
-                    Notifications
-                </span>
-                <ChevronRight className="w-3 h-3 text-slate-400" />
-                <span className="text-xs font-bold text-indigo-600">{tc.section}</span>
-                <ChevronRight className="w-3 h-3 text-slate-400" />
-                <span className="text-xs font-bold text-slate-600">{tc.label}</span>
-            </div>
-
-            {/* Header */}
-            <div className="px-6 pt-5 pb-4 border-b border-slate-100">
-                <div className="flex items-start gap-3">
-                    <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${tc.bg} border ${tc.border}`}>
+            {/* Header with icon and metadata */}
+            <div className={`px-6 py-6 border-b border-slate-100 ${tc.bg}`}>
+                <div className="flex items-start gap-4">
+                    <div className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl ${tc.bg} border ${tc.border}`}>
                         {tc.icon}
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border ${tc.bg} ${tc.color} ${tc.border}`}>
+                            <span className={`text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border ${tc.bg} ${tc.color} ${tc.border}`}>
                                 {tc.label}
                             </span>
                             {!n.isRead && (
-                                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-600 text-white">
-                                    New
+                                <span className="text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-lg bg-indigo-600 text-white">
+                                    ● New
                                 </span>
                             )}
                         </div>
-                        <p className="text-xs text-slate-400 mt-1.5 font-medium">
-                            {new Date(n.createdAt).toLocaleString()} · {timeAgo(n.createdAt)}
+                        <p className="text-sm text-slate-600 mt-3 font-medium">
+                            {new Date(n.createdAt).toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}
                         </p>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-1 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                         {!n.isRead && (
                             <button
                                 onClick={(e) => onMarkRead(n.id, e)}
-                                className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                className="p-2 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
                                 title="Mark as read"
                             >
-                                <CheckCheck className="w-4 h-4" />
+                                <CheckCheck className="w-5 h-5" />
                             </button>
                         )}
                         <button
                             onClick={(e) => onDelete(n.id, e)}
-                            className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="p-2 rounded-lg text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                             title="Delete"
                         >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Message body */}
-            <div className="px-6 py-6">
-                <p className="text-sm font-bold text-slate-800 leading-relaxed text-base">
+            {/* Message content */}
+            <div className="px-6 py-8 border-b border-slate-100">
+                <h2 className="text-xl font-bold text-slate-900 mb-4">
+                    {tc.label}
+                </h2>
+                <p className="text-slate-700 leading-relaxed text-base">
                     {n.message}
                 </p>
             </div>
 
-            {/* Go to destination */}
+            {/* Call to action */}
             {tc.destination && (
-                <div className="px-6 pb-6">
+                <div className="px-6 py-6 bg-slate-50 border-t border-slate-100">
                     <button
                         onClick={() => navigate(tc.destination.path)}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-colors shadow-sm"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg"
                     >
                         <ExternalLink className="w-4 h-4" />
                         {tc.destination.label}

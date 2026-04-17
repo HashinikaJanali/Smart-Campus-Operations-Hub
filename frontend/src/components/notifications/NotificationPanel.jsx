@@ -191,16 +191,18 @@ export default function NotificationPanel() {
             {/* Bell Button */}
             <button
                 onClick={() => setOpen(!open)}
-                className={`relative flex items-center justify-center w-10 h-10 rounded-xl border transition-all shadow-sm ${
+                className={`relative flex items-center justify-center w-10 h-10 rounded-xl border-2 transition-all shadow-sm font-medium ${
                     settings?.disableAll 
                         ? 'border-amber-200 bg-amber-50 hover:bg-amber-100' 
-                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                        : 'border-indigo-200 bg-white hover:shadow-md'
                 }`}
                 title={settings?.disableAll ? 'Notifications disabled' : 'Notifications'}
             >
-                <Bell className={`w-5 h-5 ${settings?.disableAll ? 'text-amber-600' : 'text-slate-600'}`} />
+                <Bell className={`w-5 h-5 ${
+                    settings?.disableAll ? 'text-amber-600' : 'text-indigo-600'
+                }`} />
                 {!settings?.disableAll && unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white shadow">
+                    <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white shadow-lg">
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
@@ -247,79 +249,86 @@ export default function NotificationPanel() {
                     </div>
 
                     {/* Notifications List */}
-                    <div className="max-h-80 overflow-y-auto">
+                    <div className="max-h-96 overflow-y-auto">
                         {settings?.disableAll && (
                             <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
-                                <p className="text-xs font-bold text-amber-800">
-                                    🔔 Notifications are currently disabled
-                                </p>
-                                <p className="text-[10px] text-amber-700 mt-1">
-                                    You won't receive new notifications. Enable them in notification settings.
-                                </p>
+                                <div className="flex items-start gap-2">
+                                    <span className="text-base mt-0.5">🔔</span>
+                                    <div>
+                                        <p className="text-xs font-bold text-amber-900">
+                                            Notifications Disabled
+                                        </p>
+                                        <p className="text-[10px] text-amber-800 mt-0.5">
+                                            You won't receive new notifications. Enable in settings.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         )}
                         {notifications.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-8 px-4 text-slate-400">
-                                <BellOff className="w-8 h-8 mb-2 text-slate-300" />
-                                <p className="text-sm font-medium mb-4">No notifications</p>
+                            <div className="flex flex-col items-center justify-center py-10 px-4 text-slate-400">
+                                <BellOff className="w-8 h-8 mb-3 text-slate-300" />
+                                <p className="text-sm font-bold text-slate-600">No notifications yet</p>
+                                <p className="text-[10px] text-slate-500 mt-1">You're all caught up!</p>
                                 <button
                                     onClick={handleTestNotification}
-                                    className="flex items-center gap-2 rounded-lg bg-indigo-50 border border-indigo-200 px-3 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-100 transition-colors mb-3"
+                                    className="mt-4 flex items-center gap-2 rounded-lg bg-indigo-50 border border-indigo-200 px-3 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-100 transition-colors"
                                     title="Create a test notification (dev only)"
                                 >
                                     <Zap className="w-3.5 h-3.5" />
                                     Test Notification
                                 </button>
-                                {currentUser && (
-                                    <div className="text-[10px] text-slate-400 mt-3 p-2 bg-slate-50 rounded border border-slate-200 max-w-xs">
-                                        <p><strong>Debug Info:</strong></p>
-                                        <p>Backend ID: {currentUser.mongodbId?.substring(0, 8)}...</p>
-                                        <p>LocalStorage: {localStorage.getItem('userId')?.substring(0, 8)}...</p>
-                                        <p>Match: {currentUser.mongodbId === localStorage.getItem('userId') ? '✓' : '✗'}</p>
-                                    </div>
-                                )}
                             </div>
                         ) : (
                             notifications.slice(0, 8).map(n => (
                                 <div
                                     key={n.id}
-                                    className={`flex items-start gap-3 px-4 py-3 border-b border-slate-50 transition-colors ${!n.isRead ? 'bg-indigo-50' : 'bg-white hover:bg-slate-50'}`}
+                                    className={`px-4 py-3.5 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer ${
+                                        !n.isRead ? 'bg-indigo-50' : 'bg-white'
+                                    }`}
                                 >
-                                    {/* Type icon */}
-                                    <div className="mt-1 flex-shrink-0">
-                                        {getTypeIcon(n.type)}
-                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        {/* Type icon */}
+                                        <div className="mt-0.5 flex-shrink-0">
+                                            {getTypeIcon(n.type)}
+                                        </div>
 
-                                    {/* Content */}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-black text-slate-800 leading-tight">
-                                            {formatType(n.type)}
-                                        </p>
-                                        <p className="text-xs font-medium text-slate-600 mt-0.5 leading-relaxed line-clamp-2">
-                                            {n.message}
-                                        </p>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">
-                                            {timeAgo(n.createdAt)}
-                                        </p>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex flex-col gap-2 flex-shrink-0 mt-1">
-                                        {!n.isRead && (
-                                            <button
-                                                onClick={() => handleMarkRead(n.id)}
-                                                className="text-[10px] font-bold text-emerald-600 hover:text-emerald-800 whitespace-nowrap"
-                                                title="Mark as read"
-                                            >
-                                                Mark read
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={() => { navigate(`/notifications?id=${n.id}`); setOpen(false); }}
-                                            className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 whitespace-nowrap"
-                                        >
-                                            View full<br />notification
-                                        </button>
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-900 leading-tight">
+                                                        {formatType(n.type)}
+                                                    </p>
+                                                    <p className="text-xs font-medium text-slate-600 mt-1 leading-relaxed line-clamp-2">
+                                                        {n.message}
+                                                    </p>
+                                                    <p className="text-[10px] text-slate-400 mt-1.5">
+                                                        {timeAgo(n.createdAt)}
+                                                    </p>
+                                                </div>
+                                                {!n.isRead && (
+                                                    <span className="flex-shrink-0 w-2 h-2 rounded-full bg-indigo-600 mt-1" />
+                                                )}
+                                            </div>
+                                            <div className="flex gap-2 mt-2.5 pt-2 border-t border-slate-100">
+                                                {!n.isRead && (
+                                                    <button
+                                                        onClick={() => handleMarkRead(n.id)}
+                                                        className="text-[10px] font-bold text-emerald-600 hover:text-emerald-800"
+                                                        title="Mark as read"
+                                                    >
+                                                        Mark read
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => { navigate(`/notifications?id=${n.id}`); setOpen(false); }}
+                                                    className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 ml-auto"
+                                                >
+                                                    View full notification
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -327,12 +336,12 @@ export default function NotificationPanel() {
                     </div>
 
                     {/* See all footer */}
-                    <div className="px-4 py-3 border-t border-slate-100">
+                    <div className="px-4 py-3 border-t border-slate-100 bg-slate-50">
                         <button
                             onClick={() => { navigate('/notifications'); setOpen(false); }}
-                            className="w-full py-2 rounded-xl text-sm font-bold text-indigo-600 hover:bg-indigo-50 transition-colors text-center"
+                            className="w-full py-2 rounded-lg text-sm font-bold text-indigo-600 hover:bg-white hover:shadow-sm transition-all text-center"
                         >
-                            See all notifications
+                            View all notifications
                         </button>
                     </div>
                 </div>
