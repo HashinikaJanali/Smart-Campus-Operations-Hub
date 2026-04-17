@@ -17,8 +17,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/notifications")
-@CrossOrigin(origins = "http://localhost:3000",
-             allowCredentials = "true")
+@CrossOrigin("*") // Enable CORS for development
 public class NotificationController {
 
     @Autowired

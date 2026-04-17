@@ -86,7 +86,7 @@ export default function NotificationSettingsPage() {
                         <Settings className="w-5 h-5 text-indigo-600" />
                     </div>
                     <div>
-                        <h2 className="text-3xl font-black tracking-tight text-slate-900 italic">
+                        <h2 className="text-3xl font-black tracking-tight text-slate-900">
                             Notification <span className="text-indigo-600">Preferences</span>
                         </h2>
                         <p className="text-sm font-medium text-slate-500 mt-0.5">
