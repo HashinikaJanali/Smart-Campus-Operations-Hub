@@ -13,6 +13,7 @@ public class BookingModel {
     private String resourceName;
     private String resourceType;
     private String userId;
+    private String userName;
 
     private String bookingDate; // YYYY-MM-DD
     private String startTime; // HH:MM (24-hour format)
@@ -31,7 +32,7 @@ public class BookingModel {
     }
 
     public BookingModel(String id, String resourceId, String resourceName, String resourceType, String userId,
-            String bookingDate,
+            String userName, String bookingDate,
             String startTime, String endTime, String purpose, int attendees,
             String status, String adminReason, boolean checkedIn, String checkInTime) {
         this.id = id;
@@ -39,6 +40,7 @@ public class BookingModel {
         this.resourceName = resourceName;
         this.resourceType = resourceType;
         this.userId = userId;
+        this.userName = userName;
         this.bookingDate = bookingDate;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -69,6 +71,10 @@ public class BookingModel {
 
     public String getUserId() {
         return userId;
+    }
+
+    public String getUserName() {
+        return userName;
     }
 
     public String getBookingDate() {
@@ -118,6 +124,10 @@ public class BookingModel {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public void setBookingDate(String bookingDate) {

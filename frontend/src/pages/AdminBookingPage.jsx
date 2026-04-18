@@ -3,11 +3,12 @@ import {
     Clock, CheckCircle2, XCircle, MapPin,
     CalendarDays, Eye, Loader2, ArrowRight, Search,
     SlidersHorizontal, Filter, Database, RefreshCcw,
-    ChevronLeft, ChevronRight, Building2, FlaskConical, Users
+    ChevronLeft, ChevronRight, Building2, FlaskConical, Users, MonitorPlay
 } from 'lucide-react';
 import { getAllBookings, updateBookingStatus } from '../services/bookingService';
 import ReviewModal from '../components/booking/ReviewModal';
 import { useNotificationRefresh } from '../contexts/NotificationContext';
+import { useToast } from '../contexts/ToastContext';
 
 import AdminSidebar from '../components/common/AdminSidebar';
 
@@ -20,6 +21,7 @@ export default function AdminBookingPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
     const { refreshNotifications } = useNotificationRefresh();
+    const { showToast } = useToast();
 
     // Filter States
     const [search, setSearch] = useState('');
@@ -48,10 +50,13 @@ export default function AdminBookingPage() {
             await updateBookingStatus(id, status, reason);
             setReviewing(null);
             loadAllBookings();
-            // Refresh notifications to show the approval/rejection notification
             refreshNotifications();
+            showToast(
+                status === 'APPROVED' ? 'Booking approved successfully.' : 'Booking rejected.',
+                status === 'APPROVED' ? 'success' : 'info'
+            );
         } catch (error) {
-            alert(error.response?.data || "Failed to update status");
+            showToast(error.response?.data || 'Failed to update status', 'error');
         } finally {
             setProcessing(false);
         }
@@ -250,11 +255,12 @@ export default function AdminBookingPage() {
                                          const getResourceIcon = (b) => {
                                              const type = b.resourceType;
                                              const name = (b.resourceName || '').toUpperCase();
-                                             
+
                                              if (type === 'LECTURE_HALL' || name.includes('HALL') || name.includes('LECTURE')) return Building2;
                                              if (type === 'LAB' || name.includes('LAB')) return FlaskConical;
                                              if (type === 'MEETING_ROOM' || name.includes('ROOM') || name.includes('MEETING')) return Users;
-                                             
+                                             if (type === 'EQUIPMENT' || name.includes('EQUIP')) return MonitorPlay;
+
                                              return MapPin;
                                          };
                                          const ResourceIcon = getResourceIcon(req);
@@ -274,8 +280,8 @@ export default function AdminBookingPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm font-bold text-slate-700 tracking-tight">{req.userId}</span>
-                                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mt-0.5">Campus User</span>
+                                                    <span className="text-sm font-bold text-slate-700 tracking-tight">{req.userName ? req.userName : 'Unknown User'}</span>
+                                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mt-0.5">ID: {req.userId}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">

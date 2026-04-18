@@ -6,6 +6,7 @@ import { getBookingsByUser, createBooking, cancelBooking } from '../services/boo
 import BookingForm from '../components/booking/BookingForm';
 import QRModal from '../components/booking/QRModal';
 import CheckInScanner from '../components/booking/CheckInScanner';
+import { useToast } from '../contexts/ToastContext';
 
 export default function UserBookingPage() {
     const [bookings, setBookings] = useState([]);
@@ -18,7 +19,9 @@ export default function UserBookingPage() {
     const [selectedBooking, setSelectedBooking] = useState(null);
     const [showQR, setShowQR] = useState(false);
     const [showScanner, setShowScanner] = useState(false);
+    const [cancelTarget, setCancelTarget] = useState(null);
     const requireAuth = useRequireAuth();
+    const { showToast } = useToast();
 
     const userId = localStorage.getItem("userId") || "User";
 
@@ -72,25 +75,36 @@ export default function UserBookingPage() {
     const handleCreateBooking = async (formData) => {
         try {
             setSubmitting(true);
-            const newBooking = { ...formData, userId };
+            const userStr = localStorage.getItem("user");
+            const userObj = userStr ? JSON.parse(userStr) : {};
+            const userName = userObj.name || "Unknown User";
+
+            const newBooking = { ...formData, userId, userName };
             await createBooking(newBooking);
             setShowForm(false);
             loadBookings();
-            alert("Booking created successfully!");
+            showToast('Booking created successfully!', 'success');
         } catch (error) {
-            alert(error.response?.data || "Failed to create booking");
+            showToast(error.response?.data || 'Failed to create booking', 'error');
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleCancel = async (id) => {
-        if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+        setCancelTarget(id);
+    };
+
+    const confirmCancel = async () => {
+        if (!cancelTarget) return;
+        const id = cancelTarget;
+        setCancelTarget(null);
         try {
             await cancelBooking(id, userId);
             loadBookings();
+            showToast('Booking cancelled.', 'info');
         } catch (error) {
-            alert("Failed to cancel booking");
+            showToast('Failed to cancel booking.', 'error');
         }
     };
 
@@ -298,6 +312,33 @@ export default function UserBookingPage() {
                     </div>
                 )
             }
+
+            {/* Cancel Confirmation Dialog */}
+            {cancelTarget && (
+                <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
+                        <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <XCircle className="w-8 h-8 text-rose-500" />
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900 text-center mb-2">Cancel Booking?</h3>
+                        <p className="text-slate-500 text-sm text-center mb-6">This action cannot be undone. Your booking slot will be released.</p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setCancelTarget(null)}
+                                className="flex-1 py-3 rounded-xl font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all"
+                            >
+                                Keep It
+                            </button>
+                            <button
+                                onClick={confirmCancel}
+                                className="flex-1 py-3 rounded-xl font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-md shadow-rose-600/20 transition-all"
+                            >
+                                Yes, Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }
