@@ -2,6 +2,8 @@
 
 UniOps is a full-stack web application designed for a university to modernize its day-to-day operations. The platform manages facility and asset bookings, maintenance ticketing, and features role-based workflows for seamless campus administration.
 
+---
+
 ## 🧩 Core Features & Modules
 
 - 🏢 **Facilities & Assets Catalogue**: A maintainable catalog of bookable resources (lecture halls, labs, equipment) with search, filtering, and availability status tracking.
@@ -9,6 +11,8 @@ UniOps is a full-stack web application designed for a university to modernize it
 - ⚙️**Maintenance & Incident Ticketing**: Workflow for users to report faults and attach evidence images. Technicians can be assigned to update ticket statuses (Open -> In Progress -> Resolved), complete with comment ownership rules.
 - 🔔**Notifications**: Alerting system to inform users of booking approval/rejection updates and ticket status changes.
 - 🔐 **Authentication & Authorization**: Secure application with OAuth 2.0 login integration and role-based access control (User, Admin, etc.) to secure frontend routes and REST endpoints.
+
+---
 
 ## 🛠️Technologies & Tools
 
