@@ -2,6 +2,8 @@
 
 UniOps is a full-stack web application designed for a university to modernize its day-to-day operations. The platform manages facility and asset bookings, maintenance ticketing, and features role-based workflows for seamless campus administration.
 
+---
+
 ## 🧩 Core Features & Modules
 
 - 🏢 **Facilities & Assets Catalogue**: A maintainable catalog of bookable resources (lecture halls, labs, equipment) with search, filtering, and availability status tracking.
