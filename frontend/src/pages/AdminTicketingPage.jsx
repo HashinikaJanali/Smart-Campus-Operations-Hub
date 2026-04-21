@@ -220,8 +220,7 @@ function CommentSection({ ticketId }) {
     );
 }
 
-function AdminTicketCard({ ticket, onUpdated }) {
-    const [expanded, setExpanded] = useState(false);
+function AdminTicketCard({ ticket, onUpdated, expanded, onToggleExpand }) {
     const cat = CATEGORIES.find(c => c.value === ticket.category)?.label || ticket.category;
 
     return (
@@ -259,7 +258,7 @@ function AdminTicketCard({ ticket, onUpdated }) {
                 <p className="mt-3 text-sm text-slate-600 leading-relaxed">{ticket.description}</p>
 
                 <div className="mt-3">
-                    <button onClick={() => setExpanded(!expanded)}
+                    <button onClick={onToggleExpand}
                         className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-colors">
                         {expanded ? <><ChevronUp className="h-3.5 w-3.5" /> Collapse</> : <><ChevronDown className="h-3.5 w-3.5" /> Manage & Comment</>}
                     </button>
@@ -285,7 +284,7 @@ function AdminTicketCard({ ticket, onUpdated }) {
                                 <p className="text-sm text-emerald-800">{ticket.resolutionNotes}</p>
                             </div>
                         )}
-                        {ticket.rejectionReason && (
+                        {ticket.status === 'REJECTED' && ticket.rejectionReason && (
                             <div className="mt-3 rounded-xl border border-rose-100 bg-rose-50 p-3">
                                 <p className="text-[11px] font-bold uppercase tracking-widest text-rose-600 mb-1">Rejection Reason</p>
                                 <p className="text-sm text-rose-800">{ticket.rejectionReason}</p>
@@ -307,6 +306,7 @@ export default function AdminTicketingPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [expandedTickets, setExpandedTickets] = useState({});
     const [filterStatus, setFilterStatus] = useState('ALL');
     const [filterPriority, setFilterPriority] = useState('ALL');
     const [search, setSearch] = useState('');
@@ -332,6 +332,17 @@ export default function AdminTicketingPage() {
     };
 
     useEffect(() => { fetchTickets(); }, []);
+
+    useEffect(() => {
+        const validIds = new Set(tickets.map(t => t.id));
+        setExpandedTickets(prev => {
+            const next = {};
+            Object.keys(prev).forEach(id => {
+                if (validIds.has(id) && prev[id]) next[id] = true;
+            });
+            return next;
+        });
+    }, [tickets]);
 
     const filtered = tickets.filter(t => {
         const matchStatus = filterStatus === 'ALL' || t.status === filterStatus;
@@ -435,7 +446,17 @@ export default function AdminTicketingPage() {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {filtered.map(t => <AdminTicketCard key={t.id} ticket={t} onUpdated={fetchTickets} />)}
+                        {filtered.map(t => (
+                            <AdminTicketCard
+                                key={t.id}
+                                ticket={t}
+                                onUpdated={fetchTickets}
+                                expanded={!!expandedTickets[t.id]}
+                                onToggleExpand={() =>
+                                    setExpandedTickets(prev => ({ ...prev, [t.id]: !prev[t.id] }))
+                                }
+                            />
+                        ))}
                     </div>
                 )}
             </main>

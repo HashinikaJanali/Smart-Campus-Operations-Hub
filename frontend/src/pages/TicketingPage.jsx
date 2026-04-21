@@ -400,7 +400,7 @@ function TicketCard({ ticket, onRefreshNotifications, isLoggedIn }) {
                                 <p className="text-sm text-emerald-800">{ticket.resolutionNotes}</p>
                             </div>
                         )}
-                        {ticket.rejectionReason && (
+                        {ticket.status === 'REJECTED' && ticket.rejectionReason && (
                             <div className="rounded-xl border border-rose-100 bg-rose-50 p-3">
                                 <p className="text-[11px] font-bold uppercase tracking-widest text-rose-600 mb-1">Rejection Reason</p>
                                 <p className="text-sm text-rose-800">{ticket.rejectionReason}</p>

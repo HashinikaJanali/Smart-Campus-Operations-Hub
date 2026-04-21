@@ -103,6 +103,11 @@ public class TicketService {
         if (rejectionReason != null)
             ticket.setRejectionReason(rejectionReason);
 
+        // Clear stale rejection reason once ticket moves out of REJECTED.
+        if (newStatus != null && !"REJECTED".equalsIgnoreCase(newStatus)) {
+            ticket.setRejectionReason(null);
+        }
+
         ticket.setUpdatedAt(LocalDateTime.now());
         TicketModel saved = ticketRepository.save(ticket);
 
@@ -121,6 +126,7 @@ public class TicketService {
         TicketModel ticket = getTicketById(id);
         ticket.setAssignedTo(technicianName);
         ticket.setStatus("IN_PROGRESS");
+        ticket.setRejectionReason(null);
         ticket.setUpdatedAt(LocalDateTime.now());
         TicketModel saved = ticketRepository.save(ticket);
 
