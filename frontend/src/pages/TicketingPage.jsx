@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import UserHeader from '../components/common/UserHeader';
 import useRequireAuth from '../hooks/userRequireAuth';
 import { useNotificationRefresh } from '../contexts/NotificationContext';
@@ -427,7 +427,7 @@ export default function TicketingPage() {
     const isLoggedIn = !!localStorage.getItem('userId');
     const userId = localStorage.getItem('userId') || '';
 
-    const fetchTickets = async () => {
+    const fetchTickets = useCallback(async () => {
         try {
             setLoading(true); 
             setError('');
@@ -446,9 +446,9 @@ export default function TicketingPage() {
         } finally { 
             setLoading(false); 
         }
-    };
+    }, [isLoggedIn, showMyTicketsOnly, userId]);
 
-    useEffect(() => { fetchTickets(); }, [showMyTicketsOnly, isLoggedIn]);
+    useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
     const handleNewTicket = () => {
         requireAuth(() => setShowCreate(true));  // ← redirect to login if not logged in
