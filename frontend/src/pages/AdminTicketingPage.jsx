@@ -304,6 +304,7 @@ function AdminTicketCard({ ticket, onUpdated, expanded, onToggleExpand }) {
 export default function AdminTicketingPage() {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [expandedTickets, setExpandedTickets] = useState({});
@@ -319,19 +320,30 @@ export default function AdminTicketingPage() {
         });
     };
 
-    const fetchTickets = async () => {
+    const fetchTickets = async ({ mode = 'refresh' } = {}) => {
         try {
-            setLoading(true); setError('');
+            if (mode === 'initial') {
+                setLoading(true);
+            } else if (mode === 'refresh') {
+                setRefreshing(true);
+            }
+            setError('');
             const res = await getAllTickets();
             const list = Array.isArray(res.data) ? res.data : [];
             setTickets(sortTicketsNewestFirst(list));
         } catch (e) {
             console.error(e);
             setError('Could not load tickets. Make sure the backend is running.');
-        } finally { setLoading(false); }
+        } finally {
+            if (mode === 'initial') {
+                setLoading(false);
+            } else if (mode === 'refresh') {
+                setRefreshing(false);
+            }
+        }
     };
 
-    useEffect(() => { fetchTickets(); }, []);
+    useEffect(() => { fetchTickets({ mode: 'initial' }); }, []);
 
     useEffect(() => {
         const validIds = new Set(tickets.map(t => t.id));
@@ -375,10 +387,10 @@ export default function AdminTicketingPage() {
                         <p className="mt-1 text-sm font-medium text-slate-500">Manage, assign, and resolve all campus maintenance tickets</p>
                     </div>
                     <button
-                        onClick={fetchTickets}
+                        onClick={() => fetchTickets({ mode: 'refresh' })}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-all active:scale-95 shadow-sm shadow-indigo-200/40"
                     >
-                        <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh Data
+                        <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} /> Refresh Data
                     </button>
                 </div>
 
@@ -450,7 +462,7 @@ export default function AdminTicketingPage() {
                             <AdminTicketCard
                                 key={t.id}
                                 ticket={t}
-                                onUpdated={fetchTickets}
+                                onUpdated={() => fetchTickets({ mode: 'silent' })}
                                 expanded={!!expandedTickets[t.id]}
                                 onToggleExpand={() =>
                                     setExpandedTickets(prev => ({ ...prev, [t.id]: !prev[t.id] }))
