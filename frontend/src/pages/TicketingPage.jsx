@@ -427,6 +427,14 @@ export default function TicketingPage() {
     const isLoggedIn = !!localStorage.getItem('userId');
     const userId = localStorage.getItem('userId') || '';
 
+    const sortTicketsNewestFirst = (items) => {
+        return [...items].sort((a, b) => {
+            const timeA = Date.parse(a?.createdAt || a?.updatedAt || '') || 0;
+            const timeB = Date.parse(b?.createdAt || b?.updatedAt || '') || 0;
+            return timeB - timeA;
+        });
+    };
+
     const fetchTickets = async () => {
         try {
             setLoading(true); 
@@ -435,10 +443,12 @@ export default function TicketingPage() {
             // Otherwise fetch all tickets (public view)
             if (isLoggedIn && showMyTicketsOnly && userId) {
                 const res = await getMyTickets(userId);
-                setTickets(Array.isArray(res.data) ? res.data : []);
+                const list = Array.isArray(res.data) ? res.data : [];
+                setTickets(sortTicketsNewestFirst(list));
             } else {
                 const res = await getAllTickets();
-                setTickets(Array.isArray(res.data) ? res.data : []);
+                const list = Array.isArray(res.data) ? res.data : [];
+                setTickets(sortTicketsNewestFirst(list));
             }
         } catch (e) {
             console.error(e);

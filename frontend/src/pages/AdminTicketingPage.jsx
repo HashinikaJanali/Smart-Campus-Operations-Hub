@@ -38,8 +38,6 @@ const STATUSES = {
     REJECTED: { label: 'Rejected', color: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200', icon: XCircle },
 };
 
-const PRIORITY_ORDER = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
-
 function StatusBadge({ status }) {
     const s = STATUSES[status] || STATUSES.OPEN;
     const Icon = s.icon;
@@ -313,14 +311,20 @@ export default function AdminTicketingPage() {
     const [filterPriority, setFilterPriority] = useState('ALL');
     const [search, setSearch] = useState('');
 
+    const sortTicketsNewestFirst = (items) => {
+        return [...items].sort((a, b) => {
+            const timeA = Date.parse(a?.createdAt || a?.updatedAt || '') || 0;
+            const timeB = Date.parse(b?.createdAt || b?.updatedAt || '') || 0;
+            return timeB - timeA;
+        });
+    };
+
     const fetchTickets = async () => {
         try {
             setLoading(true); setError('');
             const res = await getAllTickets();
-            const sorted = res.data.sort((a, b) =>
-                (PRIORITY_ORDER[a.priority] ?? 99) - (PRIORITY_ORDER[b.priority] ?? 99)
-            );
-            setTickets(sorted);
+            const list = Array.isArray(res.data) ? res.data : [];
+            setTickets(sortTicketsNewestFirst(list));
         } catch (e) {
             console.error(e);
             setError('Could not load tickets. Make sure the backend is running.');

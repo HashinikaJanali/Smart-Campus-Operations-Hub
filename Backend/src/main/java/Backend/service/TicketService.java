@@ -32,12 +32,12 @@ public class TicketService {
     private final String UPLOAD_DIR = "uploads/tickets/";
 
     public List<TicketModel> getAllTickets() {
-        return ticketRepository.findAll();
+        return ticketRepository.findAllByOrderByCreatedAtDesc();
     }
 
     public List<TicketModel> getMyTickets(String userId) {
         if (userId != null && !userId.isBlank()) {
-            return ticketRepository.findByUserId(userId);
+            return ticketRepository.findByUserIdOrderByCreatedAtDesc(userId);
         }
         return List.of();
     }
