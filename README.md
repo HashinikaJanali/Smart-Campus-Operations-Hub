@@ -10,6 +10,8 @@ UniOps is a full-stack web application designed for a university to modernize it
 - 🔔**Notifications**: Alerting system to inform users of booking approval/rejection updates and ticket status changes.
 - 🔐 **Authentication & Authorization**: Secure application with OAuth 2.0 login integration and role-based access control (User, Admin, etc.) to secure frontend routes and REST endpoints.
 
+---
+
 ## 🛠️Technologies & Tools
 
 ### Backend
