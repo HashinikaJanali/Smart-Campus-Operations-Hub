@@ -92,26 +92,35 @@ public class TicketService {
         String oldStatus = ticket.getStatus();
 
         String newStatus = payload.get("status");
-        if (newStatus != null)
-            ticket.setStatus(newStatus);
+        if (newStatus != null) ticket.setStatus(newStatus);
 
         String resolutionNotes = payload.get("resolutionNotes");
-        if (resolutionNotes != null)
-            ticket.setResolutionNotes(resolutionNotes);
+        if (resolutionNotes != null) ticket.setResolutionNotes(resolutionNotes);
 
         String rejectionReason = payload.get("rejectionReason");
-        if (rejectionReason != null)
-            ticket.setRejectionReason(rejectionReason);
+        if (rejectionReason != null) ticket.setRejectionReason(rejectionReason);
 
-        // Clear stale rejection reason once ticket moves out of REJECTED.
         if (newStatus != null && !"REJECTED".equalsIgnoreCase(newStatus)) {
             ticket.setRejectionReason(null);
         }
 
+        // ── SLA TIMER LOGIC ───────────────────────────────────────────────────
+        if (newStatus != null && !newStatus.equals(oldStatus)) {
+            // Record first response time when work starts (only set once)
+            if ("IN_PROGRESS".equalsIgnoreCase(newStatus) && ticket.getFirstResponseAt() == null) {
+                ticket.setFirstResponseAt(LocalDateTime.now());
+            }
+            // Record resolution time when ticket is resolved or closed (only set once)
+            if (("RESOLVED".equalsIgnoreCase(newStatus) || "CLOSED".equalsIgnoreCase(newStatus))
+                    && ticket.getResolvedAt() == null) {
+                ticket.setResolvedAt(LocalDateTime.now());
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         ticket.setUpdatedAt(LocalDateTime.now());
         TicketModel saved = ticketRepository.save(ticket);
 
-        // Notify the ticket owner if the status actually changed
         String ticketOwnerUserId = saved.getUserId();
         if (ticketOwnerUserId != null && !ticketOwnerUserId.isBlank()
                 && newStatus != null && !newStatus.equals(oldStatus)) {
@@ -127,10 +136,17 @@ public class TicketService {
         ticket.setAssignedTo(technicianName);
         ticket.setStatus("IN_PROGRESS");
         ticket.setRejectionReason(null);
+
+        // ── SLA TIMER LOGIC ───────────────────────────────────────────────────
+        // Record first response time when assigned (only set once)
+        if (ticket.getFirstResponseAt() == null) {
+            ticket.setFirstResponseAt(LocalDateTime.now());
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         ticket.setUpdatedAt(LocalDateTime.now());
         TicketModel saved = ticketRepository.save(ticket);
 
-        // Notify the ticket owner that work has started
         String ticketOwnerUserId = saved.getUserId();
         if (ticketOwnerUserId != null && !ticketOwnerUserId.isBlank()) {
             String message = String.format(
@@ -150,7 +166,6 @@ public class TicketService {
         ticketRepository.deleteById(id);
     }
 
-    // -----------------------------------------------------------------------
     private String buildStatusChangeMessage(TicketModel ticket, String newStatus) {
         String resource = truncate(ticket.getResource(), 40);
         return switch (newStatus.toUpperCase()) {

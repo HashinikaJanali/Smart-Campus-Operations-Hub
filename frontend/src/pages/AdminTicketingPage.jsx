@@ -4,7 +4,7 @@ import {
     AlertCircle, CheckCircle2, Clock, Wrench, XCircle,
     ChevronDown, ChevronUp, MessageSquare, Send, Pencil,
     Trash2, MapPin, Phone, Mail, FileText, Loader2,
-    RefreshCw, UserCheck, Check, Ban, Filter, LayoutDashboard
+    RefreshCw, UserCheck, Check, Ban, Filter, LayoutDashboard, Timer
 } from 'lucide-react';
 import {
     getAllTickets, updateTicketStatus, assignTicket,
@@ -37,6 +37,65 @@ const STATUSES = {
     CLOSED: { label: 'Closed', color: 'text-slate-600', bg: 'bg-slate-100', border: 'border-slate-200', icon: XCircle },
     REJECTED: { label: 'Rejected', color: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200', icon: XCircle },
 };
+
+// ── TIMER HELPER ─────────────────────────────────────────────────────────────
+function formatDuration(from, to) {
+    if (!from) return null;
+    const start = new Date(from);
+    const end = to ? new Date(to) : new Date();
+    const totalMinutes = Math.floor((end - start) / 60000);
+    if (totalMinutes < 1) return '< 1m';
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const mins = totalMinutes % 60;
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
+}
+
+function SlaTimers({ ticket }) {
+    const responseTime = formatDuration(ticket.createdAt, ticket.firstResponseAt);
+    const resolutionTime = formatDuration(ticket.createdAt, ticket.resolvedAt);
+    const isOpen = !['RESOLVED', 'CLOSED', 'REJECTED'].includes(ticket.status);
+    const hasResponded = Boolean(ticket.firstResponseAt) || ticket.status !== 'OPEN';
+    const responseDisplay = ticket.firstResponseAt
+        ? responseTime
+        : hasResponded
+            ? formatDuration(ticket.createdAt, ticket.updatedAt)
+            : 'Awaiting response';
+
+    if (!responseTime && !resolutionTime && ticket.status === 'OPEN') return null;
+
+    return (
+        <div className="mt-3 flex flex-wrap gap-2">
+            <div className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold
+                ${hasResponded
+                    ? 'border-indigo-100 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                <Timer className="h-3 w-3" />
+                <span>Response: </span>
+                <span>{responseDisplay}</span>
+            </div>
+            <div className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold
+                ${ticket.resolvedAt
+                    ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                    : isOpen
+                        ? 'border-amber-100 bg-amber-50 text-amber-600'
+                        : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                <Clock className="h-3 w-3" />
+                <span>Resolution: </span>
+                <span>
+                    {ticket.resolvedAt
+                        ? resolutionTime
+                        : isOpen
+                            ? `${formatDuration(ticket.createdAt, null)} elapsed`
+                            : 'N/A'}
+                </span>
+            </div>
+        </div>
+    );
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }) {
     const s = STATUSES[status] || STATUSES.OPEN;
@@ -91,10 +150,8 @@ function StatusUpdatePanel({ ticket, onUpdated }) {
                     <UserCheck className="h-3 w-3" /> Assign Technician
                 </label>
                 <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:bg-white focus:ring-1 focus:ring-indigo-100"
-                    value={assignee} onChange={e => setAssignee(e.target.value)}
-                    placeholder="Technician name or ID" />
+                    value={assignee} onChange={e => setAssignee(e.target.value)} placeholder="Technician name or ID" />
             </div>
-
             <div>
                 <label className="mb-1 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                     <FileText className="h-3 w-3" /> Resolution Notes
@@ -103,7 +160,6 @@ function StatusUpdatePanel({ ticket, onUpdated }) {
                     rows={2} value={resolutionNotes} onChange={e => setResolutionNotes(e.target.value)}
                     placeholder="Describe what was done or needs to be done..." />
             </div>
-
             <div className="flex flex-wrap gap-2">
                 {actions.map(a => {
                     const Icon = a.icon;
@@ -122,13 +178,11 @@ function StatusUpdatePanel({ ticket, onUpdated }) {
                     </button>
                 )}
             </div>
-
             {showRejectInput && (
                 <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-3 space-y-2">
                     <label className="text-[11px] font-bold uppercase tracking-widest text-rose-600">Rejection Reason *</label>
                     <input className="w-full rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-100"
-                        value={rejectionReason} onChange={e => setRejectionReason(e.target.value)}
-                        placeholder="Reason for rejection..." />
+                        value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Reason for rejection..." />
                     <div className="flex gap-2">
                         <button onClick={() => doAction('REJECTED', { rejectionReason })} disabled={!rejectionReason.trim() || loading}
                             className="flex items-center gap-1.5 rounded-lg bg-rose-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-rose-700 disabled:opacity-50 transition-colors">
@@ -257,6 +311,9 @@ function AdminTicketCard({ ticket, onUpdated, expanded, onToggleExpand }) {
 
                 <p className="mt-3 text-sm text-slate-600 leading-relaxed">{ticket.description}</p>
 
+                {/* ── SLA TIMERS ── */}
+                <SlaTimers ticket={ticket} />
+
                 <div className="mt-3">
                     <button onClick={onToggleExpand}
                         className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-colors">
@@ -280,7 +337,7 @@ function AdminTicketCard({ ticket, onUpdated, expanded, onToggleExpand }) {
                         )}
                         {ticket.resolutionNotes && (
                             <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 mb-1">Resolution Notes</p>
+                                <p className="text-[11px] font-bold uppercase tracking-widests text-emerald-600 mb-1">Resolution Notes</p>
                                 <p className="text-sm text-emerald-800">{ticket.resolutionNotes}</p>
                             </div>
                         )}
@@ -322,24 +379,17 @@ export default function AdminTicketingPage() {
 
     const fetchTickets = async ({ mode = 'refresh' } = {}) => {
         try {
-            if (mode === 'initial') {
-                setLoading(true);
-            } else if (mode === 'refresh') {
-                setRefreshing(true);
-            }
+            if (mode === 'initial') setLoading(true);
+            else if (mode === 'refresh') setRefreshing(true);
             setError('');
             const res = await getAllTickets();
-            const list = Array.isArray(res.data) ? res.data : [];
-            setTickets(sortTicketsNewestFirst(list));
+            setTickets(sortTicketsNewestFirst(Array.isArray(res.data) ? res.data : []));
         } catch (e) {
             console.error(e);
             setError('Could not load tickets. Make sure the backend is running.');
         } finally {
-            if (mode === 'initial') {
-                setLoading(false);
-            } else if (mode === 'refresh') {
-                setRefreshing(false);
-            }
+            if (mode === 'initial') setLoading(false);
+            else if (mode === 'refresh') setRefreshing(false);
         }
     };
 
@@ -349,9 +399,7 @@ export default function AdminTicketingPage() {
         const validIds = new Set(tickets.map(t => t.id));
         setExpandedTickets(prev => {
             const next = {};
-            Object.keys(prev).forEach(id => {
-                if (validIds.has(id) && prev[id]) next[id] = true;
-            });
+            Object.keys(prev).forEach(id => { if (validIds.has(id) && prev[id]) next[id] = true; });
             return next;
         });
     }, [tickets]);
@@ -371,11 +419,7 @@ export default function AdminTicketingPage() {
 
     return (
         <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
-            <AdminSidebar
-                isOpen={sidebarOpen}
-                onToggle={() => setSidebarOpen(!sidebarOpen)}
-                activePage="tickets"
-            />
+            <AdminSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} activePage="tickets" />
 
             <main className={`flex-1 p-8 transition-all duration-300 ${sidebarOpen ? 'ml-[265px]' : 'ml-20'}`}>
                 <div className="mb-8 flex items-start justify-between gap-4">
@@ -386,10 +430,8 @@ export default function AdminTicketingPage() {
                         <h1 className="text-4xl font-black text-slate-900 leading-tight">Ticket <span className="text-indigo-600">Management</span></h1>
                         <p className="mt-1 text-sm font-medium text-slate-500">Manage, assign, and resolve all campus maintenance tickets</p>
                     </div>
-                    <button
-                        onClick={() => fetchTickets({ mode: 'refresh' })}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-all active:scale-95 shadow-sm shadow-indigo-200/40"
-                    >
+                    <button onClick={() => fetchTickets({ mode: 'refresh' })}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-all active:scale-95 shadow-sm shadow-indigo-200/40">
                         <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} /> Refresh Data
                     </button>
                 </div>
@@ -399,15 +441,13 @@ export default function AdminTicketingPage() {
                         <div className="text-3xl font-black text-white">{tickets.length}</div>
                         <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-200 mt-0.5">Total</div>
                     </div>
-                    {Object.entries(STATUSES).map(([key, s]) => {
-                        return (
-                            <button key={key} onClick={() => setFilterStatus(filterStatus === key ? 'ALL' : key)}
-                                className={`rounded-2xl border p-4 text-center transition-all ${filterStatus === key ? `${s.bg} ${s.border} shadow-sm` : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                                <div className={`text-2xl font-black ${filterStatus === key ? s.color : 'text-slate-800'}`}>{statusCounts[key] || 0}</div>
-                                <div className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${filterStatus === key ? s.color : 'text-slate-400'}`}>{s.label}</div>
-                            </button>
-                        );
-                    })}
+                    {Object.entries(STATUSES).map(([key, s]) => (
+                        <button key={key} onClick={() => setFilterStatus(filterStatus === key ? 'ALL' : key)}
+                            className={`rounded-2xl border p-4 text-center transition-all ${filterStatus === key ? `${s.bg} ${s.border} shadow-sm` : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                            <div className={`text-2xl font-black ${filterStatus === key ? s.color : 'text-slate-800'}`}>{statusCounts[key] || 0}</div>
+                            <div className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${filterStatus === key ? s.color : 'text-slate-400'}`}>{s.label}</div>
+                        </button>
+                    ))}
                 </div>
 
                 <div className="mb-5 flex flex-wrap items-center gap-3">
@@ -459,14 +499,10 @@ export default function AdminTicketingPage() {
                 ) : (
                     <div className="space-y-4">
                         {filtered.map(t => (
-                            <AdminTicketCard
-                                key={t.id}
-                                ticket={t}
+                            <AdminTicketCard key={t.id} ticket={t}
                                 onUpdated={() => fetchTickets({ mode: 'silent' })}
                                 expanded={!!expandedTickets[t.id]}
-                                onToggleExpand={() =>
-                                    setExpandedTickets(prev => ({ ...prev, [t.id]: !prev[t.id] }))
-                                }
+                                onToggleExpand={() => setExpandedTickets(prev => ({ ...prev, [t.id]: !prev[t.id] }))}
                             />
                         ))}
                     </div>
