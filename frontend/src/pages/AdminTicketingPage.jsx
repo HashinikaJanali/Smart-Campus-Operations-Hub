@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import {
     getAllTickets, updateTicketStatus, assignTicket,
-    getComments, addComment, editComment, deleteComment,
+    deleteTicket, getComments, addComment, editComment, deleteComment,
     resolveTicketImageUrl
 } from '../services/ticketService';
 
@@ -276,6 +276,22 @@ function CommentSection({ ticketId }) {
 
 function AdminTicketCard({ ticket, onUpdated, expanded, onToggleExpand }) {
     const cat = CATEGORIES.find(c => c.value === ticket.category)?.label || ticket.category;
+    const [deleting, setDeleting] = useState(false);
+
+    const handleDelete = async () => {
+        if (!window.confirm(`Delete ticket #${ticket.id}? This cannot be undone.`)) return;
+
+        try {
+            setDeleting(true);
+            await deleteTicket(ticket.id);
+            onUpdated();
+        } catch (e) {
+            console.error(e);
+            window.alert('Failed to delete ticket. Please try again.');
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     return (
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden transition-all hover:shadow-md hover:border-slate-300">
@@ -315,10 +331,16 @@ function AdminTicketCard({ ticket, onUpdated, expanded, onToggleExpand }) {
                 <SlaTimers ticket={ticket} />
 
                 <div className="mt-3">
-                    <button onClick={onToggleExpand}
-                        className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-colors">
-                        {expanded ? <><ChevronUp className="h-3.5 w-3.5" /> Collapse</> : <><ChevronDown className="h-3.5 w-3.5" /> Manage & Comment</>}
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                        <button onClick={onToggleExpand}
+                            className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-colors">
+                            {expanded ? <><ChevronUp className="h-3.5 w-3.5" /> Collapse</> : <><ChevronDown className="h-3.5 w-3.5" /> Manage & Comment</>}
+                        </button>
+                        <button onClick={handleDelete} disabled={deleting}
+                            className="flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] font-bold text-rose-700 hover:bg-rose-100 hover:border-rose-300 transition-colors disabled:cursor-not-allowed disabled:opacity-60">
+                            {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />} Delete Ticket
+                        </button>
+                    </div>
                 </div>
 
                 {expanded && (
