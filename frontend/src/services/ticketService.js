@@ -27,6 +27,8 @@ export const updateTicketStatus = (id, payload) =>
 export const assignTicket = (id, technicianName) =>
     api.patch(`/tickets/${id}/assign`, { assignedTo: technicianName });
 
+export const deleteTicket = (id) => api.delete(`/tickets/${id}`);
+
 export const getComments = (ticketId) => api.get(`/tickets/${ticketId}/comments`);
 
 export const addComment = (ticketId, text, authorName) =>
