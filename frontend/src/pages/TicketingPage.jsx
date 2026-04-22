@@ -478,7 +478,7 @@ export default function TicketingPage() {
         });
     };
 
-    const fetchTickets = async () => {
+    const fetchTickets = useCallback(async () => {
         try {
             setLoading(true); setError('');
             if (isLoggedIn && showMyTicketsOnly && userId) {
@@ -492,7 +492,7 @@ export default function TicketingPage() {
             console.error(e);
             setError('Could not load tickets. Make sure the backend is running.');
         } finally { setLoading(false); }
-    };
+    }, [isLoggedIn, showMyTicketsOnly, userId]);
 
     useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
