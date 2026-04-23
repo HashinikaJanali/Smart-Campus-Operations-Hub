@@ -3,9 +3,9 @@ import {
     Clock, CheckCircle2, XCircle, MapPin,
     CalendarDays, Eye, Loader2, ArrowRight, Search,
     SlidersHorizontal, Filter, Database, RefreshCcw,
-    ChevronLeft, ChevronRight, Building2, FlaskConical, Users, MonitorPlay
+    ChevronLeft, ChevronRight, Building2, FlaskConical, Users, MonitorPlay, Trash2, AlertTriangle
 } from 'lucide-react';
-import { getAllBookings, updateBookingStatus } from '../services/bookingService';
+import { getAllBookings, updateBookingStatus, deleteBooking } from '../services/bookingService';
 import ReviewModal from '../components/booking/ReviewModal';
 import { useNotificationRefresh } from '../contexts/NotificationContext';
 import { useToast } from '../contexts/ToastContext';
@@ -16,6 +16,7 @@ export default function AdminBookingPage() {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [reviewing, setReviewing] = useState(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState(null);
     const [processing, setProcessing] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -59,6 +60,26 @@ export default function AdminBookingPage() {
             showToast(error.response?.data || 'Failed to update status', 'error');
         } finally {
             setProcessing(false);
+        }
+    };
+
+    const triggerDelete = (id) => {
+        setDeleteConfirmId(id);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirmId) return;
+        try {
+            setProcessing(true);
+            await deleteBooking(deleteConfirmId);
+            loadAllBookings();
+            refreshNotifications();
+            showToast('Booking deleted successfully.', 'success');
+        } catch (error) {
+            showToast(error.response?.data?.error || 'Failed to delete booking', 'error');
+        } finally {
+            setProcessing(false);
+            setDeleteConfirmId(null);
         }
     };
 
@@ -243,10 +264,10 @@ export default function AdminBookingPage() {
                                     <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">
                                         <th className="px-6 py-3">Resource Info</th>
                                         <th className="px-6 py-3">Requester</th>
-                                        <th className="px-6 py-3">Schedule</th>
+                                        <th className="px-6 py-3 text-center">Schedule</th>
                                         <th className="px-6 py-3 text-center">Check-in</th>
                                         <th className="px-6 py-3 text-center">Status</th>
-                                        <th className="px-6 py-3 text-right">Actions</th>
+                                        <th className="px-6 py-3 text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -323,17 +344,26 @@ export default function AdminBookingPage() {
                                                      {req.status}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <button
-                                                    onClick={() => setReviewing(req)}
-                                                    className={`inline-flex items-center gap-2 rounded-xl px-5 py-2 text-[11px] font-bold shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 ${req.status === 'PENDING' ? 'bg-indigo-600 text-white shadow-indigo-600/20 hover:bg-indigo-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 shadow-slate-200/20'}`}
-                                                >
-                                                    {req.status === 'PENDING' ? (
-                                                        <>REVIEW <ArrowRight className="h-3.5 w-3.5" /></>
-                                                    ) : (
-                                                        <>DETAILS <Eye className="h-3.5 w-3.5" /></>
-                                                    )}
-                                                </button>
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={() => setReviewing(req)}
+                                                        className={`inline-flex items-center gap-2 rounded-xl px-5 py-2 text-[11px] font-bold shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 ${req.status === 'PENDING' ? 'bg-indigo-600 text-white shadow-indigo-600/20 hover:bg-indigo-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 shadow-slate-200/20'}`}
+                                                    >
+                                                        {req.status === 'PENDING' ? (
+                                                            <>REVIEW <ArrowRight className="h-3.5 w-3.5" /></>
+                                                        ) : (
+                                                            <>DETAILS <Eye className="h-3.5 w-3.5" /></>
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => triggerDelete(req.id)}
+                                                        className="p-2 rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 hover:border-rose-100 transition-all shadow-sm"
+                                                        title="Delete Booking"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                          );
@@ -389,6 +419,40 @@ export default function AdminBookingPage() {
                             onClose={() => setReviewing(null)}
                             isLoading={processing}
                         />
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirmId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                    <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-6 text-center">
+                            <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                                <AlertTriangle className="w-8 h-8 text-rose-600" />
+                            </div>
+                            <h3 className="text-2xl font-black text-slate-900 mb-2">Delete Booking?</h3>
+                            <p className="text-slate-500 font-medium text-sm mb-8">
+                                This action cannot be undone. Are you sure you want to permanently delete this booking record?
+                            </p>
+                            <div className="flex items-center gap-3 w-full">
+                                <button
+                                    onClick={() => setDeleteConfirmId(null)}
+                                    disabled={processing}
+                                    className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    disabled={processing}
+                                    className="flex-1 py-3 px-4 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-lg shadow-rose-600/20 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                    {processing ? 'Deleting...' : 'Yes, Delete'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
