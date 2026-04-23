@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import jsQR from 'jsqr';
 import { X, Upload, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 import { checkInBooking } from '../../services/bookingService';
 
@@ -12,12 +12,29 @@ export default function CheckInScanner({ onClose, onSuccess }) {
         if (!file) return;
 
         try {
-            // Do NOT set status to PROCESSING here yet, as it might unmount the reader if not careful
-            // We'll keep the IDLE state but show a small loading indicator if needed, 
-            // or just ensure the reader is always mounted.
-            const html5QrCode = new Html5Qrcode("upload-reader");
-            const result = await html5QrCode.scanFile(file, true);
-            processCheckIn(result);
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d', { willReadFrequently: true });
+            canvas.width = img.width;
+            canvas.height = img.height;
+            context.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+            if (code) {
+                setStatus('PROCESSING');
+                processCheckIn(code.data);
+            } else {
+                throw new Error("QR code pattern not detected.");
+            }
         } catch (error) {
             console.error("QR Scan Error:", error);
             setStatus('ERROR');
@@ -38,14 +55,10 @@ export default function CheckInScanner({ onClose, onSuccess }) {
         }
     };
 
-    // Removal of startCamera method
-
     return (
         <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-slate-100 relative overflow-hidden">
-            {/* Hidden reader for file upload processing - MUST STAY MOUNTED */}
-            <div id="upload-reader" style={{ display: 'none' }}></div>
 
-            <button 
+            <button
                 onClick={onClose}
                 className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
             >
@@ -59,10 +72,10 @@ export default function CheckInScanner({ onClose, onSuccess }) {
                 {(status === 'IDLE' || status === 'PROCESSING') && (
                     <div className="space-y-4">
                         {status === 'IDLE' ? (
-                             <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-indigo-300 rounded-3xl bg-slate-50 hover:bg-white hover:border-indigo-400 active:border-indigo-900 active:bg-indigo-50/50 transition-all cursor-pointer relative group">
-                                <input 
-                                    type="file" 
-                                    accept="image/*" 
+                            <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-indigo-300 rounded-3xl bg-slate-50 hover:bg-white hover:border-indigo-400 active:border-indigo-900 active:bg-indigo-50/50 transition-all cursor-pointer relative group">
+                                <input
+                                    type="file"
+                                    accept="image/*"
                                     onChange={handleFileUpload}
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                 />
@@ -95,7 +108,7 @@ export default function CheckInScanner({ onClose, onSuccess }) {
                         </div>
                         <h4 className="text-xl font-black text-slate-900 mb-2">Check-in Verified!</h4>
                         <p className="text-slate-500 mb-8">{message}</p>
-                        <button 
+                        <button
                             onClick={onClose}
                             className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-all"
                         >
@@ -112,13 +125,13 @@ export default function CheckInScanner({ onClose, onSuccess }) {
                         <h4 className="text-xl font-black text-slate-900 mb-2">Verification Failed</h4>
                         <p className="text-slate-500 mb-8">{message}</p>
                         <div className="flex gap-4">
-                            <button 
+                            <button
                                 onClick={() => setStatus('IDLE')}
                                 className="flex-1 py-4 border-2 border-slate-200 rounded-2xl font-bold text-slate-600 hover:border-slate-300 transition-all"
                             >
                                 Try Again
                             </button>
-                            <button 
+                            <button
                                 onClick={onClose}
                                 className="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-bold shadow-lg shadow-rose-600/20 hover:bg-rose-700 transition-all"
                             >

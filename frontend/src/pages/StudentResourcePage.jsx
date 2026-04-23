@@ -10,6 +10,7 @@ import {
     FolderOpen, MapPin, Users as UsersIcon, Clock,
     X, Check, Loader2, Sunrise, Sunset, FileText, AlertCircle
 } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 const TC = {
     LECTURE_HALL: { icon: Building2, textClass: 'text-slate-900', bgClass: 'bg-slate-100', borderClass: 'border-slate-300', label: 'Lecture Hall' },
@@ -32,6 +33,8 @@ export default function StudentResourcePage() {
     const [isBooking, setIsBooking] = useState(false);
     const [bookingResource, setBookingResource] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const { showToast } = useToast();
 
     useEffect(() => { load(); }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
 
@@ -73,14 +76,14 @@ export default function StudentResourcePage() {
     const handleBookingSubmit = async (formData) => {
         try {
             setIsSubmitting(true);
-            const userId = localStorage.getItem('userId') || 'STU001'; // Fallback for demo
+            const userId = localStorage.getItem('userId') || 'STU001';
             const bookingData = { ...formData, userId };
             await createBooking(bookingData);
-            alert('Booking request sent successfully! You can track its status in the Bookings page.');
+            showToast('Booking request sent! Track its status in the Bookings page.', 'success');
             setIsBooking(false);
             setBookingResource(null);
         } catch (error) {
-            alert(error.response?.data || "Failed to submit booking request. Please check availability.");
+            showToast(error.response?.data || 'Failed to submit booking request. Please check availability.', 'error');
         } finally {
             setIsSubmitting(false);
         }

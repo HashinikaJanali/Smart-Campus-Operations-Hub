@@ -4,6 +4,8 @@ import Backend.model.BookingModel;
 import Backend.model.ResourceModel;
 import Backend.repository.BookingRepository;
 import Backend.repository.ResourceRepository;
+import Backend.repository.UserRepository;
+import Backend.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +24,35 @@ public class BookingService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     public List<BookingModel> getAllBookings() {
-        return bookingRepository.findAll();
+        List<BookingModel> bookings = bookingRepository.findAll();
+        return populateUserNames(bookings);
     }
 
     public List<BookingModel> getBookingsByUserId(String userId) {
-        return bookingRepository.findByUserId(userId);
+        List<BookingModel> bookings = bookingRepository.findByUserId(userId);
+        return populateUserNames(bookings);
+    }
+
+    private List<BookingModel> populateUserNames(List<BookingModel> bookings) {
+        for (BookingModel booking : bookings) {
+            if (booking.getUserName() == null || booking.getUserName().trim().isEmpty()) {
+                if (booking.getUserId() != null && !booking.getUserId().trim().isEmpty()) {
+                    Optional<User> userOpt = userRepository.findById(booking.getUserId());
+                    if (userOpt.isPresent() && userOpt.get().getName() != null) {
+                        booking.setUserName(userOpt.get().getName());
+                    } else {
+                        booking.setUserName("Unknown User");
+                    }
+                } else {
+                    booking.setUserName("Unknown User");
+                }
+            }
+        }
+        return bookings;
     }
 
     public BookingModel createBooking(BookingModel booking) {
@@ -93,15 +118,15 @@ public class BookingService {
                 String upperStatus = status.toUpperCase();
                 if ("APPROVED".equals(upperStatus)) {
                     String msg = String.format(
-                        "Your booking for \"%s\" on %s (%s–%s) has been approved.",
-                        saved.getResourceName(), saved.getBookingDate(),
-                        saved.getStartTime(), saved.getEndTime());
+                            "Your booking for \"%s\" on %s (%s–%s) has been approved.",
+                            saved.getResourceName(), saved.getBookingDate(),
+                            saved.getStartTime(), saved.getEndTime());
                     notificationService.createNotification(userId, "BOOKING_APPROVED", msg);
                 } else if ("REJECTED".equals(upperStatus)) {
                     String msg = String.format(
-                        "Your booking for \"%s\" on %s has been rejected.%s",
-                        saved.getResourceName(), saved.getBookingDate(),
-                        reason != null && !reason.isBlank() ? " Reason: " + reason : "");
+                            "Your booking for \"%s\" on %s has been rejected.%s",
+                            saved.getResourceName(), saved.getBookingDate(),
+                            reason != null && !reason.isBlank() ? " Reason: " + reason : "");
                     notificationService.createNotification(userId, "BOOKING_REJECTED", msg);
                 }
             }
