@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Edit3, Users, Loader2, X } from 'lucide-react';
+import { Calendar, Clock, Edit3, Users, Loader2, X, AlertTriangle, MonitorPlay } from 'lucide-react';
 import { getAllResources } from '../../services/resourceService';
 
 export default function BookingForm({ onSubmit, onClose, isLoading, initialResourceId }) {
@@ -10,8 +10,9 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
         startTime: '',
         endTime: '',
         purpose: '',
-        attendees: 1
+        attendees: ''
     });
+    const [error, setError] = useState('');
 
     useEffect(() => {
         if (initialResourceId) {
@@ -39,7 +40,37 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(formData);
+        setError('');
+
+        if (!formData.resourceId) {
+            setError('Please select a resource.');
+            return;
+        }
+        if (!formData.bookingDate) {
+            setError('Please select a date.');
+            return;
+        }
+        if (!formData.startTime) {
+            setError('Please select a start time.');
+            return;
+        }
+        if (!formData.endTime) {
+            setError('Please select an end time.');
+            return;
+        }
+        if (formData.startTime >= formData.endTime) {
+            setError('End time must be after start time.');
+            return;
+        }
+        if (!formData.purpose.trim()) {
+            setError('Please state the purpose.');
+            return;
+        }
+
+        onSubmit({
+            ...formData,
+            attendees: formData.attendees === '' ? null : Number(formData.attendees)
+        });
     };
 
     return (
@@ -53,7 +84,7 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
                         </h2>
                         <p className="text-indigo-600/80 mt-1 text-xs font-medium">Secure a facility or equipment instantly.</p>
                     </div>
-                    <button 
+                    <button
                         onClick={onClose}
                         className="text-slate-400 hover:text-slate-700 transition-colors p-2 bg-white rounded-full hover:bg-slate-100 border border-slate-200 shadow-sm"
                     >
@@ -64,14 +95,21 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
 
             {/* Form Content */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                
+
+                {error && (
+                    <div className="p-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-sm font-bold flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4" />
+                        {error}
+                    </div>
+                )}
+
                 {/* Resource Selection */}
                 <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                        Resource required
+                        <MonitorPlay className="w-4 h-4 text-indigo-600" /> Resource <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
-                        <select 
+                        <select
                             required
                             name="resourceId"
                             value={formData.resourceId}
@@ -95,21 +133,21 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
                     {/* Date */}
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-indigo-600" /> Date
+                            <Calendar className="w-4 h-4 text-indigo-600" /> Date <span className="text-rose-500">*</span>
                         </label>
-                        <input 
+                        <input
                             required type="date" name="bookingDate" value={formData.bookingDate} onChange={handleChange}
                             min={new Date().toISOString().split('T')[0]}
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm"
                         />
                     </div>
-                     {/* Attendees */}
-                     <div className="space-y-2">
+                    {/* Attendees */}
+                    <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
                             <Users className="w-4 h-4 text-indigo-600" /> Attendees
                         </label>
-                        <input 
-                            required type="number" min="1" name="attendees" value={formData.attendees} onChange={handleChange}
+                        <input
+                            type="number" min="1" name="attendees" value={formData.attendees} onChange={handleChange}
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm"
                             placeholder="Expected numbers"
                         />
@@ -120,9 +158,9 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
                     {/* Start Time */}
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-indigo-600" /> Start time
+                            <Clock className="w-4 h-4 text-indigo-600" /> Start time <span className="text-rose-500">*</span>
                         </label>
-                        <input 
+                        <input
                             required type="time" name="startTime" value={formData.startTime} onChange={handleChange}
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm"
                         />
@@ -131,9 +169,9 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
                     {/* End Time */}
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-indigo-600" /> End time
+                            <Clock className="w-4 h-4 text-indigo-600" /> End time <span className="text-rose-500">*</span>
                         </label>
-                        <input 
+                        <input
                             required type="time" name="endTime" value={formData.endTime} onChange={handleChange}
                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm"
                         />
@@ -143,9 +181,9 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
                 {/* Purpose */}
                 <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                        <Edit3 className="w-4 h-4 text-indigo-600" /> Purpose
+                        <Edit3 className="w-4 h-4 text-indigo-600" /> Purpose <span className="text-rose-500">*</span>
                     </label>
-                    <textarea 
+                    <textarea
                         required name="purpose" value={formData.purpose} onChange={handleChange} rows="3"
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-all resize-none shadow-sm placeholder-slate-400"
                         placeholder="State the objective of this booking..."
@@ -154,15 +192,15 @@ export default function BookingForm({ onSubmit, onClose, isLoading, initialResou
 
                 {/* Submit Action */}
                 <div className="pt-4 border-t border-slate-100 flex justify-end gap-4">
-                    <button 
-                        type="button" 
+                    <button
+                        type="button"
                         onClick={onClose}
                         className="px-6 py-3 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200"
                     >
                         Cancel
                     </button>
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         disabled={isLoading}
                         className="px-8 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
