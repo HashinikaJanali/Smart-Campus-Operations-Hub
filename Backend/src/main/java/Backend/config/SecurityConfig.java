@@ -59,6 +59,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/resources/**").permitAll()
                 .requestMatchers("/api/tickets/**").permitAll()
                 .requestMatchers("/api/bookings/**").permitAll()
+                .requestMatchers("/api/users/**").permitAll()
                 .requestMatchers("/api/notifications/test").permitAll()
                 .anyRequest().authenticated()
             )
@@ -72,7 +73,7 @@ public class SecurityConfig {
             )
             .logout(logout -> logout
                 .logoutUrl("/api/auth/logout")
-                .logoutSuccessUrl("http://localhost:3000/login")
+                .logoutSuccessUrl("http://localhost:3000/")
                 .deleteCookies("JSESSIONID")
                 .invalidateHttpSession(true)
             );

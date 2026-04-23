@@ -493,13 +493,11 @@ export default function TicketingPage() {
                         <button onClick={fetchTickets} className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-colors shadow-sm">
                             <RefreshCw className="h-4 w-4" />
                         </button>
-                        {isLoggedIn && (
-                            <button
-                                onClick={handleNewTicket}
-                                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/25 transition-all">
-                                <Plus className="h-4 w-4" /> New Ticket
-                            </button>
-                        )}
+                        <button
+                            onClick={handleNewTicket}
+                            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/25 transition-all">
+                            <Plus className="h-4 w-4" /> New Ticket
+                        </button>
                     </div>
                 </div>
 

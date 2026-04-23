@@ -11,7 +11,11 @@ import {
     Users,
     Building2,
     FlaskConical,
-    MonitorPlay
+    MonitorPlay,
+    CheckCircle2,
+    Search,
+    BookOpen,
+    Lightbulb
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -20,43 +24,95 @@ export default function HomePage() {
             <UserHeader />
 
             {/* ── HERO SECTION ── */}
-            <section className="relative overflow-hidden bg-white py-16 lg:py-20">
-                {/* Subtle decorative background blurs */}
-                <div className="absolute -top-24 -left-20 h-96 w-96 rounded-full bg-indigo-100/50 blur-[100px] pointer-events-none" />
-                <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-blue-50/50 blur-[80px] pointer-events-none" />
-
+            <section className="relative overflow-hidden py-20 lg:py-28">
+                {/* Premium gradient background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-indigo-50/30 to-white" />
+                
+                {/* Animated background elements */}
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[800px] h-[800px] rounded-full bg-gradient-to-bl from-indigo-200/40 to-transparent blur-[120px] pointer-events-none animate-pulse" />
+                <div className="absolute -bottom-20 -left-40 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-blue-100/30 to-transparent blur-[100px] pointer-events-none" />
+                
                 <div className="relative z-10 mx-auto max-w-7xl px-8 sm:px-12">
-                    <div className="flex flex-col lg:flex-row items-center gap-16">
-                        <div className="flex-1 lg:max-w-2xl">
-                            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-600 shadow-sm">
-                                <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse" />
-                                Next-Gen Campus Hub
+                    <div className="flex flex-col lg:flex-row items-center gap-20 lg:gap-24">
+                        {/* Content */}
+                        <div className="flex-1 lg:max-w-2xl animate-in fade-in slide-in-from-left-8 duration-1000">
+                            {/* Badge */}
+                            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-indigo-200/60 bg-gradient-to-r from-indigo-50 to-indigo-100/50 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-indigo-700 shadow-sm backdrop-blur-sm">
+                                <span className="flex h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
+                                Unified Campus Management
                             </div>
-                            <h1 className="mb-6 text-4xl font-black leading-tight text-slate-900 lg:text-6xl">
-                                Campus Operations,<br />
-                                <span className="text-indigo-600">Simplified & Unified</span>
+                            
+                            {/* Headline */}
+                            <h1 className="mb-6 text-5xl font-black leading-[1.15] text-slate-900 lg:text-7xl tracking-tight">
+                                Empower Your <br />
+                                <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Campus Operations</span>
                             </h1>
-                            <p className="mb-8 text-base font-medium text-slate-500 leading-relaxed md:text-lg">
-                                Empowering Students, Lecturers, and Staff with a state-of-the-art platform for resource booking, issue tracking, and real-time operations management.
+                            
+                            {/* Subheading */}
+                            <p className="mb-10 text-lg font-medium text-slate-600 leading-relaxed lg:text-xl max-w-lg">
+                                A modern, integrated platform designed for students, lecturers, and staff. Manage bookings, track issues, and monitor campus operations—all in one place.
                             </p>
-                            <div className="flex flex-col gap-3 sm:flex-row">
+                            
+                            {/* CTA Buttons */}
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                                 <NavLink
                                     to="/resoursestudent"
-                                    className="group flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition-all hover:bg-indigo-700 active:scale-95"
+                                    className="group flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-10 py-4 text-base font-black text-white shadow-2xl shadow-indigo-600/30 transition-all duration-300 hover:shadow-indigo-600/50 hover:scale-105 active:scale-95"
                                 >
-                                    Explore Resources <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                                    <span>Explore Platform</span>
+                                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                                 </NavLink>
                                 <button
-                                    className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-8 py-3.5 text-sm font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95 shadow-sm"
+                                    className="flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white px-10 py-4 text-base font-black text-slate-700 transition-all duration-300 hover:border-indigo-300 hover:bg-indigo-50/50 active:scale-95 shadow-md hover:shadow-lg"
                                 >
-                                    Get Support
+                                    <span>Learn More</span>
                                 </button>
+                            </div>
+                            
+                            {/* Trust indicators */}
+                            <div className="mt-12 flex items-center gap-8">
+                                <div className="flex -space-x-3">
+                                    {[1, 2, 3].map((i) => (
+                                        <div key={i} className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold">
+                                            {i}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-slate-800">3,500+ Active Users</p>
+                                    <p className="text-xs font-medium text-slate-500">Across campus</p>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="hidden lg:block flex-1 relative animate-in fade-in zoom-in duration-1000">
-                            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-transparent rounded-[3rem] blur-2xl" />
-                            <img src={heroImage} alt="Campus Hub" className="relative rounded-[2.5rem] shadow-2xl border-4 border-white shadow-indigo-200 object-cover w-full h-[450px]" />
+                        {/* Image Section */}
+                        <div className="flex-1 relative animate-in fade-in slide-in-from-right-8 duration-1000">
+                            {/* Decorative elements */}
+                            <div className="absolute -top-16 -right-16 w-48 h-48 bg-indigo-300/20 rounded-3xl blur-3xl" />
+                            <div className="absolute -bottom-8 -left-8 w-64 h-64 bg-blue-300/10 rounded-3xl blur-3xl" />
+                            
+                            {/* Image container */}
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-indigo-400/10 to-blue-500/20 rounded-[3.5rem] blur-2xl" />
+                                <img 
+                                    src={heroImage} 
+                                    alt="Campus Operations Hub" 
+                                    className="relative rounded-[3rem] shadow-2xl border border-white/60 object-cover w-full h-[500px] backdrop-blur-md"
+                                />
+                                
+                                {/* Feature badges */}
+                                <div className="absolute bottom-6 left-6 right-6 flex gap-3 bg-white/95 backdrop-blur-xl rounded-2xl p-4 shadow-xl border border-white/40">
+                                    <div className="flex-1">
+                                        <p className="text-xs font-black text-indigo-600 uppercase tracking-wider">Real-time</p>
+                                        <p className="text-sm font-bold text-slate-800">Updates</p>
+                                    </div>
+                                    <div className="w-px bg-slate-200" />
+                                    <div className="flex-1">
+                                        <p className="text-xs font-black text-indigo-600 uppercase tracking-wider">24/7</p>
+                                        <p className="text-sm font-bold text-slate-800">Available</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -136,6 +192,69 @@ export default function HomePage() {
                                     </div>
                                     <div className="text-4xl font-black text-slate-900 tracking-tight">{s.val}</div>
                                     <div className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-600/70">{s.lbl}</div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── HOW IT WORKS ── */}
+            <section className="py-16 bg-white">
+                <div className="mx-auto max-w-7xl px-8 sm:px-12">
+                    <div className="mb-12 text-center max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                        <h2 className="mb-2 text-3xl font-black tracking-tight text-slate-900 lg:text-4xl">How It Works</h2>
+                        <h3 className="text-base font-bold text-indigo-600 uppercase tracking-[0.2em]">Simple Steps to Streamline Your Campus Experience</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[
+                            {
+                                step: "01",
+                                title: "Sign In",
+                                desc: "Log in with your campus credentials to access your personalized dashboard and all platform features.",
+                                icon: ShieldCheck,
+                                color: "from-indigo-600 to-indigo-500"
+                            },
+                            {
+                                step: "02",
+                                title: "Explore Resources",
+                                desc: "Browse available labs, lecture halls, and equipment with real-time availability and instant booking.",
+                                icon: Search,
+                                color: "from-blue-600 to-indigo-600"
+                            },
+                            {
+                                step: "03",
+                                title: "Book & Manage",
+                                desc: "Reserve resources, track your bookings, and manage approvals all in one centralized hub.",
+                                icon: BookOpen,
+                                color: "from-emerald-600 to-blue-600"
+                            },
+                            {
+                                step: "04",
+                                title: "Report & Track",
+                                desc: "Submit support tickets for issues and monitor their status until resolution in real-time.",
+                                icon: Lightbulb,
+                                color: "from-amber-600 to-emerald-600"
+                            }
+                        ].map((item, i) => {
+                            const Icon = item.icon;
+                            return (
+                                <div key={i} className={`group relative animate-in fade-in slide-in-from-bottom-12 duration-700`} style={{ animationDelay: `${i * 100}ms` }}>
+                                    {/* Connector line */}
+                                    {i < 3 && (
+                                        <div className="hidden lg:block absolute top-12 left-[60%] w-[calc(100%+24px)] h-1 bg-gradient-to-r from-indigo-300 to-transparent pointer-events-none" />
+                                    )}
+                                    
+                                    <div className="relative h-full rounded-3xl border border-indigo-100/50 bg-gradient-to-br from-indigo-50/30 to-white p-8 shadow-sm shadow-indigo-100/20 transition-all duration-500 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-200/30 hover:-translate-y-2">
+                                        <div className={`mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${item.color} text-white font-black text-xl shadow-lg shadow-indigo-200/40 group-hover:scale-110 transition-transform duration-500`}>
+                                            {item.step}
+                                        </div>
+                                        <h4 className="mb-3 text-xl font-black text-slate-800">{item.title}</h4>
+                                        <p className="text-sm font-medium leading-relaxed text-slate-500">
+                                            {item.desc}
+                                        </p>
+                                    </div>
                                 </div>
                             );
                         })}
