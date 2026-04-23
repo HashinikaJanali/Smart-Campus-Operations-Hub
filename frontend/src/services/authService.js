@@ -47,7 +47,7 @@ const authService = {
             localStorage.removeItem('user');
             localStorage.removeItem('role');
             localStorage.removeItem('userId');
-            window.location.href = '/login';
+            window.location.href = '/';
         }
     }
 };
