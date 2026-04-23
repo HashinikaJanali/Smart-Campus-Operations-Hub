@@ -20,8 +20,8 @@ public class TicketModel {
     private String priority;
     private String status;
 
-    private String userId;       // MongoDB User.id of the ticket owner
-    private String submittedBy;  // Display name of the submitter
+    private String userId;
+    private String submittedBy;
     private String assignedTo;
 
     private String contactPhone;
@@ -34,6 +34,13 @@ public class TicketModel {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // ── SLA TIMER FIELDS ──────────────────────────────────────────────────────
+    // Set automatically when ticket first moves to IN_PROGRESS
+    private LocalDateTime firstResponseAt;
+    // Set automatically when ticket moves to RESOLVED or CLOSED
+    private LocalDateTime resolvedAt;
+    // ─────────────────────────────────────────────────────────────────────────
 
     public TicketModel() {}
 
@@ -78,6 +85,8 @@ public class TicketModel {
     public String getRejectionReason() { return rejectionReason; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public LocalDateTime getFirstResponseAt() { return firstResponseAt; }
+    public LocalDateTime getResolvedAt() { return resolvedAt; }
 
     public void setId(String id) { this.id = id; }
     public void setUserId(String userId) { this.userId = userId; }
@@ -96,4 +105,6 @@ public class TicketModel {
     public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public void setFirstResponseAt(LocalDateTime firstResponseAt) { this.firstResponseAt = firstResponseAt; }
+    public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
 }

@@ -30,6 +30,7 @@ function Toast({ message, type, onClose }) {
         </div>
     );
 }
+import { Users, Search, Loader2, ShieldCheck, UserCheck, Wrench } from 'lucide-react';
 
 export default function AdminUserManagementPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -37,6 +38,7 @@ export default function AdminUserManagementPage() {
     const [filtered, setFiltered] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [sidebarOpen, setSidebarOpen] = useState(true);
     const [updatingId, setUpdatingId] = useState(null);
     const [toast, setToast] = useState(null);
 
@@ -56,6 +58,16 @@ export default function AdminUserManagementPage() {
             setFiltered(list);
         } catch {
             showToast('Failed to load users', 'error');
+            if (Array.isArray(data)) {
+                setUsers(data);
+                setFiltered(data);
+            } else {
+                console.error('API did not return an array of users:', data);
+                setUsers([]);
+                setFiltered([]);
+            }
+        } catch (error) {
+            console.error('Error loading users', error);
         } finally {
             setLoading(false);
         }
@@ -128,12 +140,14 @@ export default function AdminUserManagementPage() {
 
     return (
         <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+            {/* ── ADMIN SIDEBAR ── */}
             <AdminSidebar
                 isOpen={sidebarOpen}
                 onToggle={() => setSidebarOpen(!sidebarOpen)}
                 activePage="users"
             />
 
+            {/* ── MAIN ── */}
             <main className={`flex-1 p-8 transition-all duration-300 ${sidebarOpen ? 'ml-[265px]' : 'ml-20'}`}>
 
                 {/* Header */}

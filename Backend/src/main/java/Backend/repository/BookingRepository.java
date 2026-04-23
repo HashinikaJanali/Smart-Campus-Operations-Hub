@@ -8,7 +8,7 @@ import java.util.List;
 
 @Repository
 public interface BookingRepository extends MongoRepository<BookingModel, String> {
-    
+
     List<BookingModel> findByUserId(String userId);
 
     // Fetch all active bookings for a given resource on a given date.
@@ -16,6 +16,5 @@ public interface BookingRepository extends MongoRepository<BookingModel, String>
     List<BookingModel> findByResourceIdAndBookingDateAndStatusIn(
             String resourceId,
             String bookingDate,
-            java.util.List<String> statuses
-    );
+            java.util.List<String> statuses);
 }

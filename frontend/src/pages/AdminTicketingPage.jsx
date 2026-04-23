@@ -4,13 +4,14 @@ import {
     AlertCircle, CheckCircle2, Clock, Wrench, XCircle,
     ChevronDown, ChevronUp, MessageSquare, Send, Pencil,
     Trash2, MapPin, Phone, Mail, FileText, Loader2,
-    RefreshCw, UserCheck, Check, Ban, Filter, LayoutDashboard
+    RefreshCw, UserCheck, Check, Ban, Filter, LayoutDashboard, Timer
 } from 'lucide-react';
 import {
     getAllTickets, updateTicketStatus, assignTicket,
-    getComments, addComment, editComment, deleteComment,
+    deleteTicket, getComments, addComment, editComment, deleteComment,
     resolveTicketImageUrl
 } from '../services/ticketService';
+import authService from '../services/authService';
 
 const CATEGORIES = [
     { value: 'ELECTRICAL', label: 'Electrical' },
@@ -38,7 +39,64 @@ const STATUSES = {
     REJECTED: { label: 'Rejected', color: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200', icon: XCircle },
 };
 
-const PRIORITY_ORDER = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+// ── TIMER HELPER ─────────────────────────────────────────────────────────────
+function formatDuration(from, to) {
+    if (!from) return null;
+    const start = new Date(from);
+    const end = to ? new Date(to) : new Date();
+    const totalMinutes = Math.floor((end - start) / 60000);
+    if (totalMinutes < 1) return '< 1m';
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const mins = totalMinutes % 60;
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
+}
+
+function SlaTimers({ ticket }) {
+    const responseTime = formatDuration(ticket.createdAt, ticket.firstResponseAt);
+    const resolutionTime = formatDuration(ticket.createdAt, ticket.resolvedAt);
+    const isOpen = !['RESOLVED', 'CLOSED', 'REJECTED'].includes(ticket.status);
+    const hasResponded = Boolean(ticket.firstResponseAt) || ticket.status !== 'OPEN';
+    const responseDisplay = ticket.firstResponseAt
+        ? responseTime
+        : hasResponded
+            ? formatDuration(ticket.createdAt, ticket.updatedAt)
+            : 'Awaiting response';
+
+    if (!responseTime && !resolutionTime && ticket.status === 'OPEN') return null;
+
+    return (
+        <div className="mt-3 flex flex-wrap gap-2">
+            <div className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold
+                ${hasResponded
+                    ? 'border-indigo-100 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                <Timer className="h-3 w-3" />
+                <span>Response: </span>
+                <span>{responseDisplay}</span>
+            </div>
+            <div className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold
+                ${ticket.resolvedAt
+                    ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                    : isOpen
+                        ? 'border-amber-100 bg-amber-50 text-amber-600'
+                        : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                <Clock className="h-3 w-3" />
+                <span>Resolution: </span>
+                <span>
+                    {ticket.resolvedAt
+                        ? resolutionTime
+                        : isOpen
+                            ? `${formatDuration(ticket.createdAt, null)} elapsed`
+                            : 'N/A'}
+                </span>
+            </div>
+        </div>
+    );
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }) {
     const s = STATUSES[status] || STATUSES.OPEN;
@@ -93,10 +151,8 @@ function StatusUpdatePanel({ ticket, onUpdated }) {
                     <UserCheck className="h-3 w-3" /> Assign Technician
                 </label>
                 <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:bg-white focus:ring-1 focus:ring-indigo-100"
-                    value={assignee} onChange={e => setAssignee(e.target.value)}
-                    placeholder="Technician name or ID" />
+                    value={assignee} onChange={e => setAssignee(e.target.value)} placeholder="Technician name or ID" />
             </div>
-
             <div>
                 <label className="mb-1 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                     <FileText className="h-3 w-3" /> Resolution Notes
@@ -105,7 +161,6 @@ function StatusUpdatePanel({ ticket, onUpdated }) {
                     rows={2} value={resolutionNotes} onChange={e => setResolutionNotes(e.target.value)}
                     placeholder="Describe what was done or needs to be done..." />
             </div>
-
             <div className="flex flex-wrap gap-2">
                 {actions.map(a => {
                     const Icon = a.icon;
@@ -124,13 +179,11 @@ function StatusUpdatePanel({ ticket, onUpdated }) {
                     </button>
                 )}
             </div>
-
             {showRejectInput && (
                 <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-3 space-y-2">
                     <label className="text-[11px] font-bold uppercase tracking-widest text-rose-600">Rejection Reason *</label>
                     <input className="w-full rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-100"
-                        value={rejectionReason} onChange={e => setRejectionReason(e.target.value)}
-                        placeholder="Reason for rejection..." />
+                        value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Reason for rejection..." />
                     <div className="flex gap-2">
                         <button onClick={() => doAction('REJECTED', { rejectionReason })} disabled={!rejectionReason.trim() || loading}
                             className="flex items-center gap-1.5 rounded-lg bg-rose-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-rose-700 disabled:opacity-50 transition-colors">
@@ -153,6 +206,25 @@ function CommentSection({ ticketId }) {
     const [editId, setEditId] = useState(null);
     const [editText, setEditText] = useState('');
     const [loading, setLoading] = useState(false);
+    const currentStaffName = authService.getUser()?.name || localStorage.getItem('username') || authService.getUser()?.email || 'Staff';
+
+    const normalizeAuthor = (authorName) => (authorName || '').trim().toLowerCase();
+
+    const getCommentMeta = (comment) => {
+        const rawAuthor = (comment.authorName || '').trim();
+        const normalized = normalizeAuthor(rawAuthor);
+        const isAnonymousAuthor = normalized === 'anonymous' || !normalized;
+        const isCurrentStaffComment = normalized === normalizeAuthor(currentStaffName);
+        const isStaffComment = isCurrentStaffComment || isAnonymousAuthor;
+        const displayName = isAnonymousAuthor ? 'Staff' : rawAuthor;
+
+        return {
+            isAnonymousAuthor,
+            isCurrentStaffComment,
+            isStaffComment,
+            displayName
+        };
+    };
 
     const fetchComments = async () => {
         try { const res = await getComments(ticketId); setComments(res.data); } catch { }
@@ -163,18 +235,33 @@ function CommentSection({ ticketId }) {
 
     const handleAdd = async () => {
         if (!text.trim()) return;
-        try { setLoading(true); await addComment(ticketId, text.trim()); setText(''); fetchComments(); }
+        try {
+            setLoading(true);
+            await addComment(ticketId, text.trim(), currentStaffName);
+            setText('');
+            fetchComments();
+        }
         finally { setLoading(false); }
     };
 
-    const handleEdit = async (id) => {
-        await editComment(ticketId, id, editText);
+    const handleEdit = async (comment) => {
+        const { isAnonymousAuthor } = getCommentMeta(comment);
+        const requestingUser = isAnonymousAuthor ? 'anonymous' : currentStaffName;
+        await editComment(ticketId, comment.id, editText, requestingUser);
         setEditId(null); fetchComments();
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (comment) => {
+        const { isCurrentStaffComment, isAnonymousAuthor } = getCommentMeta(comment);
+        const requestingUser = isCurrentStaffComment
+            ? currentStaffName
+            : isAnonymousAuthor
+                ? 'anonymous'
+                : comment.authorName;
+
         if (!window.confirm('Delete this comment?')) return;
-        await deleteComment(ticketId, id); fetchComments();
+        await deleteComment(ticketId, comment.id, requestingUser);
+        fetchComments();
     };
 
     return (
@@ -182,33 +269,39 @@ function CommentSection({ ticketId }) {
             <h4 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-400">
                 <MessageSquare className="h-3.5 w-3.5" /> Comments ({comments.length})
             </h4>
-            {comments.map(c => (
+            {comments.map(c => {
+                const { isStaffComment, displayName } = getCommentMeta(c);
+                const canEdit = isStaffComment;
+
+                return (
                 <div key={c.id} className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5">
-                    {editId === c.id ? (
+                    {editId === c.id && canEdit ? (
                         <div className="flex gap-2">
                             <input className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-indigo-400"
                                 value={editText} onChange={e => setEditText(e.target.value)} />
-                            <button onClick={() => handleEdit(c.id)} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-700">Save</button>
+                            <button onClick={() => handleEdit(c)} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-indigo-700">Save</button>
                             <button onClick={() => setEditId(null)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-100">Cancel</button>
                         </div>
                     ) : (
                         <div className="flex items-start justify-between gap-2">
                             <div>
-                                <span className="text-[11px] font-bold text-indigo-600">{c.authorName || 'Staff'}</span>
+                                <span className="text-[11px] font-bold text-indigo-600">{displayName}</span>
                                 <span className="mx-1.5 text-slate-300">·</span>
                                 <span className="text-[11px] text-slate-400">{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</span>
                                 <p className="mt-1 text-sm text-slate-700">{c.text}</p>
                             </div>
                             <div className="flex gap-1 shrink-0">
-                                <button onClick={() => { setEditId(c.id); setEditText(c.text); }}
-                                    className="rounded-lg p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-white transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
-                                <button onClick={() => handleDelete(c.id)}
+                                {canEdit && (
+                                    <button onClick={() => { setEditId(c.id); setEditText(c.text); }}
+                                        className="rounded-lg p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-white transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
+                                )}
+                                <button onClick={() => handleDelete(c)}
                                     className="rounded-lg p-1.5 text-slate-400 hover:text-rose-600 hover:bg-white transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
                             </div>
                         </div>
                     )}
                 </div>
-            ))}
+            );})}
             <div className="flex gap-2 pt-1">
                 <input className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:bg-white focus:ring-1 focus:ring-indigo-100"
                     placeholder="Add a staff comment..." value={text} onChange={e => setText(e.target.value)}
@@ -222,9 +315,24 @@ function CommentSection({ ticketId }) {
     );
 }
 
-function AdminTicketCard({ ticket, onUpdated }) {
-    const [expanded, setExpanded] = useState(false);
+function AdminTicketCard({ ticket, onUpdated, expanded, onToggleExpand }) {
     const cat = CATEGORIES.find(c => c.value === ticket.category)?.label || ticket.category;
+    const [deleting, setDeleting] = useState(false);
+
+    const handleDelete = async () => {
+        if (!window.confirm(`Delete ticket #${ticket.id}? This cannot be undone.`)) return;
+
+        try {
+            setDeleting(true);
+            await deleteTicket(ticket.id);
+            onUpdated();
+        } catch (e) {
+            console.error(e);
+            window.alert('Failed to delete ticket. Please try again.');
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     return (
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden transition-all hover:shadow-md hover:border-slate-300">
@@ -260,11 +368,20 @@ function AdminTicketCard({ ticket, onUpdated }) {
 
                 <p className="mt-3 text-sm text-slate-600 leading-relaxed">{ticket.description}</p>
 
+                {/* ── SLA TIMERS ── */}
+                <SlaTimers ticket={ticket} />
+
                 <div className="mt-3">
-                    <button onClick={() => setExpanded(!expanded)}
-                        className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-colors">
-                        {expanded ? <><ChevronUp className="h-3.5 w-3.5" /> Collapse</> : <><ChevronDown className="h-3.5 w-3.5" /> Manage & Comment</>}
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                        <button onClick={onToggleExpand}
+                            className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-colors">
+                            {expanded ? <><ChevronUp className="h-3.5 w-3.5" /> Collapse</> : <><ChevronDown className="h-3.5 w-3.5" /> Manage & Comment</>}
+                        </button>
+                        <button onClick={handleDelete} disabled={deleting}
+                            className="flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] font-bold text-rose-700 hover:bg-rose-100 hover:border-rose-300 transition-colors disabled:cursor-not-allowed disabled:opacity-60">
+                            {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />} Delete Ticket
+                        </button>
+                    </div>
                 </div>
 
                 {expanded && (
@@ -283,11 +400,11 @@ function AdminTicketCard({ ticket, onUpdated }) {
                         )}
                         {ticket.resolutionNotes && (
                             <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-                                <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-600 mb-1">Resolution Notes</p>
+                                <p className="text-[11px] font-bold uppercase tracking-widests text-emerald-600 mb-1">Resolution Notes</p>
                                 <p className="text-sm text-emerald-800">{ticket.resolutionNotes}</p>
                             </div>
                         )}
-                        {ticket.rejectionReason && (
+                        {ticket.status === 'REJECTED' && ticket.rejectionReason && (
                             <div className="mt-3 rounded-xl border border-rose-100 bg-rose-50 p-3">
                                 <p className="text-[11px] font-bold uppercase tracking-widest text-rose-600 mb-1">Rejection Reason</p>
                                 <p className="text-sm text-rose-800">{ticket.rejectionReason}</p>
@@ -307,27 +424,48 @@ function AdminTicketCard({ ticket, onUpdated }) {
 export default function AdminTicketingPage() {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [expandedTickets, setExpandedTickets] = useState({});
     const [filterStatus, setFilterStatus] = useState('ALL');
     const [filterPriority, setFilterPriority] = useState('ALL');
     const [search, setSearch] = useState('');
 
-    const fetchTickets = async () => {
+    const sortTicketsNewestFirst = (items) => {
+        return [...items].sort((a, b) => {
+            const timeA = Date.parse(a?.createdAt || a?.updatedAt || '') || 0;
+            const timeB = Date.parse(b?.createdAt || b?.updatedAt || '') || 0;
+            return timeB - timeA;
+        });
+    };
+
+    const fetchTickets = async ({ mode = 'refresh' } = {}) => {
         try {
-            setLoading(true); setError('');
+            if (mode === 'initial') setLoading(true);
+            else if (mode === 'refresh') setRefreshing(true);
+            setError('');
             const res = await getAllTickets();
-            const sorted = res.data.sort((a, b) =>
-                (PRIORITY_ORDER[a.priority] ?? 99) - (PRIORITY_ORDER[b.priority] ?? 99)
-            );
-            setTickets(sorted);
+            setTickets(sortTicketsNewestFirst(Array.isArray(res.data) ? res.data : []));
         } catch (e) {
             console.error(e);
             setError('Could not load tickets. Make sure the backend is running.');
-        } finally { setLoading(false); }
+        } finally {
+            if (mode === 'initial') setLoading(false);
+            else if (mode === 'refresh') setRefreshing(false);
+        }
     };
 
-    useEffect(() => { fetchTickets(); }, []);
+    useEffect(() => { fetchTickets({ mode: 'initial' }); }, []);
+
+    useEffect(() => {
+        const validIds = new Set(tickets.map(t => t.id));
+        setExpandedTickets(prev => {
+            const next = {};
+            Object.keys(prev).forEach(id => { if (validIds.has(id) && prev[id]) next[id] = true; });
+            return next;
+        });
+    }, [tickets]);
 
     const filtered = tickets.filter(t => {
         const matchStatus = filterStatus === 'ALL' || t.status === filterStatus;
@@ -344,11 +482,7 @@ export default function AdminTicketingPage() {
 
     return (
         <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
-            <AdminSidebar
-                isOpen={sidebarOpen}
-                onToggle={() => setSidebarOpen(!sidebarOpen)}
-                activePage="tickets"
-            />
+            <AdminSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} activePage="tickets" />
 
             <main className={`flex-1 p-8 transition-all duration-300 ${sidebarOpen ? 'ml-[265px]' : 'ml-20'}`}>
                 <div className="mb-8 flex items-start justify-between gap-4">
@@ -359,11 +493,9 @@ export default function AdminTicketingPage() {
                         <h1 className="text-4xl font-black text-slate-900 leading-tight">Ticket <span className="text-indigo-600">Management</span></h1>
                         <p className="mt-1 text-sm font-medium text-slate-500">Manage, assign, and resolve all campus maintenance tickets</p>
                     </div>
-                    <button
-                        onClick={fetchTickets}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-all active:scale-95 shadow-sm shadow-indigo-200/40"
-                    >
-                        <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh Data
+                    <button onClick={() => fetchTickets({ mode: 'refresh' })}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-all active:scale-95 shadow-sm shadow-indigo-200/40">
+                        <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} /> Refresh Data
                     </button>
                 </div>
 
@@ -372,15 +504,13 @@ export default function AdminTicketingPage() {
                         <div className="text-3xl font-black text-white">{tickets.length}</div>
                         <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-200 mt-0.5">Total</div>
                     </div>
-                    {Object.entries(STATUSES).map(([key, s]) => {
-                        return (
-                            <button key={key} onClick={() => setFilterStatus(filterStatus === key ? 'ALL' : key)}
-                                className={`rounded-2xl border p-4 text-center transition-all ${filterStatus === key ? `${s.bg} ${s.border} shadow-sm` : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                                <div className={`text-2xl font-black ${filterStatus === key ? s.color : 'text-slate-800'}`}>{statusCounts[key] || 0}</div>
-                                <div className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${filterStatus === key ? s.color : 'text-slate-400'}`}>{s.label}</div>
-                            </button>
-                        );
-                    })}
+                    {Object.entries(STATUSES).map(([key, s]) => (
+                        <button key={key} onClick={() => setFilterStatus(filterStatus === key ? 'ALL' : key)}
+                            className={`rounded-2xl border p-4 text-center transition-all ${filterStatus === key ? `${s.bg} ${s.border} shadow-sm` : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                            <div className={`text-2xl font-black ${filterStatus === key ? s.color : 'text-slate-800'}`}>{statusCounts[key] || 0}</div>
+                            <div className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${filterStatus === key ? s.color : 'text-slate-400'}`}>{s.label}</div>
+                        </button>
+                    ))}
                 </div>
 
                 <div className="mb-5 flex flex-wrap items-center gap-3">
@@ -431,7 +561,13 @@ export default function AdminTicketingPage() {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {filtered.map(t => <AdminTicketCard key={t.id} ticket={t} onUpdated={fetchTickets} />)}
+                        {filtered.map(t => (
+                            <AdminTicketCard key={t.id} ticket={t}
+                                onUpdated={() => fetchTickets({ mode: 'silent' })}
+                                expanded={!!expandedTickets[t.id]}
+                                onToggleExpand={() => setExpandedTickets(prev => ({ ...prev, [t.id]: !prev[t.id] }))}
+                            />
+                        ))}
                     </div>
                 )}
             </main>

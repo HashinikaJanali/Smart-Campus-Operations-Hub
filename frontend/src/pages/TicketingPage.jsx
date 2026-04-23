@@ -6,7 +6,7 @@ import {
     Plus, X, AlertCircle, CheckCircle2, Clock, Wrench,
     ChevronDown, ChevronUp, MessageSquare, Send, Pencil,
     Trash2, Image, Upload, Tag, MapPin, Phone, Mail,
-    FileText, AlertTriangle, Loader2, RefreshCw, XCircle
+    FileText, AlertTriangle, Loader2, RefreshCw, XCircle, Timer
 } from 'lucide-react';
 import {
     createTicket, getMyTickets, getAllTickets, getComments,
@@ -40,6 +40,82 @@ const STATUSES = {
     REJECTED: { label: 'Rejected', color: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200', icon: XCircle },
 };
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SRI_LANKAN_PHONE_PATTERN = /^(?:\+94|0)7\d{8}$/;
+const MIN_DESCRIPTION_WORDS = 5;
+
+function normalizePhoneNumber(phoneNumber) {
+    return phoneNumber.replace(/[\s()-]/g, '');
+}
+
+function countWords(text) {
+    return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+// ── TIMER HELPER ─────────────────────────────────────────────────────────────
+// Converts two ISO date strings into a human-readable duration e.g. "2h 15m"
+function formatDuration(from, to) {
+    if (!from) return null;
+    const start = new Date(from);
+    const end = to ? new Date(to) : new Date();
+    const totalMinutes = Math.floor((end - start) / 60000);
+    if (totalMinutes < 1) return '< 1m';
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const mins = totalMinutes % 60;
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
+}
+
+// Shows the two SLA timers — used in both TicketCard and AdminTicketCard
+function SlaTimers({ ticket }) {
+    const responseTime = formatDuration(ticket.createdAt, ticket.firstResponseAt);
+    const resolutionTime = formatDuration(ticket.createdAt, ticket.resolvedAt);
+    const isOpen = !['RESOLVED', 'CLOSED', 'REJECTED'].includes(ticket.status);
+    const hasResponded = Boolean(ticket.firstResponseAt) || ticket.status !== 'OPEN';
+    const responseDisplay = ticket.firstResponseAt
+        ? responseTime
+        : hasResponded
+            ? formatDuration(ticket.createdAt, ticket.updatedAt)
+            : 'Awaiting response';
+
+    if (!responseTime && !resolutionTime && ticket.status === 'OPEN') return null;
+
+    return (
+        <div className="mt-3 flex flex-wrap gap-2">
+            {/* Time to first response */}
+            <div className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold
+                ${hasResponded
+                    ? 'border-indigo-100 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                <Timer className="h-3 w-3" />
+                <span>Response: </span>
+                <span>{responseDisplay}</span>
+            </div>
+
+            {/* Time to resolution */}
+            <div className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold
+                ${ticket.resolvedAt
+                    ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                    : isOpen
+                        ? 'border-amber-100 bg-amber-50 text-amber-600'
+                        : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                <Clock className="h-3 w-3" />
+                <span>Resolution: </span>
+                <span>
+                    {ticket.resolvedAt
+                        ? resolutionTime
+                        : isOpen
+                            ? `${formatDuration(ticket.createdAt, null)} elapsed`
+                            : 'N/A'}
+                </span>
+            </div>
+        </div>
+    );
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function StatusBadge({ status }) {
     const s = STATUSES[status] || STATUSES.OPEN;
     const Icon = s.icon;
@@ -65,13 +141,48 @@ function CreateTicketModal({ onClose, onCreated }) {
         description: '', priority: 'MEDIUM',
         contactPhone: '', contactEmail: ''
     });
+    const [fieldErrors, setFieldErrors] = useState({});
     const [images, setImages] = useState([]);
     const [previews, setPreviews] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const fileRef = useRef();
 
-    const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+    const handleChange = e => {
+        const { name, value } = e.target;
+        setForm({ ...form, [name]: value });
+        setFieldErrors(prev => ({ ...prev, [name]: '' }));
+    };
+
+    const validateForm = () => {
+        const nextErrors = {};
+
+        // Keep the ticket title fields populated so support staff get the core issue context.
+        if (!form.resource.trim() || !form.location.trim()) {
+            nextErrors.general = 'Resource and Location are required.';
+        }
+
+        // Block short descriptions so tickets contain enough detail to act on.
+        if (countWords(form.description || '') < MIN_DESCRIPTION_WORDS) {
+            nextErrors.description = `Description must be at least ${MIN_DESCRIPTION_WORDS} words.`;
+        }
+
+        // Validate the contact email only when the user provides one.
+        if (form.contactEmail && !EMAIL_PATTERN.test(form.contactEmail.trim())) {
+            nextErrors.contactEmail = 'Enter a valid email address.';
+        }
+
+        // Accept standard Sri Lankan mobile formats such as 0771234567 or +94771234567.
+        if (form.contactPhone) {
+            const normalizedPhone = normalizePhoneNumber(form.contactPhone.trim());
+            if (!SRI_LANKAN_PHONE_PATTERN.test(normalizedPhone)) {
+                nextErrors.contactPhone = 'Enter a valid Sri Lankan mobile number, such as 0771234567 or +94771234567.';
+            }
+        }
+
+        setFieldErrors(nextErrors);
+        return nextErrors;
+    };
 
     const handleImages = e => {
         const files = Array.from(e.target.files);
@@ -87,8 +198,9 @@ function CreateTicketModal({ onClose, onCreated }) {
     };
 
     const handleSubmit = async () => {
-        if (!form.resource || !form.location || !form.description) {
-            setError('Resource, Location, and Description are required.');
+        const nextErrors = validateForm();
+        if (Object.keys(nextErrors).length > 0) {
+            setError(nextErrors.general || 'Please correct the highlighted fields.');
             return;
         }
         try {
@@ -96,7 +208,6 @@ function CreateTicketModal({ onClose, onCreated }) {
             const fd = new FormData();
             Object.entries(form).forEach(([k, v]) => fd.append(k, v));
             images.forEach(img => fd.append('images', img));
-            // Attach user identity so the backend can send notifications
             fd.append('userId', localStorage.getItem('userId') || '');
             fd.append('submittedBy', localStorage.getItem('username') || 'anonymous');
             await createTicket(fd);
@@ -123,31 +234,25 @@ function CreateTicketModal({ onClose, onCreated }) {
                             <X className="h-4 w-4" />
                         </button>
                     </div>
-
                     <div className="mb-5 h-px bg-slate-100" />
-
                     {error && (
                         <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                             <AlertCircle className="h-4 w-4 shrink-0" />{error}
                         </div>
                     )}
-
                     <div className="space-y-4">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">Resource / Item *</label>
                                 <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-colors"
-                                    name="resource" value={form.resource} onChange={handleChange}
-                                    placeholder="e.g. Projector, AC Unit" />
+                                    name="resource" value={form.resource} onChange={handleChange} placeholder="e.g. Projector, AC Unit" />
                             </div>
                             <div>
                                 <label className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500"><MapPin className="h-3 w-3" /> Location *</label>
                                 <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-colors"
-                                    name="location" value={form.location} onChange={handleChange}
-                                    placeholder="e.g. Block A, Room 201" />
+                                    name="location" value={form.location} onChange={handleChange} placeholder="e.g. Block A, Room 201" />
                             </div>
                         </div>
-
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500"><Tag className="h-3 w-3" /> Category</label>
@@ -160,8 +265,7 @@ function CreateTicketModal({ onClose, onCreated }) {
                                 <label className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500"><AlertTriangle className="h-3 w-3" /> Priority</label>
                                 <div className="grid grid-cols-4 gap-1.5">
                                     {PRIORITIES.map(p => (
-                                        <button key={p.value}
-                                            onClick={() => setForm({ ...form, priority: p.value })}
+                                        <button key={p.value} onClick={() => setForm({ ...form, priority: p.value })}
                                             className={`rounded-lg border py-2 text-[10px] font-bold uppercase tracking-wide transition-all ${form.priority === p.value ? `${p.bg} ${p.border} ${p.color} shadow-sm` : 'border-slate-200 bg-white text-slate-400 hover:bg-slate-50'}`}>
                                             {p.label}
                                         </button>
@@ -169,30 +273,28 @@ function CreateTicketModal({ onClose, onCreated }) {
                                 </div>
                             </div>
                         </div>
-
                         <div>
                             <label className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500"><FileText className="h-3 w-3" /> Description *</label>
-                            <textarea className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-colors resize-none"
-                                rows={3} name="description" value={form.description} onChange={handleChange}
-                                placeholder="Describe the issue in detail..." />
+                            <textarea className={`w-full rounded-xl border bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors resize-none focus:bg-white focus:ring-2 ${fieldErrors.description ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-indigo-400 focus:ring-indigo-100'}`}
+                                rows={3} name="description" value={form.description} onChange={handleChange} placeholder="Describe the issue in detail..." />
+                            {fieldErrors.description && <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.description}</p>}
                         </div>
-
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500"><Phone className="h-3 w-3" /> Contact Phone</label>
-                                <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-colors"
-                                    name="contactPhone" value={form.contactPhone} onChange={handleChange}
-                                    placeholder="+94 77 123 4567" />
+                                <input className={`w-full rounded-xl border bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:bg-white focus:ring-2 ${fieldErrors.contactPhone ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-indigo-400 focus:ring-indigo-100'}`}
+                                    name="contactPhone" value={form.contactPhone} onChange={handleChange} placeholder="+94 77 123 4567" inputMode="tel" autoComplete="tel" />
+                                {fieldErrors.contactPhone && <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.contactPhone}</p>}
                             </div>
                             <div>
                                 <label className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500"><Mail className="h-3 w-3" /> Contact Email</label>
-                                <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-colors"
-                                    name="contactEmail" value={form.contactEmail} onChange={handleChange}
-                                    placeholder="you@university.edu" />
+                                <input className={`w-full rounded-xl border bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:bg-white focus:ring-2 ${fieldErrors.contactEmail ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-indigo-400 focus:ring-indigo-100'}`}
+                                    name="contactEmail" value={form.contactEmail} onChange={handleChange} placeholder="you@university.edu" type="email" autoComplete="email" />
+                                {fieldErrors.contactEmail && <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.contactEmail}</p>}
                             </div>
                         </div>
-
                         <div>
+                            {/* Optional evidence images help support staff verify the issue, with a max of 3 uploads. */}
                             <label className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                                 <Image className="h-3 w-3" /> Evidence Images <span className="text-slate-400 normal-case font-medium">(max 3)</span>
                             </label>
@@ -200,8 +302,7 @@ function CreateTicketModal({ onClose, onCreated }) {
                                 {previews.map((src, i) => (
                                     <div key={i} className="relative h-20 w-20 rounded-xl overflow-hidden border border-slate-200 shadow-sm group">
                                         <img src={src} alt={`preview-${i}`} className="h-full w-full object-cover" />
-                                        <button onClick={() => removeImage(i)}
-                                            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity text-white">
+                                        <button onClick={() => removeImage(i)} className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity text-white">
                                             <X className="h-4 w-4" />
                                         </button>
                                     </div>
@@ -213,15 +314,13 @@ function CreateTicketModal({ onClose, onCreated }) {
                                         <span className="text-[10px] font-bold">Upload</span>
                                     </button>
                                 )}
+                                {/* Accepts common image formats such as JPG and PNG via image/* */}
                                 <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImages} />
                             </div>
                         </div>
                     </div>
-
                     <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-5">
-                        <button onClick={onClose} className="rounded-xl border border-slate-200 bg-slate-50 px-6 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors">
-                            Cancel
-                        </button>
+                        <button onClick={onClose} className="rounded-xl border border-slate-200 bg-slate-50 px-6 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors">Cancel</button>
                         <button onClick={handleSubmit} disabled={loading}
                             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-8 py-2.5 text-sm font-bold text-white shadow-md hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/30 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0">
                             {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</> : <><CheckCircle2 className="h-4 w-4" /> Submit Ticket</>}
@@ -242,10 +341,7 @@ function CommentSection({ ticketId, onRefreshNotifications, isLoggedIn }) {
     const currentUser = localStorage.getItem('username') || 'You';
 
     const fetchComments = async () => {
-        try {
-            const res = await getComments(ticketId);
-            setComments(res.data);
-        } catch { }
+        try { const res = await getComments(ticketId); setComments(res.data); } catch { }
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -256,12 +352,8 @@ function CommentSection({ ticketId, onRefreshNotifications, isLoggedIn }) {
         try {
             setLoading(true);
             await addComment(ticketId, text.trim(), currentUser);
-            setText(''); 
-            fetchComments();
-            // Refresh notifications when a comment is added
-            if (onRefreshNotifications) {
-                onRefreshNotifications();
-            }
+            setText(''); fetchComments();
+            if (onRefreshNotifications) onRefreshNotifications();
         } finally { setLoading(false); }
     };
 
@@ -285,12 +377,10 @@ function CommentSection({ ticketId, onRefreshNotifications, isLoggedIn }) {
                 {comments.length === 0 && <p className="text-xs text-slate-400 italic">No comments yet.</p>}
                 {comments.map(c => (
                     <div key={c.id} className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 mb-2">
-                        <div>
-                            <span className="text-[11px] font-bold text-indigo-600">{c.authorName || 'User'}</span>
-                            <span className="mx-1.5 text-slate-300">·</span>
-                            <span className="text-[11px] text-slate-400">{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</span>
-                            <p className="mt-1 text-sm text-slate-700">{c.text}</p>
-                        </div>
+                        <span className="text-[11px] font-bold text-indigo-600">{c.authorName || 'User'}</span>
+                        <span className="mx-1.5 text-slate-300">·</span>
+                        <span className="text-[11px] text-slate-400">{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</span>
+                        <p className="mt-1 text-sm text-slate-700">{c.text}</p>
                     </div>
                 ))}
             </div>
@@ -369,7 +459,12 @@ function TicketCard({ ticket, onRefreshNotifications, isLoggedIn }) {
                         <PriorityBadge priority={ticket.priority} />
                     </div>
                 </div>
+
                 <p className="mt-3 text-sm text-slate-600 leading-relaxed line-clamp-2">{ticket.description}</p>
+
+                {/* ── SLA TIMERS ── */}
+                <SlaTimers ticket={ticket} />
+
                 <div className="mt-4 flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-3 text-[11px] text-slate-400">
                         <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : 'Recently'}</span>
@@ -380,6 +475,7 @@ function TicketCard({ ticket, onRefreshNotifications, isLoggedIn }) {
                         {expanded ? <><ChevronUp className="h-3.5 w-3.5" /> Hide</> : <><ChevronDown className="h-3.5 w-3.5" /> Details & Comments</>}
                     </button>
                 </div>
+
                 {expanded && (
                     <div className="mt-4 border-t border-slate-100 pt-4 space-y-3">
                         {ticket.imageUrls?.length > 0 && (
@@ -400,7 +496,7 @@ function TicketCard({ ticket, onRefreshNotifications, isLoggedIn }) {
                                 <p className="text-sm text-emerald-800">{ticket.resolutionNotes}</p>
                             </div>
                         )}
-                        {ticket.rejectionReason && (
+                        {ticket.status === 'REJECTED' && ticket.rejectionReason && (
                             <div className="rounded-xl border border-rose-100 bg-rose-50 p-3">
                                 <p className="text-[11px] font-bold uppercase tracking-widest text-rose-600 mb-1">Rejection Reason</p>
                                 <p className="text-sm text-rose-800">{ticket.rejectionReason}</p>
@@ -423,39 +519,39 @@ export default function TicketingPage() {
     const [showMyTicketsOnly, setShowMyTicketsOnly] = useState(false);
     const requireAuth = useRequireAuth();
     const { refreshNotifications } = useNotificationRefresh();
-    
+
     const isLoggedIn = !!localStorage.getItem('userId');
     const userId = localStorage.getItem('userId') || '';
 
+    const sortTicketsNewestFirst = (items) => {
+        return [...items].sort((a, b) => {
+            const timeA = Date.parse(a?.createdAt || a?.updatedAt || '') || 0;
+            const timeB = Date.parse(b?.createdAt || b?.updatedAt || '') || 0;
+            return timeB - timeA;
+        });
+    };
+
     const fetchTickets = async () => {
         try {
-            setLoading(true); 
-            setError('');
-            // If user is logged in AND wants to see their tickets, fetch only theirs
-            // Otherwise fetch all tickets (public view)
+            setLoading(true); setError('');
             if (isLoggedIn && showMyTicketsOnly && userId) {
                 const res = await getMyTickets(userId);
-                setTickets(Array.isArray(res.data) ? res.data : []);
+                setTickets(sortTicketsNewestFirst(Array.isArray(res.data) ? res.data : []));
             } else {
                 const res = await getAllTickets();
-                setTickets(Array.isArray(res.data) ? res.data : []);
+                setTickets(sortTicketsNewestFirst(Array.isArray(res.data) ? res.data : []));
             }
         } catch (e) {
             console.error(e);
             setError('Could not load tickets. Make sure the backend is running.');
-        } finally { 
-            setLoading(false); 
-        }
+        } finally { setLoading(false); }
     };
 
     useEffect(() => { fetchTickets(); }, [showMyTicketsOnly, isLoggedIn]);
 
-    const handleNewTicket = () => {
-        requireAuth(() => setShowCreate(true));  // ← redirect to login if not logged in
-    };
+    const handleNewTicket = () => { requireAuth(() => setShowCreate(true)); };
 
     const filtered = filterStatus === 'ALL' ? tickets : tickets.filter(t => t.status === filterStatus);
-
     const statusCounts = ['ALL', ...Object.keys(STATUSES)].reduce((acc, s) => {
         acc[s] = s === 'ALL' ? tickets.length : tickets.filter(t => t.status === s).length;
         return acc;
@@ -471,22 +567,17 @@ export default function TicketingPage() {
                             {isLoggedIn && showMyTicketsOnly ? 'My Tickets' : 'All Tickets'}
                         </h1>
                         <p className="mt-1 text-sm font-medium text-slate-500">
-                            {isLoggedIn && showMyTicketsOnly 
+                            {isLoggedIn && showMyTicketsOnly
                                 ? 'Track your reported incidents and maintenance requests'
-                                : 'Browse all tickets from the campus community'
-                            }
+                                : 'Browse all tickets from the campus community'}
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
                         {isLoggedIn && (
-                            <button 
-                                onClick={() => setShowMyTicketsOnly(!showMyTicketsOnly)}
-                                className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-colors ${
-                                    showMyTicketsOnly 
-                                        ? 'border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-                                        : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                }`}
-                            >
+                            <button onClick={() => setShowMyTicketsOnly(!showMyTicketsOnly)}
+                                className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-colors ${showMyTicketsOnly
+                                    ? 'border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                                    : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
                                 {showMyTicketsOnly ? 'View All' : 'My Tickets'}
                             </button>
                         )}
@@ -498,6 +589,12 @@ export default function TicketingPage() {
                             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/25 transition-all">
                             <Plus className="h-4 w-4" /> New Ticket
                         </button>
+                        {isLoggedIn && (
+                            <button onClick={handleNewTicket}
+                                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/25 transition-all">
+                                <Plus className="h-4 w-4" /> New Ticket
+                            </button>
+                        )}
                     </div>
                 </div>
 
