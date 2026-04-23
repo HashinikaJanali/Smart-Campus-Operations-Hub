@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AdminSidebar from '../components/common/AdminSidebar';
 import {
     Users, Search, Loader2, ShieldCheck, UserCheck, Wrench,
@@ -30,7 +30,6 @@ function Toast({ message, type, onClose }) {
         </div>
     );
 }
-import { Users, Search, Loader2, ShieldCheck, UserCheck, Wrench } from 'lucide-react';
 
 export default function AdminUserManagementPage() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -38,15 +37,12 @@ export default function AdminUserManagementPage() {
     const [filtered, setFiltered] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
-    const [sidebarOpen, setSidebarOpen] = useState(true);
     const [updatingId, setUpdatingId] = useState(null);
     const [toast, setToast] = useState(null);
 
-    useEffect(() => { loadUsers(); }, []);
-
     const showToast = (message, type = 'success') => setToast({ message, type });
 
-    const loadUsers = async () => {
+    const loadUsers = useCallback(async () => {
         try {
             setLoading(true);
             const res = await fetch('http://localhost:8085/api/users', {
@@ -56,22 +52,17 @@ export default function AdminUserManagementPage() {
             const list = Array.isArray(data) ? data : [];
             setUsers(list);
             setFiltered(list);
-        } catch {
-            showToast('Failed to load users', 'error');
-            if (Array.isArray(data)) {
-                setUsers(data);
-                setFiltered(data);
-            } else {
-                console.error('API did not return an array of users:', data);
-                setUsers([]);
-                setFiltered([]);
-            }
         } catch (error) {
             console.error('Error loading users', error);
+            showToast('Failed to load users', 'error');
+            setUsers([]);
+            setFiltered([]);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => { loadUsers(); }, [loadUsers]);
 
     const handleSearch = (e) => {
         const val = e.target.value;
