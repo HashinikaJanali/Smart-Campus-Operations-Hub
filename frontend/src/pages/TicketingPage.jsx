@@ -40,6 +40,18 @@ const STATUSES = {
     REJECTED: { label: 'Rejected', color: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-200', icon: XCircle },
 };
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SRI_LANKAN_PHONE_PATTERN = /^(?:\+94|0)7\d{8}$/;
+const MIN_DESCRIPTION_WORDS = 5;
+
+function normalizePhoneNumber(phoneNumber) {
+    return phoneNumber.replace(/[\s()-]/g, '');
+}
+
+function countWords(text) {
+    return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
 // ── TIMER HELPER ─────────────────────────────────────────────────────────────
 // Converts two ISO date strings into a human-readable duration e.g. "2h 15m"
 function formatDuration(from, to) {
@@ -129,13 +141,48 @@ function CreateTicketModal({ onClose, onCreated }) {
         description: '', priority: 'MEDIUM',
         contactPhone: '', contactEmail: ''
     });
+    const [fieldErrors, setFieldErrors] = useState({});
     const [images, setImages] = useState([]);
     const [previews, setPreviews] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const fileRef = useRef();
 
-    const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+    const handleChange = e => {
+        const { name, value } = e.target;
+        setForm({ ...form, [name]: value });
+        setFieldErrors(prev => ({ ...prev, [name]: '' }));
+    };
+
+    const validateForm = () => {
+        const nextErrors = {};
+
+        // Keep the ticket title fields populated so support staff get the core issue context.
+        if (!form.resource.trim() || !form.location.trim()) {
+            nextErrors.general = 'Resource and Location are required.';
+        }
+
+        // Block short descriptions so tickets contain enough detail to act on.
+        if (countWords(form.description || '') < MIN_DESCRIPTION_WORDS) {
+            nextErrors.description = `Description must be at least ${MIN_DESCRIPTION_WORDS} words.`;
+        }
+
+        // Validate the contact email only when the user provides one.
+        if (form.contactEmail && !EMAIL_PATTERN.test(form.contactEmail.trim())) {
+            nextErrors.contactEmail = 'Enter a valid email address.';
+        }
+
+        // Accept standard Sri Lankan mobile formats such as 0771234567 or +94771234567.
+        if (form.contactPhone) {
+            const normalizedPhone = normalizePhoneNumber(form.contactPhone.trim());
+            if (!SRI_LANKAN_PHONE_PATTERN.test(normalizedPhone)) {
+                nextErrors.contactPhone = 'Enter a valid Sri Lankan mobile number, such as 0771234567 or +94771234567.';
+            }
+        }
+
+        setFieldErrors(nextErrors);
+        return nextErrors;
+    };
 
     const handleImages = e => {
         const files = Array.from(e.target.files);
@@ -151,8 +198,9 @@ function CreateTicketModal({ onClose, onCreated }) {
     };
 
     const handleSubmit = async () => {
-        if (!form.resource || !form.location || !form.description) {
-            setError('Resource, Location, and Description are required.');
+        const nextErrors = validateForm();
+        if (Object.keys(nextErrors).length > 0) {
+            setError(nextErrors.general || 'Please correct the highlighted fields.');
             return;
         }
         try {
@@ -227,22 +275,26 @@ function CreateTicketModal({ onClose, onCreated }) {
                         </div>
                         <div>
                             <label className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500"><FileText className="h-3 w-3" /> Description *</label>
-                            <textarea className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-colors resize-none"
+                            <textarea className={`w-full rounded-xl border bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors resize-none focus:bg-white focus:ring-2 ${fieldErrors.description ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-indigo-400 focus:ring-indigo-100'}`}
                                 rows={3} name="description" value={form.description} onChange={handleChange} placeholder="Describe the issue in detail..." />
+                            {fieldErrors.description && <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.description}</p>}
                         </div>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500"><Phone className="h-3 w-3" /> Contact Phone</label>
-                                <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-colors"
-                                    name="contactPhone" value={form.contactPhone} onChange={handleChange} placeholder="+94 77 123 4567" />
+                                <input className={`w-full rounded-xl border bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:bg-white focus:ring-2 ${fieldErrors.contactPhone ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-indigo-400 focus:ring-indigo-100'}`}
+                                    name="contactPhone" value={form.contactPhone} onChange={handleChange} placeholder="+94 77 123 4567" inputMode="tel" autoComplete="tel" />
+                                {fieldErrors.contactPhone && <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.contactPhone}</p>}
                             </div>
                             <div>
                                 <label className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500"><Mail className="h-3 w-3" /> Contact Email</label>
-                                <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 transition-colors"
-                                    name="contactEmail" value={form.contactEmail} onChange={handleChange} placeholder="you@university.edu" />
+                                <input className={`w-full rounded-xl border bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:bg-white focus:ring-2 ${fieldErrors.contactEmail ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-100' : 'border-slate-200 focus:border-indigo-400 focus:ring-indigo-100'}`}
+                                    name="contactEmail" value={form.contactEmail} onChange={handleChange} placeholder="you@university.edu" type="email" autoComplete="email" />
+                                {fieldErrors.contactEmail && <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.contactEmail}</p>}
                             </div>
                         </div>
                         <div>
+                            {/* Optional evidence images help support staff verify the issue, with a max of 3 uploads. */}
                             <label className="mb-1.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                                 <Image className="h-3 w-3" /> Evidence Images <span className="text-slate-400 normal-case font-medium">(max 3)</span>
                             </label>
@@ -262,6 +314,7 @@ function CreateTicketModal({ onClose, onCreated }) {
                                         <span className="text-[10px] font-bold">Upload</span>
                                     </button>
                                 )}
+                                {/* Accepts common image formats such as JPG and PNG via image/* */}
                                 <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImages} />
                             </div>
                         </div>
