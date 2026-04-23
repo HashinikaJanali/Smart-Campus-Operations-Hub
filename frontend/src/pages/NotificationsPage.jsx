@@ -105,7 +105,7 @@ export default function NotificationsPage() {
         }
     }, [searchParams]);
 
-    useEffect(() => { loadNotifications(); }, [loadNotifications]);
+    useEffect(() => { loadNotifications(); }, [loadNotifications, searchParams]);
 
     const selectNotification = async (n, list) => {
         setSelected(n);
@@ -204,8 +204,8 @@ export default function NotificationsPage() {
                             key={f}
                             onClick={() => setFilter(f)}
                             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === f
-                                    ? 'bg-indigo-600 text-white shadow-md'
-                                    : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
+                                ? 'bg-indigo-600 text-white shadow-md'
+                                : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
                                 }`}
                         >
                             {f}
@@ -245,10 +245,10 @@ export default function NotificationsPage() {
                                         key={n.id}
                                         onClick={() => selectNotification(n, notifications)}
                                         className={`w-full text-left px-4 py-4 flex items-start gap-3 transition-all border-b border-slate-100 last:border-b-0 ${isSelected
-                                                ? 'bg-indigo-600 text-white shadow-md'
-                                                : !n.isRead
-                                                    ? 'bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200'
-                                                    : 'bg-white hover:bg-slate-50'
+                                            ? 'bg-indigo-600 text-white shadow-md'
+                                            : !n.isRead
+                                                ? 'bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200'
+                                                : 'bg-white hover:bg-slate-50'
                                             }`}
                                     >
                                         <div className={`mt-1 flex-shrink-0 flex h-3 w-3 items-center justify-center rounded-full ${!n.isRead ? (isSelected ? 'bg-white/60' : 'bg-indigo-600') : (isSelected ? 'bg-white/40' : 'bg-slate-200')
