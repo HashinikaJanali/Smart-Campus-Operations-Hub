@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import UserHeader from '../components/common/UserHeader';
 import useRequireAuth from '../hooks/userRequireAuth';
 import { useNotificationRefresh } from '../contexts/NotificationContext';
@@ -531,7 +531,7 @@ export default function TicketingPage() {
         });
     };
 
-    const fetchTickets = async () => {
+    const fetchTickets = useCallback(async () => {
         try {
             setLoading(true); setError('');
             if (isLoggedIn && showMyTicketsOnly && userId) {
@@ -545,9 +545,9 @@ export default function TicketingPage() {
             console.error(e);
             setError('Could not load tickets. Make sure the backend is running.');
         } finally { setLoading(false); }
-    };
+    }, [isLoggedIn, showMyTicketsOnly, userId]);
 
-    useEffect(() => { fetchTickets(); }, [showMyTicketsOnly, isLoggedIn]);
+    useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
     const handleNewTicket = () => { requireAuth(() => setShowCreate(true)); };
 

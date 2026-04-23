@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import UserHeader from '../components/common/UserHeader';
 import {
     Loader2, CheckCheck, Trash2, BellOff, Bell,
     CheckCircle2, XCircle, Calendar, Ticket,
-    MessageCircle, Info, ChevronRight, ExternalLink
+    MessageCircle, Info, ExternalLink
 } from 'lucide-react';
 import notificationService from '../services/notificationService';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -84,9 +84,7 @@ export default function NotificationsPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
-    useEffect(() => { loadNotifications(); }, []);
-
-    const loadNotifications = async () => {
+    const loadNotifications = useCallback(async () => {
         try {
             setLoading(true);
             const data = await notificationService.getMyNotifications();
@@ -105,7 +103,9 @@ export default function NotificationsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [searchParams]);
+
+    useEffect(() => { loadNotifications(); }, [loadNotifications, searchParams]);
 
     const selectNotification = async (n, list) => {
         setSelected(n);

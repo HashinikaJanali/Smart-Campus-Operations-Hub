@@ -45,7 +45,6 @@ const getTypeIcon = (type) => {
 export default function NotificationPanel() {
     const [notifications, setNotifications] = useState([]);
     const [open, setOpen] = useState(false);
-    const [currentUser, setCurrentUser] = useState(null);
     const [settings, setSettings] = useState(null);
     const panelRef = useRef(null);
     const navigate = useNavigate();
@@ -102,7 +101,6 @@ export default function NotificationPanel() {
     useEffect(() => {
         loadNotifications();
         loadSettings();
-        fetchCurrentUser();
 
         const interval = setInterval(() => {
             loadNotifications();
@@ -110,17 +108,6 @@ export default function NotificationPanel() {
         }, 30000);
         return () => clearInterval(interval);
     }, []);
-
-    const fetchCurrentUser = async () => {
-        try {
-            const user = await notificationService.getCurrentUserInfo();
-            if (user) {
-                setCurrentUser(user);
-            }
-        } catch (error) {
-            console.error('Error fetching current user', error);
-        }
-    };
 
     // Close when clicking outside
     useEffect(() => {

@@ -12,7 +12,6 @@ import {
     Building2,
     FlaskConical,
     MonitorPlay,
-    CheckCircle2,
     Search,
     BookOpen,
     Lightbulb
@@ -238,7 +237,6 @@ export default function HomePage() {
                                 color: "from-amber-600 to-emerald-600"
                             }
                         ].map((item, i) => {
-                            const Icon = item.icon;
                             return (
                                 <div key={i} className={`group relative animate-in fade-in slide-in-from-bottom-12 duration-700`} style={{ animationDelay: `${i * 100}ms` }}>
                                     {/* Connector line */}

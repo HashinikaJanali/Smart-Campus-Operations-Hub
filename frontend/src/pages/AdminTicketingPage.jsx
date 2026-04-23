@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AdminSidebar from '../components/common/AdminSidebar';
 import {
     AlertCircle, CheckCircle2, Clock, Wrench, XCircle,
@@ -440,7 +440,7 @@ export default function AdminTicketingPage() {
         });
     };
 
-    const fetchTickets = async ({ mode = 'refresh' } = {}) => {
+    const fetchTickets = useCallback(async ({ mode = 'refresh' } = {}) => {
         try {
             if (mode === 'initial') setLoading(true);
             else if (mode === 'refresh') setRefreshing(true);
@@ -454,9 +454,9 @@ export default function AdminTicketingPage() {
             if (mode === 'initial') setLoading(false);
             else if (mode === 'refresh') setRefreshing(false);
         }
-    };
+    }, []);
 
-    useEffect(() => { fetchTickets({ mode: 'initial' }); }, []);
+    useEffect(() => { fetchTickets({ mode: 'initial' }); }, [fetchTickets]);
 
     useEffect(() => {
         const validIds = new Set(tickets.map(t => t.id));
