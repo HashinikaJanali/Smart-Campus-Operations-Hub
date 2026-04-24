@@ -4,11 +4,28 @@ A modern, unified platform designed to streamline campus operations and enhance 
 
 ## 🧩 Core Features
 
-- 🏢 **Facilities & Assets Catalogue**: A maintainable catalog of bookable resources (lecture halls, labs, equipment) with search, filtering, and availability status tracking.
-- 📅 **Booking Management**: System for users to request bookings (with timeline conflict checking) and for admins to approve/reject/cancel requests.
-- ⚙️**Maintenance & Incident Ticketing**: Workflow for users to report faults and attach evidence images. Technicians can be assigned to update ticket statuses (Open -> In Progress -> Resolved), complete with comment ownership rules.
-- 🔔**Notifications**: Alerting system to inform users of booking approval/rejection updates and ticket status changes.
-- 🔐 **Authentication & Authorization**: Secure application with OAuth 2.0 login integration and role-based access control (User, Admin, etc.) to secure frontend routes and REST endpoints.
+- 🏢 **Facilities & Assets Catalogue**: 
+  - **Comprehensive Registry**: Maintainable catalog of lecture halls, labs, and equipment.
+  - **Smart Filtering**: Advanced search by resource type, location, and real-time availability.
+  - **Status Tracking**: Monitor assets across states like *Available*, *Maintenance*, or *Occupied*.
+- 📅 **Booking Management**: 
+  - **Conflict Prevention**: Built-in timeline checking to prevent overlapping reservations.
+  - **Approval Workflow**: Streamlined process for admins to approve, reject, or cancel requests with reason tracking.
+  - **Self-Service Check-ins**: Digital check-in system for users to confirm their presence at booked resources.
+- ⚙️ **Maintenance & Incident Ticketing**: 
+  - **Visual Reporting**: Users can report faults with priority levels and multiple image attachments as evidence.
+  - **Lifecycle Tracking**: Monitor ticket progress from *Open* to *In Progress* and *Resolved*.
+  - **Collaborative Comments**: Ownership-based commenting system for users and technicians to communicate.
+- 📊 **Real-time Analytics**:
+  - **Usage Insights**: Visualize top-utilized resources and peak booking hours.
+  - **Performance Metrics**: Summary statistics for administrators to monitor system-wide activity at a glance.
+- 🔔 **Notifications & Preferences**: 
+  - **Real-time Alerts**: Instant updates for booking status changes and ticket resolutions.
+  - **Admin Preferences**: Granular control for admins to customize their notification experience through a dedicated dashboard.
+- 🔐 **Authentication & Authorization**: 
+  - **OAuth 2.0 Integration**: Secure social login via Google.
+  - **RBAC**: Multi-tier access control for *Admins*, *Technicians*, and *Students*.
+  - **Secure Sessions**: Protected REST endpoints and frontend routes with secure cookie handling.
 
 ## 🏗️ Architecture
 
