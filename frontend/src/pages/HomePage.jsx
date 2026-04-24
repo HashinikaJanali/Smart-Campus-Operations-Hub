@@ -23,14 +23,14 @@ export default function HomePage() {
             <UserHeader />
 
             {/* ── HERO SECTION ── */}
-            <section className="relative overflow-hidden py-20 lg:py-28">
+            <section className="relative overflow-hidden pt-8 pb-10 lg:pt-12 lg:pb-16">
                 {/* Premium gradient background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-indigo-50/30 to-white" />
-                
+
                 {/* Animated background elements */}
                 <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[800px] h-[800px] rounded-full bg-gradient-to-bl from-indigo-200/40 to-transparent blur-[120px] pointer-events-none animate-pulse" />
                 <div className="absolute -bottom-20 -left-40 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-blue-100/30 to-transparent blur-[100px] pointer-events-none" />
-                
+
                 <div className="relative z-10 mx-auto max-w-7xl px-8 sm:px-12">
                     <div className="flex flex-col lg:flex-row items-center gap-20 lg:gap-24">
                         {/* Content */}
@@ -40,18 +40,18 @@ export default function HomePage() {
                                 <span className="flex h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
                                 Unified Campus Management
                             </div>
-                            
+
                             {/* Headline */}
-                            <h1 className="mb-6 text-5xl font-black leading-[1.15] text-slate-900 lg:text-7xl tracking-tight">
+                            <h1 className="mb-6 text-4xl font-black leading-[1.15] text-slate-900 lg:text-6xl tracking-tight">
                                 Empower Your <br />
-                                <span className="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Campus Operations</span>
+                                <span className="text-indigo-600">Campus Operations</span>
                             </h1>
-                            
+
                             {/* Subheading */}
-                            <p className="mb-10 text-lg font-medium text-slate-600 leading-relaxed lg:text-xl max-w-lg">
+                            <p className="mb-10 text-base font-medium text-slate-600 leading-relaxed lg:text-lg max-w-lg">
                                 A modern, integrated platform designed for students, lecturers, and staff. Manage bookings, track issues, and monitor campus operations—all in one place.
                             </p>
-                            
+
                             {/* CTA Buttons */}
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                                 <NavLink
@@ -67,21 +67,7 @@ export default function HomePage() {
                                     <span>Learn More</span>
                                 </button>
                             </div>
-                            
-                            {/* Trust indicators */}
-                            <div className="mt-12 flex items-center gap-8">
-                                <div className="flex -space-x-3">
-                                    {[1, 2, 3].map((i) => (
-                                        <div key={i} className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold">
-                                            {i}
-                                        </div>
-                                    ))}
-                                </div>
-                                <div>
-                                    <p className="text-sm font-black text-slate-800">3,500+ Active Users</p>
-                                    <p className="text-xs font-medium text-slate-500">Across campus</p>
-                                </div>
-                            </div>
+
                         </div>
 
                         {/* Image Section */}
@@ -89,28 +75,16 @@ export default function HomePage() {
                             {/* Decorative elements */}
                             <div className="absolute -top-16 -right-16 w-48 h-48 bg-indigo-300/20 rounded-3xl blur-3xl" />
                             <div className="absolute -bottom-8 -left-8 w-64 h-64 bg-blue-300/10 rounded-3xl blur-3xl" />
-                            
+
                             {/* Image container */}
                             <div className="relative">
                                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-indigo-400/10 to-blue-500/20 rounded-[3.5rem] blur-2xl" />
-                                <img 
-                                    src={heroImage} 
-                                    alt="Campus Operations Hub" 
+                                <img
+                                    src={heroImage}
+                                    alt="Campus Operations Hub"
                                     className="relative rounded-[3rem] shadow-2xl border border-white/60 object-cover w-full h-[500px] backdrop-blur-md"
                                 />
-                                
-                                {/* Feature badges */}
-                                <div className="absolute bottom-6 left-6 right-6 flex gap-3 bg-white/95 backdrop-blur-xl rounded-2xl p-4 shadow-xl border border-white/40">
-                                    <div className="flex-1">
-                                        <p className="text-xs font-black text-indigo-600 uppercase tracking-wider">Real-time</p>
-                                        <p className="text-sm font-bold text-slate-800">Updates</p>
-                                    </div>
-                                    <div className="w-px bg-slate-200" />
-                                    <div className="flex-1">
-                                        <p className="text-xs font-black text-indigo-600 uppercase tracking-wider">24/7</p>
-                                        <p className="text-sm font-bold text-slate-800">Available</p>
-                                    </div>
-                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -225,16 +199,18 @@ export default function HomePage() {
                             {
                                 step: "03",
                                 title: "Book & Manage",
-                                desc: "Reserve resources, track your bookings, and manage approvals all in one centralized hub.",
+                                desc: "Reserve resources, track your bookings, and manage approvals all in one place.",
                                 icon: BookOpen,
-                                color: "from-emerald-600 to-blue-600"
+                                color: "from-blue-600 to-indigo-600",
+                                isSquare: true
                             },
                             {
                                 step: "04",
                                 title: "Report & Track",
                                 desc: "Submit support tickets for issues and monitor their status until resolution in real-time.",
                                 icon: Lightbulb,
-                                color: "from-amber-600 to-emerald-600"
+                                color: "from-indigo-600 to-blue-500",
+                                isSquare: true
                             }
                         ].map((item, i) => {
                             return (
@@ -243,9 +219,9 @@ export default function HomePage() {
                                     {i < 3 && (
                                         <div className="hidden lg:block absolute top-12 left-[60%] w-[calc(100%+24px)] h-1 bg-gradient-to-r from-indigo-300 to-transparent pointer-events-none" />
                                     )}
-                                    
+
                                     <div className="relative h-full rounded-3xl border border-indigo-100/50 bg-gradient-to-br from-indigo-50/30 to-white p-8 shadow-sm shadow-indigo-100/20 transition-all duration-500 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-200/30 hover:-translate-y-2">
-                                        <div className={`mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${item.color} text-white font-black text-xl shadow-lg shadow-indigo-200/40 group-hover:scale-110 transition-transform duration-500`}>
+                                        <div className={`mb-6 inline-flex h-14 w-14 items-center justify-center ${item.isSquare ? 'rounded-xl' : 'rounded-2xl'} bg-gradient-to-br ${item.color} text-white font-black text-xl shadow-lg shadow-indigo-200/40 group-hover:scale-110 transition-transform duration-500`}>
                                             {item.step}
                                         </div>
                                         <h4 className="mb-3 text-xl font-black text-slate-800">{item.title}</h4>
