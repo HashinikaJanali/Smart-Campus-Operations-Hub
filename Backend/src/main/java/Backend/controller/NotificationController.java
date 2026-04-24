@@ -171,4 +171,47 @@ public class NotificationController {
             put("role", user.getRole());
         }});
     }
+
+    // DEBUG endpoint to test admin notifications
+    @PostMapping("/debug/test-admin-notification")
+    public ResponseEntity<?> testAdminNotification(
+            @AuthenticationPrincipal OAuth2User principal) {
+        Optional<User> userOpt = getCurrentUser(principal);
+        if (userOpt.isEmpty() || !"ADMIN".equals(userOpt.get().getRole())) {
+            return ResponseEntity.status(403)
+                .body("Only admins can access this endpoint");
+        }
+        
+        String adminId = userOpt.get().getId();
+        System.out.println("TEST: Creating notification for admin: " + adminId);
+        Notification notification = notificationService.createNotification(
+            adminId,
+            "TICKET_STATUS_CHANGED",
+            "TEST: This is a test notification from debug endpoint"
+        );
+        
+        if (notification != null) {
+            return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
+                put("message", "Test notification created");
+                put("notification", notification);
+            }});
+        } else {
+            return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
+                put("message", "Notification was not created (blocked by settings)");
+            }});
+        }
+    }
+
+    // DEBUG endpoint to check admin count
+    @GetMapping("/debug/admin-count")
+    public ResponseEntity<?> checkAdminCount() {
+        java.util.List<User> admins = userRepository.findByRole("ADMIN");
+        System.out.println("DEBUG: Found " + admins.size() + " admins in database");
+        admins.forEach(admin -> System.out.println("  - " + admin.getId() + ": " + admin.getName() + " (" + admin.getEmail() + ")"));
+        
+        return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
+            put("adminCount", admins.size());
+            put("admins", admins);
+        }});
+    }
 }

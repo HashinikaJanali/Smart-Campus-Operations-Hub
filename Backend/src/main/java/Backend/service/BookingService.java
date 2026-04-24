@@ -95,7 +95,21 @@ public class BookingService {
         }
 
         booking.setStatus("PENDING");
-        return bookingRepository.save(booking);
+        BookingModel created = bookingRepository.save(booking);
+
+        // Notify all admins of the new booking request
+        String adminMsg = String.format(
+                "New booking request for \"%s\" on %s (%s–%s) is awaiting approval.",
+                created.getResourceName(), created.getBookingDate(),
+                created.getStartTime(), created.getEndTime());
+        java.util.List<Backend.model.User> admins = userRepository.findByRole("ADMIN");
+        System.out.println("Found " + admins.size() + " admins to notify about booking");
+        admins.forEach(admin -> {
+            System.out.println("Notifying admin: " + admin.getId() + " (" + admin.getName() + ")");
+            notificationService.createNotification(admin.getId(), "BOOKING_REQUESTED", adminMsg);
+        });
+
+        return created;
     }
 
     public BookingModel updateBookingStatus(String id, String status, String reason) {
@@ -151,7 +165,15 @@ public class BookingService {
             }
 
             booking.setStatus("CANCELLED");
-            return bookingRepository.save(booking);
+            BookingModel saved = bookingRepository.save(booking);
+
+            String msg = String.format(
+                    "Your booking for \"%s\" on %s (%s–%s) has been cancelled.",
+                    saved.getResourceName(), saved.getBookingDate(),
+                    saved.getStartTime(), saved.getEndTime());
+            notificationService.createNotification(saved.getUserId(), "BOOKING_CANCELLED", msg);
+
+            return saved;
         }
         throw new RuntimeException("Booking not found");
     }

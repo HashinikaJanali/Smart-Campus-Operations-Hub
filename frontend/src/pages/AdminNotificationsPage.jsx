@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import UserHeader from '../components/common/UserHeader';
+import AdminSidebar from '../components/common/AdminSidebar';
 import {
     Loader2, CheckCheck, Trash2, BellOff, Bell,
     CheckCircle2, XCircle, Calendar, Ticket,
-    MessageCircle, Info, ExternalLink
+    MessageCircle, Info, ExternalLink, RefreshCw, Settings
 } from 'lucide-react';
 import notificationService from '../services/notificationService';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -29,9 +29,9 @@ const getTypeConfig = (type) => {
             return {
                 label: 'Booking Requested',
                 color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200',
-                icon: <CheckCircle2 className="w-5 h-5 text-blue-500" />,
+                icon: <Calendar className="w-5 h-5 text-blue-500" />,
                 section: 'Bookings',
-                destination: { label: 'View in Bookings', path: '/bookings' }
+                destination: { label: 'View in Bookings', path: '/admin-bookings' }
             };
         case 'BOOKING_APPROVED':
             return {
@@ -39,7 +39,7 @@ const getTypeConfig = (type) => {
                 color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200',
                 icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" />,
                 section: 'Bookings',
-                destination: { label: 'View in Bookings', path: '/bookings' }
+                destination: { label: 'View in Bookings', path: '/admin-bookings' }
             };
         case 'BOOKING_REJECTED':
             return {
@@ -47,7 +47,7 @@ const getTypeConfig = (type) => {
                 color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200',
                 icon: <XCircle className="w-5 h-5 text-rose-500" />,
                 section: 'Bookings',
-                destination: { label: 'View in Bookings', path: '/bookings' }
+                destination: { label: 'View in Bookings', path: '/admin-bookings' }
             };
         case 'BOOKING_CANCELLED':
             return {
@@ -55,7 +55,7 @@ const getTypeConfig = (type) => {
                 color: 'text-slate-500', bg: 'bg-slate-100', border: 'border-slate-200',
                 icon: <Calendar className="w-5 h-5 text-slate-400" />,
                 section: 'Bookings',
-                destination: { label: 'View in Bookings', path: '/bookings' }
+                destination: { label: 'View in Bookings', path: '/admin-bookings' }
             };
         case 'TICKET_RAISED':
             return {
@@ -63,7 +63,7 @@ const getTypeConfig = (type) => {
                 color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200',
                 icon: <Ticket className="w-5 h-5 text-rose-500" />,
                 section: 'Tickets',
-                destination: { label: 'View in Tickets', path: '/tickets' }
+                destination: { label: 'View in Tickets', path: '/admin-tickets' }
             };
         case 'TICKET_STATUS_CHANGED':
             return {
@@ -71,7 +71,7 @@ const getTypeConfig = (type) => {
                 color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200',
                 icon: <Ticket className="w-5 h-5 text-indigo-500" />,
                 section: 'Tickets',
-                destination: { label: 'View in Tickets', path: '/tickets' }
+                destination: { label: 'View in Tickets', path: '/admin-tickets' }
             };
         case 'NEW_COMMENT':
             return {
@@ -79,7 +79,7 @@ const getTypeConfig = (type) => {
                 color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200',
                 icon: <MessageCircle className="w-5 h-5 text-amber-500" />,
                 section: 'Tickets',
-                destination: { label: 'View in Tickets', path: '/tickets' }
+                destination: { label: 'View in Tickets', path: '/admin-tickets' }
             };
         default:
             return {
@@ -92,7 +92,8 @@ const getTypeConfig = (type) => {
     }
 };
 
-export default function NotificationsPage() {
+export default function AdminNotificationsPage() {
+    const [sidebarOpen, setSidebarOpen] = useState(true);
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('ALL');
@@ -104,6 +105,7 @@ export default function NotificationsPage() {
         try {
             setLoading(true);
             const data = await notificationService.getMyNotifications();
+            console.log('Loaded notifications:', data);
             const list = Array.isArray(data) ? data : [];
             setNotifications(list);
 
@@ -121,7 +123,12 @@ export default function NotificationsPage() {
         }
     }, [searchParams]);
 
-    useEffect(() => { loadNotifications(); }, [loadNotifications, searchParams]);
+    useEffect(() => { 
+        loadNotifications(); 
+        // Refresh every 5 seconds to get new notifications
+        const interval = setInterval(loadNotifications, 5000);
+        return () => clearInterval(interval);
+    }, [loadNotifications, searchParams]);
 
     const selectNotification = async (n, list) => {
         setSelected(n);
@@ -182,35 +189,58 @@ export default function NotificationsPage() {
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 font-sans text-slate-900">
-            <UserHeader />
-            <main className="mx-auto max-w-7xl px-6 py-12">
+        <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+            {/* ── SHARED ADMIN SIDEBAR ── */}
+            <AdminSidebar 
+                isOpen={sidebarOpen} 
+                onToggle={() => setSidebarOpen(!sidebarOpen)} 
+                activePage="notifications"
+            />
 
-                {/* Professional Page header */}
-                <div className="mb-8">
-                    <div className="flex items-start gap-4 mb-6">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 shadow-lg">
-                            <Bell className="w-6 h-6 text-white" />
+            {/* ── MAIN ── */}
+            <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-[265px]' : 'ml-20'}`}>
+                <div className="w-full min-h-screen bg-gradient-to-b from-slate-50 to-white">
+                    <div className="px-8 py-8 mx-auto">
+                
+                {/* ── HEADER ── */}
+                <div className="mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                    <div>
+                        <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-600 border border-indigo-100 shadow-sm">
+                            <Bell className="w-3.5 h-3.5" /> System Alerts
                         </div>
-                        <div>
-                            <h1 className="text-4xl font-black tracking-tight text-slate-900">
-                                Notifications
-                            </h1>
-                            <p className="text-base font-medium text-slate-600 mt-2">
-                                {unreadCount > 0
-                                    ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`
-                                    : '✓ You\'re all caught up!'}
-                            </p>
-                        </div>
+                        <h1 className="text-4xl font-black text-slate-900 leading-tight">
+                            All <span className="text-indigo-600">Notifications</span>
+                        </h1>
+                        <p className="text-slate-500 mt-2 font-medium">
+                            {unreadCount > 0 
+                                ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''} from tickets, bookings and system alerts` 
+                                : 'No new notifications. You\'re all caught up!'}
+                        </p>
                     </div>
-                    {unreadCount > 0 && (
+                    <div className="flex gap-3">
                         <button
-                            onClick={handleMarkAllRead}
-                            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg"
+                            onClick={loadNotifications}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+                            title="Refresh notifications"
                         >
-                            <CheckCheck className="w-4 h-4" /> Mark all as read
+                            <RefreshCw className="w-4 h-4" /> Refresh
                         </button>
-                    )}
+                        <button
+                            onClick={() => navigate('/admin-notifications/settings')}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+                            title="Notification preferences"
+                        >
+                            <Settings className="w-4 h-4" /> Settings
+                        </button>
+                        {unreadCount > 0 && (
+                            <button
+                                onClick={handleMarkAllRead}
+                                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                            >
+                                <CheckCheck className="w-4 h-4" /> Mark all as read
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Filter Tabs */}
@@ -219,10 +249,11 @@ export default function NotificationsPage() {
                         <button
                             key={f}
                             onClick={() => setFilter(f)}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === f
-                                ? 'bg-indigo-600 text-white shadow-md'
-                                : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
-                                }`}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                                filter === f
+                                    ? 'bg-indigo-600 text-white shadow-md'
+                                    : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
+                            }`}
                         >
                             {f}
                         </button>
@@ -252,7 +283,7 @@ export default function NotificationsPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
                         {/* Left: Notification list */}
-                        <div className="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden h-fit">
+                        <div className="lg:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden h-fit max-h-[600px] overflow-y-auto">
                             {filtered.map((n, idx) => {
                                 const tc = getTypeConfig(n.type);
                                 const isSelected = selected?.id === n.id;
@@ -260,15 +291,17 @@ export default function NotificationsPage() {
                                     <button
                                         key={n.id}
                                         onClick={() => selectNotification(n, notifications)}
-                                        className={`w-full text-left px-4 py-4 flex items-start gap-3 transition-all border-b border-slate-100 last:border-b-0 ${isSelected
-                                            ? 'bg-indigo-600 text-white shadow-md'
-                                            : !n.isRead
-                                                ? 'bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200'
-                                                : 'bg-white hover:bg-slate-50'
-                                            }`}
+                                        className={`w-full text-left px-4 py-4 flex items-start gap-3 transition-all border-b border-slate-100 last:border-b-0 ${
+                                            isSelected
+                                                ? 'bg-indigo-600 text-white shadow-md'
+                                                : !n.isRead
+                                                    ? 'bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200'
+                                                    : 'bg-white hover:bg-slate-50'
+                                        }`}
                                     >
-                                        <div className={`mt-1 flex-shrink-0 flex h-3 w-3 items-center justify-center rounded-full ${!n.isRead ? (isSelected ? 'bg-white/60' : 'bg-indigo-600') : (isSelected ? 'bg-white/40' : 'bg-slate-200')
-                                            }`} />
+                                        <div className={`mt-1 flex-shrink-0 flex h-3 w-3 items-center justify-center rounded-full ${
+                                            !n.isRead ? (isSelected ? 'bg-white/60' : 'bg-indigo-600') : (isSelected ? 'bg-white/40' : 'bg-slate-200')
+                                        }`} />
                                         <div className="flex-1 min-w-0">
                                             <p className={`text-sm font-bold truncate ${isSelected ? 'text-white' : 'text-slate-900'}`}>
                                                 {tc.label}
@@ -306,6 +339,9 @@ export default function NotificationsPage() {
                         </div>
                     </div>
                 )}
+
+                    </div>
+                </div>
             </main>
         </div>
     );
@@ -335,10 +371,10 @@ function DetailPanel({ notification: n, onDelete, onMarkRead, navigate }) {
                             )}
                         </div>
                         <p className="text-sm text-slate-600 mt-3 font-medium">
-                            {new Date(n.createdAt).toLocaleDateString('en-US', {
-                                weekday: 'long',
-                                year: 'numeric',
-                                month: 'long',
+                            {new Date(n.createdAt).toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
                                 day: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit'

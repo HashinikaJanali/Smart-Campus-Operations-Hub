@@ -589,12 +589,6 @@ export default function TicketingPage() {
                             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/25 transition-all">
                             <Plus className="h-4 w-4" /> New Ticket
                         </button>
-                        {isLoggedIn && (
-                            <button onClick={handleNewTicket}
-                                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/25 transition-all">
-                                <Plus className="h-4 w-4" /> New Ticket
-                            </button>
-                        )}
                     </div>
                 </div>
 
