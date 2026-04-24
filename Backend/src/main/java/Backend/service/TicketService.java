@@ -1,8 +1,9 @@
 package Backend.service;
 
 import Backend.model.TicketModel;
-import Backend.repository.TicketRepository;
 import Backend.repository.CommentRepository;
+import Backend.repository.TicketRepository;
+import Backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +29,9 @@ public class TicketService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private final String UPLOAD_DIR = "uploads/tickets/";
 
@@ -84,7 +88,20 @@ public class TicketService {
         ticket.setCreatedAt(LocalDateTime.now());
         ticket.setUpdatedAt(LocalDateTime.now());
 
-        return ticketRepository.save(ticket);
+        TicketModel saved = ticketRepository.save(ticket);
+
+        // Notify all admins of the new ticket
+        String adminMsg = String.format(
+                "New ticket raised: \"%s\" at %s (Priority: %s)",
+                saved.getResource(), saved.getLocation(), saved.getPriority());
+        java.util.List<Backend.model.User> admins = userRepository.findByRole("ADMIN");
+        System.out.println("Found " + admins.size() + " admins to notify about ticket");
+        admins.forEach(admin -> {
+            System.out.println("Notifying admin: " + admin.getId() + " (" + admin.getName() + ")");
+            notificationService.createNotification(admin.getId(), "TICKET_STATUS_CHANGED", adminMsg);
+        });
+
+        return saved;
     }
 
     public TicketModel updateTicketStatus(String id, Map<String, String> payload) {
@@ -154,6 +171,14 @@ public class TicketService {
                 truncate(saved.getResource(), 40), technicianName);
             notificationService.createNotification(ticketOwnerUserId, "TICKET_STATUS_CHANGED", message);
         }
+
+        // Notify the assigned technician
+        userRepository.findByName(technicianName).ifPresent(technician -> {
+            String techMsg = String.format(
+                    "You have been assigned to ticket \"%s\" (%s priority) at %s.",
+                    truncate(saved.getResource(), 40), saved.getPriority(), saved.getLocation());
+            notificationService.createNotification(technician.getId(), "TICKET_STATUS_CHANGED", techMsg);
+        });
 
         return saved;
     }

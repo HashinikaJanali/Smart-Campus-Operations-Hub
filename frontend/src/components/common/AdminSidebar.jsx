@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -7,10 +7,12 @@ import {
     Menu,
     LogOut,
     Activity,
-    Users
+    Users,
+    Bell
 } from 'lucide-react';
 import logo from '../../assets/logo.png';
 import authService from '../../services/authService';
+import notificationService from '../../services/notificationService';
 
 export default function AdminSidebar({ isOpen, onToggle, activePage }) {
 
@@ -18,6 +20,25 @@ export default function AdminSidebar({ isOpen, onToggle, activePage }) {
     const displayName = user?.name || 'System Admin';
     const displayEmail = user?.email || '';
     const avatarLetter = displayName.charAt(0).toUpperCase();
+
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        const fetchCount = async () => {
+            try {
+                const count = await notificationService.getUnreadCount();
+                console.log('Fetched unread count:', count);
+                setUnreadCount(count || 0);
+            } catch (error) {
+                console.error('Error fetching unread count:', error);
+                setUnreadCount(0);
+            }
+        };
+        fetchCount();
+        // Fetch every 5 seconds instead of 30 for faster updates during testing
+        const interval = setInterval(fetchCount, 5000);
+        return () => clearInterval(interval);
+    }, []);
 
     const menuItems = [
         {
@@ -49,6 +70,12 @@ export default function AdminSidebar({ isOpen, onToggle, activePage }) {
             label: 'User Management',
             icon: Users,
             path: '/admin/users'
+        },
+        {
+            id: 'notifications',
+            label: 'Notifications',
+            icon: Bell,
+            path: '/admin-notifications'
         }
     ];
 
@@ -88,18 +115,31 @@ export default function AdminSidebar({ isOpen, onToggle, activePage }) {
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = activePage === item.id;
+                    const badge = item.id === 'notifications' ? unreadCount : 0;
 
                     return (
                         <NavLink
                             key={item.id}
                             to={item.path}
-                            className={`flex items-center rounded-xl text-sm font-bold transition-all duration-200 ${isOpen ? 'gap-3 px-4 py-3' : 'justify-center p-3'} 
+                            className={`flex items-center rounded-xl text-sm font-bold transition-all duration-200 ${isOpen ? 'gap-3 px-4 py-3' : 'justify-center p-3'}
                                 ${isActive
                                     ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-indigo-950/40 translate-x-1'
                                     : 'text-blue-100/80 hover:bg-white/10 hover:text-white'}`}
                         >
-                            <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-white' : 'text-blue-300'}`} />
-                            {isOpen && <span className="overflow-hidden whitespace-nowrap">{item.label}</span>}
+                            <div className="relative shrink-0">
+                                <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-blue-300'}`} />
+                                {badge > 0 && !isOpen && (
+                                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shadow-sm">
+                                        {badge > 9 ? '9+' : badge}
+                                    </span>
+                                )}
+                            </div>
+                            {isOpen && <span className="flex-1 overflow-hidden whitespace-nowrap">{item.label}</span>}
+                            {isOpen && badge > 0 && (
+                                <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-black text-white shadow-sm">
+                                    {badge > 99 ? '99+' : badge}
+                                </span>
+                            )}
                         </NavLink>
                     );
                 })}

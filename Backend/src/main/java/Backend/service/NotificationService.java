@@ -32,25 +32,31 @@ public class NotificationService {
         
         // If all notifications are disabled, don't create
         if (settings.isDisableAll()) {
+            System.out.println("Notification blocked: all notifications disabled for user " + userId);
             return null;
         }
         
         // Check if specific notification type is enabled
         switch(type) {
+            case "BOOKING_REQUESTED":
             case "BOOKING_APPROVED":
             case "BOOKING_REJECTED":
             case "BOOKING_CANCELLED":
                 if (!settings.isBookingEnabled()) {
+                    System.out.println("Notification blocked: booking notifications disabled for user " + userId);
                     return null;
                 }
                 break;
             case "TICKET_STATUS_CHANGED":
+            case "TICKET_RAISED":
                 if (!settings.isTicketEnabled()) {
+                    System.out.println("Notification blocked: ticket notifications disabled for user " + userId);
                     return null;
                 }
                 break;
             case "NEW_COMMENT":
                 if (!settings.isCommentEnabled()) {
+                    System.out.println("Notification blocked: comment notifications disabled for user " + userId);
                     return null;
                 }
                 break;
@@ -58,7 +64,9 @@ public class NotificationService {
         
         Notification notification = 
             new Notification(userId, type, message);
-        return notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+        System.out.println("Created notification for user " + userId + ": " + type + " - " + message);
+        return saved;
     }
 
     // Mark one notification as read

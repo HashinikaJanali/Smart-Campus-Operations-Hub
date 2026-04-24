@@ -8,6 +8,8 @@ import AdminBookingPage from './pages/AdminBookingPage';
 import UserBookingPage from './pages/UserBookingPage';
 import TicketingPage from './pages/TicketingPage';
 import AdminTicketingPage from './pages/AdminTicketingPage';
+import AdminNotificationsPage from './pages/AdminNotificationsPage';
+import AdminNotificationSettingsPage from './pages/AdminNotificationSettingsPage';
 import LoginPage from './pages/LoginPage';
 import NotificationsPage from './pages/NotificationsPage';
 import NotificationSettingsPage from './pages/NotificationSettingsPage';
@@ -76,6 +78,16 @@ function App() {
                     <Route path="/admin/users" element={
                         <ProtectedRoute allowedRoles={['ADMIN']}>
                             <AdminUserManagementPage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/admin-notifications" element={
+                        <ProtectedRoute allowedRoles={['ADMIN']}>
+                            <AdminNotificationsPage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/admin-notifications/settings" element={
+                        <ProtectedRoute allowedRoles={['ADMIN']}>
+                            <AdminNotificationSettingsPage />
                         </ProtectedRoute>
                     } />
 
