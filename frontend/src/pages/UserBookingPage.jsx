@@ -32,8 +32,12 @@ export default function UserBookingPage() {
         try {
             setLoading(true);
             const data = await getBookingsByUser(userId);
-            setBookings(Array.isArray(data) ? data : []);
-            applyFilters(Array.isArray(data) ? data : [], search, statusFilter);
+            // Sort by ID descending (proxy for newest first)
+            const sortedData = Array.isArray(data) 
+                ? [...data].sort((a, b) => (b.id || "").localeCompare(a.id || "")) 
+                : [];
+            setBookings(sortedData);
+            applyFilters(sortedData, search, statusFilter);
         } catch (error) {
             console.error("Error loading bookings", error);
             setBookings([]);
