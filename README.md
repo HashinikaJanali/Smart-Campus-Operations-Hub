@@ -73,14 +73,12 @@ Smart-Campus-Operations-Hub/
    cd Backend
    ```
 
-2. **Configure application.properties**
-   Edit `src/main/resources/application.properties`:
-   ```properties
-   spring.application.name=Backend
-   spring.data.mongodb.uri=mongodb://localhost:27017/campus-hub
-   # Add your Google OAuth2 credentials:
-   spring.security.oauth2.client.registration.google.client-id=YOUR_CLIENT_ID
-   spring.security.oauth2.client.registration.google.client-secret=YOUR_CLIENT_SECRET
+2. **Configure Environment Variables**
+   Create a `.env` file in the `Backend` directory (use `.env.example` as a template):
+   ```env
+   MONGODB_URI=mongodb://localhost:27017/campus-hub
+   GOOGLE_CLIENT_ID=YOUR_CLIENT_ID
+   GOOGLE_CLIENT_SECRET=YOUR_CLIENT_SECRET
    ```
 
 3. **Build and run**
@@ -123,7 +121,7 @@ Smart-Campus-Operations-Hub/
 
 ### MongoDB Connection Error
 - Ensure MongoDB is running: `mongod`
-- Check connection string in `application.properties`
+- Check `MONGODB_URI` in `.env`
 
 ### Frontend Build Errors
 - Clear node_modules and reinstall: `rm -rf node_modules && npm install`
@@ -134,6 +132,6 @@ Smart-Campus-Operations-Hub/
 - Ensure backend is running on port 8085
 
 ### Google OAuth Issues
-- Verify credentials in `application.properties`
+- Verify credentials in `.env`
 - Check callback URL matches in Google Console
 - Ensure redirect URI is set to `http://localhost:8085/login/oauth2/code/google`
