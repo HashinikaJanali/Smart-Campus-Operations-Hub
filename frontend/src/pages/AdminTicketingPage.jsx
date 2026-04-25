@@ -150,6 +150,7 @@ function StatusUpdatePanel({ ticket, onUpdated }) {
                 <label className="mb-1 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                     <UserCheck className="h-3 w-3" /> Assign Technician
                 </label>
+                {/* Validation note: technician assignment is optional unless the workflow requires ownership. */}
                 <input className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:bg-white focus:ring-1 focus:ring-indigo-100"
                     value={assignee} onChange={e => setAssignee(e.target.value)} placeholder="Technician name or ID" />
             </div>
@@ -157,6 +158,7 @@ function StatusUpdatePanel({ ticket, onUpdated }) {
                 <label className="mb-1 flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                     <FileText className="h-3 w-3" /> Resolution Notes
                 </label>
+                {/* Validation note: notes should be completed before resolve or close actions are submitted. */}
                 <textarea className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-indigo-400 focus:bg-white focus:ring-1 focus:ring-indigo-100 resize-none"
                     rows={2} value={resolutionNotes} onChange={e => setResolutionNotes(e.target.value)}
                     placeholder="Describe what was done or needs to be done..." />
@@ -182,9 +184,11 @@ function StatusUpdatePanel({ ticket, onUpdated }) {
             {showRejectInput && (
                 <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-3 space-y-2">
                     <label className="text-[11px] font-bold uppercase tracking-widest text-rose-600">Rejection Reason *</label>
+                    {/* Validation note: rejection must always include a reason so the status change is explainable. */}
                     <input className="w-full rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-100"
                         value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Reason for rejection..." />
                     <div className="flex gap-2">
+                        {/* Validation note: the confirm button stays disabled until the rejection reason is provided. */}
                         <button onClick={() => doAction('REJECTED', { rejectionReason })} disabled={!rejectionReason.trim() || loading}
                             className="flex items-center gap-1.5 rounded-lg bg-rose-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-rose-700 disabled:opacity-50 transition-colors">
                             <Ban className="h-3.5 w-3.5" /> Confirm Reject
@@ -428,6 +432,7 @@ export default function AdminTicketingPage() {
     const [error, setError] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [expandedTickets, setExpandedTickets] = useState({});
+    // Track the active ticket filters used by the admin list.
     const [filterStatus, setFilterStatus] = useState('ALL');
     const [filterPriority, setFilterPriority] = useState('ALL');
     const [search, setSearch] = useState('');
@@ -467,6 +472,7 @@ export default function AdminTicketingPage() {
         });
     }, [tickets]);
 
+    // Apply status, priority, and search filters together before rendering.
     const filtered = tickets.filter(t => {
         const matchStatus = filterStatus === 'ALL' || t.status === filterStatus;
         const matchPriority = filterPriority === 'ALL' || t.priority === filterPriority;
@@ -504,6 +510,7 @@ export default function AdminTicketingPage() {
                         <div className="text-3xl font-black text-white">{tickets.length}</div>
                         <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-200 mt-0.5">Total</div>
                     </div>
+                    {/* Status cards double as quick filters for the ticket list. */}
                     {Object.entries(STATUSES).map(([key, s]) => (
                         <button key={key} onClick={() => setFilterStatus(filterStatus === key ? 'ALL' : key)}
                             className={`rounded-2xl border p-4 text-center transition-all ${filterStatus === key ? `${s.bg} ${s.border} shadow-sm` : 'border-slate-200 bg-white hover:border-slate-300'}`}>
@@ -514,11 +521,13 @@ export default function AdminTicketingPage() {
                 </div>
 
                 <div className="mb-5 flex flex-wrap items-center gap-3">
+                    {/* Search narrows tickets by resource, location, description, or submitter. */}
                     <input className="flex-1 min-w-48 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-colors shadow-sm"
                         placeholder="Search by resource, location, user..." value={search} onChange={e => setSearch(e.target.value)} />
                     <div className="flex items-center gap-2">
                         <Filter className="h-4 w-4 text-slate-400" />
                         <span className="text-xs font-semibold text-slate-500">Priority:</span>
+                        {/* Priority chips provide the second filter dimension. */}
                         <div className="flex gap-1.5">
                             {[{ value: 'ALL', label: 'All' }, ...PRIORITIES].map(p => (
                                 <button key={p.value} onClick={() => setFilterPriority(p.value)}
