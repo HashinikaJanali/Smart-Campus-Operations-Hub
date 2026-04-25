@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UserHeader from '../components/common/UserHeader';
 import useRequireAuth from '../hooks/userRequireAuth';
-import { CalendarDays, Clock, MapPin, Search, Plus, Loader2, CheckCircle2, XCircle, AlertCircle, Bookmark, QrCode, UserCheck, Building2, FlaskConical, Users } from 'lucide-react';
+import { CalendarDays, MapPin, Clock, MonitorPlay, Search, Plus, Loader2, CheckCircle2, XCircle, AlertCircle, Bookmark, QrCode, UserCheck, Building2, FlaskConical, Users } from 'lucide-react';
 import { getBookingsByUser, createBooking, cancelBooking } from '../services/bookingService';
 import BookingForm from '../components/booking/BookingForm';
 import QRModal from '../components/booking/QRModal';
@@ -189,6 +189,7 @@ export default function UserBookingPage() {
                                 if (type === 'LECTURE_HALL' || name.includes('HALL') || name.includes('LECTURE')) return Building2;
                                 if (type === 'LAB' || name.includes('LAB')) return FlaskConical;
                                 if (type === 'MEETING_ROOM' || name.includes('ROOM') || name.includes('MEETING')) return Users;
+                                if (type === 'EQUIPMENT' || name.includes('EQUIPMENT')) return MonitorPlay;
 
                                 return MapPin;
                             };
