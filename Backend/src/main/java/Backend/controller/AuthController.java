@@ -20,6 +20,7 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(
             @AuthenticationPrincipal OAuth2User principal) {
+        // Validate that a session exists before looking up the database record
         if (principal == null) {
             return ResponseEntity.status(401)
                     .body("Not authenticated");
@@ -31,6 +32,7 @@ public class AuthController {
                    .orElse(ResponseEntity.notFound().build());
     }
 
+    // Session invalidation is handled by Spring Security; this endpoint exists so the frontend can POST and clear its own state
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         return ResponseEntity.ok("Logged out");

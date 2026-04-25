@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AdminSidebar from '../components/common/AdminSidebar';
 import {
     Users, Search, Loader2, ShieldCheck, UserCheck, Wrench,
-    CheckCircle2, XCircle, UserCog, Trash2
+    CheckCircle2, XCircle, UserCog, Trash2,
+    ArrowUpDown, ArrowUp, ArrowDown
 } from 'lucide-react';
 
 const ROLES = ['USER', 'ADMIN', 'TECHNICIAN'];
@@ -38,6 +39,7 @@ export default function AdminUserManagementPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [updatingId, setUpdatingId] = useState(null);
+    const [dateSort, setDateSort] = useState(null); // null | 'asc' | 'desc'
     const [toast, setToast] = useState(null);
 
     const showToast = (message, type = 'success') => setToast({ message, type });
@@ -51,7 +53,6 @@ export default function AdminUserManagementPage() {
             const data = await res.json();
             const list = Array.isArray(data) ? data : [];
             setUsers(list);
-            setFiltered(list);
         } catch (error) {
             console.error('Error loading users', error);
             showToast('Failed to load users', 'error');
@@ -64,15 +65,29 @@ export default function AdminUserManagementPage() {
 
     useEffect(() => { loadUsers(); }, [loadUsers]);
 
-    const handleSearch = (e) => {
-        const val = e.target.value;
-        setSearch(val);
-        const q = val.toLowerCase();
-        setFiltered(users.filter(u =>
-            u.name?.toLowerCase().includes(q) ||
-            u.email?.toLowerCase().includes(q)
-        ));
-    };
+    useEffect(() => {
+        let result = [...users];
+        if (search) {
+            const q = search.toLowerCase();
+            result = result.filter(u =>
+                u.name?.toLowerCase().includes(q) ||
+                u.email?.toLowerCase().includes(q)
+            );
+        }
+        if (dateSort) {
+            result.sort((a, b) => {
+                const da = new Date(a.createdAt || 0);
+                const db = new Date(b.createdAt || 0);
+                return dateSort === 'asc' ? da - db : db - da;
+            });
+        }
+        setFiltered(result);
+    }, [users, search, dateSort]);
+
+    const handleSearch = (e) => setSearch(e.target.value);
+
+    const toggleDateSort = () =>
+        setDateSort(prev => prev === null ? 'asc' : prev === 'asc' ? 'desc' : null);
 
     const handleRoleChange = async (userId, newRole) => {
         try {
@@ -85,7 +100,6 @@ export default function AdminUserManagementPage() {
             });
             if (!res.ok) throw new Error();
             setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
-            setFiltered(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
             showToast('Role updated successfully');
         } catch {
             showToast('Failed to update role', 'error');
@@ -106,7 +120,6 @@ export default function AdminUserManagementPage() {
             });
             if (!res.ok) throw new Error();
             setUsers(prev => prev.filter(u => u.id !== userId));
-            setFiltered(prev => prev.filter(u => u.id !== userId));
             showToast('User deleted successfully');
         } catch {
             showToast('Failed to delete user', 'error');
@@ -204,7 +217,18 @@ export default function AdminUserManagementPage() {
                                 <tr className="border-b border-slate-100 bg-slate-50">
                                     <th className="text-left px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">User</th>
                                     <th className="text-left px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">Email</th>
-                                    <th className="text-left px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">Joined</th>
+                                    <th className="text-left px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                                        <button
+                                            onClick={toggleDateSort}
+                                            className={`inline-flex items-center gap-1.5 hover:text-indigo-600 transition-colors ${dateSort ? 'text-indigo-600' : ''}`}
+                                            title="Sort by join date"
+                                        >
+                                            Joined
+                                            {dateSort === 'asc' && <ArrowUp className="w-3 h-3" />}
+                                            {dateSort === 'desc' && <ArrowDown className="w-3 h-3" />}
+                                            {!dateSort && <ArrowUpDown className="w-3 h-3 opacity-40" />}
+                                        </button>
+                                    </th>
                                     <th className="text-left px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">Role</th>
                                     <th className="text-left px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">Change Role</th>
                                     <th className="text-left px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-400">Action</th>

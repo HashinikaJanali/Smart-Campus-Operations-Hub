@@ -59,6 +59,7 @@ export default function NotificationSettingsPage() {
         load();
     }, []);
 
+    // Persists settings to the backend and shows a 3-second success status indicator
     const handleSave = async () => {
         setSaving(true);
         try {
@@ -72,7 +73,9 @@ export default function NotificationSettingsPage() {
         }
     };
 
+    // Curried setter — returns a change handler for a single settings key to keep onChange props concise
     const set = (key) => (val) => setSettings(prev => ({ ...prev, [key]: val }));
+    // True when the master toggle is on; passed as disabled to individual SettingRow components
     const allDisabled = settings.disableAll;
 
     return (

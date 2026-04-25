@@ -1,6 +1,7 @@
 const API_URL = 'http://localhost:8085/api/notifications';
 
 const notificationService = {
+  // Fetches all notifications for the current session user; returns [] on any error to avoid breaking the UI
   getMyNotifications: async () => {
     try {
       const res = await fetch(API_URL, { credentials: 'include' });
@@ -15,6 +16,7 @@ const notificationService = {
       return [];
     }
   },
+  // Debug helper — returns the backend's resolved current-user object including MongoDB ID and role
   getCurrentUserInfo: async () => {
     try {
       const res = await fetch(`${API_URL}/debug/current-user`, { 
@@ -30,6 +32,7 @@ const notificationService = {
       return null;
     }
   },
+  // Marks a single notification as read via PATCH
   markAsRead: async (id) => {
     try {
       const res = await fetch(`${API_URL}/${id}/read`, {
@@ -41,6 +44,7 @@ const notificationService = {
       return {};
     }
   },
+  // Bulk-marks all notifications as read for the current user in a single request
   markAllAsRead: async () => {
     try {
       const res = await fetch(`${API_URL}/read-all`, {
@@ -52,6 +56,7 @@ const notificationService = {
       return {};
     }
   },
+  // Permanently deletes a notification by ID
   deleteNotification: async (id) => {
     try {
       await fetch(`${API_URL}/${id}`, {
@@ -61,6 +66,7 @@ const notificationService = {
       console.error('Error deleting notification:', error);
     }
   },
+  // Creates a synthetic BOOKING_APPROVED notification for manual testing only
   createTestNotification: async () => {
     try {
       const res = await fetch(`${API_URL}/test`, {
@@ -77,6 +83,7 @@ const notificationService = {
       return null;
     }
   },
+  // Loads the user's notification preference flags (bookingEnabled, ticketEnabled, etc.)
   getSettings: async () => {
     try {
       const res = await fetch(`${API_URL}/settings`, {
@@ -89,6 +96,7 @@ const notificationService = {
       return null;
     }
   },
+  // Persists updated notification preference flags to the backend
   saveSettings: async (settings) => {
     try {
       const res = await fetch(`${API_URL}/settings`, {
@@ -104,6 +112,7 @@ const notificationService = {
       return null;
     }
   },
+  // Returns the count of unread notifications; used for the bell badge in the header
   getUnreadCount: async () => {
     try {
       const res = await fetch(`${API_URL}/unread-count`, {
