@@ -8,6 +8,7 @@ import {
 import notificationService from '../services/notificationService';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+// Converts a UTC timestamp into a human-readable relative label (e.g. "3 minutes ago")
 const timeAgo = (dateStr) => {
     const now = new Date();
     const date = new Date(dateStr);
@@ -23,6 +24,7 @@ const timeAgo = (dateStr) => {
     return date.toLocaleDateString();
 };
 
+// Maps each backend notification type enum to its display label, color theme, icon, and admin navigation destination
 const getTypeConfig = (type) => {
     switch (type) {
         case 'BOOKING_REQUESTED':
@@ -130,6 +132,7 @@ export default function AdminNotificationsPage() {
         return () => clearInterval(interval);
     }, [loadNotifications, searchParams]);
 
+    // Selects a notification for the detail panel and auto-marks it as read on first open
     const selectNotification = async (n, list) => {
         setSelected(n);
         if (!n.isRead) {
@@ -145,6 +148,7 @@ export default function AdminNotificationsPage() {
         }
     };
 
+    // Marks a single notification as read; stopPropagation prevents triggering the row's select handler
     const handleMarkRead = async (id, e) => {
         e.stopPropagation();
         try {
@@ -158,6 +162,7 @@ export default function AdminNotificationsPage() {
         }
     };
 
+    // Deletes a notification; clears the detail panel if the deleted item was selected
     const handleDelete = async (id, e) => {
         e.stopPropagation();
         try {
@@ -169,6 +174,7 @@ export default function AdminNotificationsPage() {
         }
     };
 
+    // Marks all unread notifications as read in parallel
     const handleMarkAllRead = async () => {
         try {
             const unread = notifications.filter(n => !n.isRead);
@@ -180,12 +186,14 @@ export default function AdminNotificationsPage() {
         }
     };
 
+    // Applies the active read-status filter (ALL / UNREAD / READ) to the full notification list
     const filtered = filter === 'ALL'
         ? notifications
         : filter === 'UNREAD'
             ? notifications.filter(n => !n.isRead)
             : notifications.filter(n => n.isRead);
 
+    // Used for the summary header text and to conditionally show the "mark all as read" button
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
     return (

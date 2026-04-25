@@ -2,15 +2,19 @@ const API_URL = 'http://localhost:8085/api/auth';
 
 const authService = {
 
+    // Returns the parsed user object stored by OAuthCallback after login, or null if not authenticated
     getUser: () => {
         const user = localStorage.getItem('user');
         return user ? JSON.parse(user) : null;
     },
 
+    // Quick boolean check for session presence without parsing JSON
     isLoggedIn: () => !!localStorage.getItem('user'),
 
+    // Returns the raw role string (USER / ADMIN / TECHNICIAN) stored at login time
     getRole: () => localStorage.getItem('role'),
 
+    // Validates that the stored user has the ADMIN role; returns false on missing or malformed data
     isAdmin: () => {
         try {
             const user = localStorage.getItem('user');
@@ -22,6 +26,7 @@ const authService = {
         }
     },
 
+    // Validates that the stored user has the TECHNICIAN role; returns false on missing or malformed data
     isTechnician: () => {
         try {
             const user = localStorage.getItem('user');

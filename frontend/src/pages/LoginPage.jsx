@@ -4,6 +4,7 @@ import UserHeader from '../components/common/UserHeader';
 import Footer from '../components/common/Footer';
 
 export default function LoginPage() {
+  // Redirects to Spring Security's OAuth2 flow; prompt=select_account forces the account picker even if the user is already signed in
   const handleGoogleLogin = () => {
     window.location.href = 'http://localhost:8085/oauth2/authorization/google?prompt=select_account';
   };
